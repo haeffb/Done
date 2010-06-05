@@ -1,0 +1,65 @@
+<!--
+<div class='palm-row' x-mojo-touch-feedback='momentary'>
+	<div class='palm-row-wrapper'>
+		<table class='listTable'>
+			<tr>
+				<td class='col1'>
+				<span id='taskCheck' class="taskcheck" name='taskcheck' x-mojo-element='CheckBox'></span>
+				</td>
+				
+				<td class='col2'>
+					<table>
+					<tr>
+						<td>
+						<span class='star-list-container-#{starFormatted} done-icon-star-#{star}-small'></span>
+
+						<span id='taskDue' class='tasklist taskdue dueformat-#{dueFormat}'>	
+							#{duedateFormatted} #{duetimeFormatted}
+						</span>
+						</td>
+					</tr>
+					<tr>
+						<td>
+						<span id='taskTitle' class='tasktitle #{wrap}'>
+							#{title}
+						</span>
+						</td>
+					</tr>
+					<tr>
+						<td>
+						<span id='taskFolder' class='tasklist taskfolder truncating-text'>#{folderFormatted}</span>
+						<span id='taskContext' class='tasklist taskcontext'>#{contextFormatted}</span>
+						</td>
+					</tr>
+					</table>
+				</td>
+				<td class='col3'>
+					<span id='priorityIcon' class='tasklist taskbox priority#{priority}'></span>			
+				</td>
+			</tr>
+		</table>
+	</div>
+</div>
+-->
+
+<div class='palm-row' x-mojo-touch-feedback='momentary'>
+	<div class='palm-row-wrapper'>
+		<div id='taskCheck' class="taskcheck left" name='taskcheck' x-mojo-element='CheckBox'>
+		</div>
+			<!--<div id='recur' class="taskbox2 done-icon-recur"></div> -->
+
+		<div id='priorityIcon' class='tasklist taskbox priority#{priority}'></div>
+		<div class='star-list-container-#{starFormatted} done-icon-star-#{star}-small'></div>
+
+		<div id='taskDue' class='tasklist taskdue dueformat-#{dueFormat}'>	
+			#{duedateFormatted} #{duetimeFormatted}
+		</div>
+		<div id='taskTitle' class='tasktitle #{wrap}'>
+			#{title}
+		</div>
+		
+		<div id='taskFolder' class='tasklist taskfolder truncating-text'>#{folderFormatted}</div>
+		<div id='taskContext' class='tasklist taskcontext'>#{contextFormatted}</div> 
+			
+	</div>
+</div>

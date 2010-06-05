@@ -1,0 +1,14 @@
+{
+	"id": "com.tigers.beta.done",
+	"version": "0.2.3",
+	"ToodledoId": "DoneBeta",
+	"copy": "&copy; Copyright 2011 Brian A. Haeffner.",
+	"vendor": "Tiger Country Software",
+	"type": "web",
+	"main": "index.html",
+	"title": "Done!",
+	"icon": "done64b.png",
+	"smallicon": "done32.png",
+	"miniicon": "done32.png",
+	"noWindow": "true"
+}
