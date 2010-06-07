@@ -76,6 +76,7 @@ function DAO () {
 			);
 
 	    }).bind(this));
+
 		Mojo.Log.info("****** Leaving db init *******");
   }; // End init().
 // **********************************************

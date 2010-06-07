@@ -748,6 +748,7 @@ IntroAssistant.prototype.taskDivider = function(itemModel) {
 	var today, tomorrow, nextDay, nextWeek, yesterday, lastWeek, lastMonth;
 	switch (this.showListModel.value) {
 		case 'all':
+			//return $L("Importance") + ": " + itemModel.importance;
 		case 'folder':
 			return (this.foldersModel.items[itemModel.folder]) ? 
 				this.foldersModel.items[itemModel.folder].label : $L("No Folder");
@@ -923,9 +924,11 @@ IntroAssistant.prototype.loadData = function () {
 IntroAssistant.prototype.gotFoldersDb = function (response) {
 	var i;
 	//Mojo.Log.info("Folders response is %j", response, response.length);
+	// sortorder 9999 is a hack!
 	this.foldersArray = response;
 	this.foldersArray.push({id: 0, label: $L("No Folder"), value: 0});
 	this.foldersModel.items = [];
+	this.foldersModel.items[0] = {id: 0, label: $L("No Folder"), value: 0};
 	for (i = 0; i < response.length; i++) {
 		//Mojo.Log.info("Response folder %j", response[i], i);
 		this.foldersModel.items[response[i].id] = response[i];
@@ -941,6 +944,7 @@ IntroAssistant.prototype.gotContextsDb = function (response) {
 	this.contextsArray = response;
 	this.contextsArray.push({id: 0, label: $L("No Context"), value: 0});
 	this.contextsModel.items = [];
+	this.contextsModel.items[0] = {id: 0, label: $L("No Context"), value: 0};
 	for (i = 0; i < response.length; i++) {
 		//Mojo.Log.info("Response context %j", response[i], i);
 		this.contextsModel.items[response[i].id] = response[i];
@@ -958,6 +962,7 @@ IntroAssistant.prototype.gotGoalsDb = function (response) {
 	this.goalsArray = response;
 	this.goalsArray.push({id: 0, label: $L("No Goal"), value: 0});
 	this.goalsModel.items = [];
+	this.goalsModel.items[0] = {id: 0, label: $L("No Goal"), value: 0};
 	for (i = 0; i < response.length; i++) {
 		//Mojo.Log.info("Response context %j", response[i], i);
 		this.goalsModel.items[response[i].id] = response[i];
@@ -994,6 +999,7 @@ IntroAssistant.prototype.gotTasksDb = function (response) {
 		
 		for (i = 0; i < response.length; i++) {
 			response[i].done = false;
+			response[i].importance = this.calcImportance(response[i]);
 			
 			// Set boolean value for completed tasks
 			if (response[i].completed) {
@@ -1032,6 +1038,12 @@ IntroAssistant.prototype.gotTasksDb = function (response) {
 		];
 	}
 	//this.tasks.sort(this.specSort.bind(this));
+	if (this.showListModel.value === 'all') {
+		//this.tasks.sort(this.sortImportance.bind(this));
+	}
+	if (this.showListModel.value === 'folder') {
+		//this.tasks.sort(this.sortFolder.bind(this));
+	}
 	this.tasks.reverse();
 	this.taskListModel.items = this.tasks;
 	//Mojo.Log.info("changing taskListModel");
@@ -1045,9 +1057,54 @@ IntroAssistant.prototype.gotTasksDb = function (response) {
 	}
 };
 
+IntroAssistant.prototype.calcImportance = function (task) {
+	var due, importance, today;
+	
+	importance = 2 + task.priority + task.star;
+	
+	today = new Date();
+	today.setHours(0, 0, 0, 0);
+	
+	if (task.duedate) {
+		due = task.duedate - today.getTime();
+		if (due < 0) {
+			importance += 6;
+		}
+		else if (due < 1000*60*60*24) {
+			importance += 5;
+		}
+		else if (due < 1000*60*60*24*2) {
+			importance += 3;
+		}
+		else if (due < 1000*60*60*24*7) {
+			importance += 2;
+		}
+		else if (due < 1000*60*60*24*14) {
+			importance += 1;
+		}		
+	}
+	//Mojo.Log.info("Importance:", task.title, task.duedate, importance, due);
+	return importance;	
+};
+
 IntroAssistant.prototype.getTasks = function (listType, filter) {
 	Mojo.Log.info("List: %s, filter: %s, sort %s",listType, filter, this.sortSpec);
-	var sqlString = "SELECT * FROM tasks WHERE (VALUE>0)", date1, date2, val1;
+	var sqlString, date1, date2, val1;
+	//sqlString = "SELECT * FROM tasks WHERE (VALUE>0)";
+	sqlString = "SELECT t.id as id, t.parent, t.children, t.title, t.tag, " +
+		"t.folder, t.context, t.goal, t.added, t.modified as modified, " +
+		"t.duedate, t.startdate, " +
+		"t.duetime, t.starttime, t.reminder, t.repeat, t.completed, " +
+		"t.rep_advanced, t.status, " +
+		"t.star, t.priority, t.length, t.timer, t.note, t.value, " + 
+		"f.id as folderId, f.label as folderLabel, f.value " + 
+		"as folderValue, f.privy as folderPrivy, " +
+		"CASE WHEN t.folder=0 THEN '0' ELSE f.sortorder END as sortorder, " + 
+		"f.archived as folderArchived, f.modified " +
+		"as folderModified";
+	sqlString += " FROM tasks t";
+	sqlString += " LEFT OUTER JOIN folders f ON t.folder=f.value";
+	sqlString += " WHERE (t.value>0)";
 	
 	if (!MyAPP.prefs.showFutureTasks) {
 		date1 = new Date();
@@ -1056,24 +1113,25 @@ IntroAssistant.prototype.getTasks = function (listType, filter) {
 		date2.setHours(0,0,0,0);
 		date1.setDate(date1.getDate()+1);
 		date2.setMonth(date1.getMonth() + MyAPP.account.hidemonths);
-		sqlString += " AND (startdate<" + date1.getTime() + " OR startdate = '') AND (duedate<" + date2.getTime() + " OR duedate ='')";
+		sqlString += " AND (t.startdate<" + date1.getTime() + " OR t.startdate = '') AND (duedate<" + date2.getTime() + " OR duedate ='')";
 	}
 	if (!MyAPP.prefs.showNegPriority) {
-		sqlString += " AND (priority>-1)";
+		sqlString += " AND (t.priority>-1)";
 	}
 	if (!MyAPP.prefs.showDeferred) {
-		sqlString += " AND (status < 4)";
+		sqlString += " AND (t.status < 4)";
 	}
-	var sort1 = (listType == 'all') ? 'folder' : listType;
+	var sort1 = (listType == 'all') ? 'sortorder' : listType;
 	switch (listType) {
 		case 'folder':
+			sort1 = 'sortorder';
 			if (filter != 'all') {
-				sqlString += " AND (folder="  + filter + ")";
+				sqlString += " AND (t.folder="  + filter + ")";
 			}
 			break;
 		case 'context':
 			if (filter != 'all') {
-				sqlString += " AND (context="  + filter + ")";
+				sqlString += " AND (t.context="  + filter + ")";
 			}
 			break;
 		case 'all':
@@ -1084,44 +1142,44 @@ IntroAssistant.prototype.getTasks = function (listType, filter) {
 					date1.setDate(date1.getDate() + MyAPP.account.hotlistduedate * 1);
 					Mojo.Log.info("Date for hotlist:", date1);
 					val1 = MyAPP.account.hotlistpriority * 1 - 1;
-					sqlString += " AND (duedate < " + date1.getTime() + 
-					" OR priority > " + 
+					sqlString += " AND (t.duedate < " + date1.getTime() + 
+					" OR t.priority > " + 
 						val1 + ")";
 					break;
 				case "2": // starred
-					sqlString += " AND (star = 1)";
+					sqlString += " AND (t.star = 1)";
 					break;
 				case "3": // recent
 					date1 = new Date();
 					date1.setDate(date1.getDate() - 7);
-					sqlString += " AND (added > " + date1.getTime() + ")";
+					sqlString += " AND (t.added > " + date1.getTime() + ")";
 			}
 			break;
 		case 'priority':
 			if (filter != 'all') {
-				sqlString += " AND (priority="  + filter + ")";
+				sqlString += " AND (t.priority="  + filter + ")";
 			}
 			break;
 		case 'status':
 			if (filter != 'all') {
 				switch (filter) {
 					case "1": // Next Action
-						sqlString += " AND (status=1)";
+						sqlString += " AND (t.status=1)";
 						break;
 					case "2": // Active (status = 1 & 2)
-						sqlString += " AND (status=1 or status=2 )";
+						sqlString += " AND (t.status=1 or t.status=2 )";
 						break;
 					case "3": // Planning (status = 1 & 2 & 3)
-						sqlString += " AND (status > 0 and status < 4)";
+						sqlString += " AND (t.status > 0 and t.status < 4)";
 						break;
 					case "4": // Deferred Task (status = 4-9)
-						sqlString += " AND (status > 3 and status < 10 )";
+						sqlString += " AND (t.status > 3 and t.status < 10 )";
 						break;
 					case "5": // Reference (status = 10)
-						sqlString += " AND (status = 10)";
+						sqlString += " AND (t.status = 10)";
 						break;
 					case "6": // No Status
-						sqlString += " AND (status = 0)";
+						sqlString += " AND (t.status = 0)";
 						break;
 				}
 			}
@@ -1147,10 +1205,10 @@ IntroAssistant.prototype.getTasks = function (listType, filter) {
 						break;
 				}
 				if (filter === "6") { // no due date
-					sqlString += " AND (duedate = '')";
+					sqlString += " AND (t.duedate = '')";
 				}
 				else {
-					sqlString += " AND (duedate < " + date1.getTime() + ")";
+					sqlString += " AND (t.duedate < " + date1.getTime() + ")";
 				}
 			}
 			break;
@@ -1174,154 +1232,21 @@ IntroAssistant.prototype.getTasks = function (listType, filter) {
 					break;
 			}
 			if (filter !== 'all') {
-				sqlString += " AND (completed > " + date1.getTime() + ")";
+				sqlString += " AND (t.completed > " + date1.getTime() + ")";
 			}
 			break;
 	}
-	if (sort1 === 'duedate' || sort1 === 'status') {
-		sqlString += " ORDER BY " + sort1 + " DESC, duedate DESC, duetime DESC, priority ASC, star ASC, folder ASC, context ASC, added DESC";
+	if (sort1 === 'duedate' || sort1 === 'status' || sort1 === 'sortorder') {
+		sqlString += " ORDER BY " + sort1 + " DESC, t.duedate DESC, t.duetime DESC, t.priority ASC, t.star ASC, sortorder ASC, t.context ASC, added DESC";
 	}
 	else {
-		sqlString += " ORDER BY " + sort1 + " ASC, duedate DESC, duetime DESC, priority ASC, star ASC, context ASC, added DESC";		
+		sqlString += " ORDER BY " + sort1 + " ASC, t.duedate DESC, t.duetime DESC, t.priority ASC, t.star ASC, t.context ASC, t.added DESC";		
 	}
 	sqlString += ";GO;";
 	Mojo.Log.info("SQL String: ", sqlString);
 	dao.retrieveTasksByString(sqlString, this.gotTasksDb.bind(this));
 };
 
-
-/*
-IntroAssistant.prototype.getTasks = function (listType, filter) {
-	Mojo.Log.info("List: %s, filter: %s, sort %s",listType, filter, this.sortSpec);
-	var sqlString = "SELECT * FROM tasks", date1, val1;
-	var sort1 = (listType == 'all') ? 'folder' : listType;
-	switch (listType) {
-		case 'folder':
-			if (filter != 'all') {
-				sqlString += " WHERE (folder="  + filter + ")";
-			}
-			break;
-		case 'context':
-			if (filter != 'all') {
-				sqlString += " WHERE (context="  + filter + ")";
-			}
-			break;
-		case 'all':
-			switch (filter) {
-				case "1": // hotlist
-					date1 = new Date();
-					date1.setHours(0, 0, 0, 0);
-					date1.setDate(date1.getDate() + MyAPP.account.hotlistduedate * 1);
-					Mojo.Log.info("Date for hotlist:", date1);
-					val1 = MyAPP.account.hotlistpriority * 1 - 1;
-					sqlString += " WHERE (duedate < " + date1.getTime() + 
-					" OR priority > " + 
-						val1 + ")";
-					break;
-				case "2": // starred
-					sqlString += " WHERE (star = 1)";
-					break;
-				case "3": // recent
-					date1 = new Date();
-					date1.setDate(date1.getDate() - 7);
-					sqlString += " WHERE (added > " + date1.getTime() + ")";
-			}
-			break;
-		case 'priority':
-			if (filter != 'all') {
-				sqlString += " WHERE (priority="  + filter + ")";
-			}
-			break;
-		case 'status':
-			if (filter != 'all') {
-				switch (filter) {
-					case "1": // Next Action
-						sqlString += " WHERE (status=1)";
-						break;
-					case "2": // Active (status = 1 & 2)
-						sqlString += " WHERE (status=1 or status=2 )";
-						break;
-					case "3": // Planning (status = 1 & 2 & 3)
-						sqlString += " WHERE (status > 0 and status < 4)";
-						break;
-					case "4": // Deferred Task (status = 4-9)
-						sqlString += " WHERE (status > 3 and status < 10 )";
-						break;
-					case "5": // Reference (status = 10)
-						sqlString += " WHERE (status = 10)";
-						break;
-					case "6": // No Status
-						sqlString += " WHERE (status = 0)";
-						break;
-				}
-			}
-			break;
-		case 'duedate':
-			if (filter !== 'all') {
-				date1 = new Date();
-				date1.setHours(0, 0, 0, 0);
-				switch (filter) {
-					case "1": //overdue
-						break;
-					case "2": // today
-						date1.setDate(date1.getDate() + 1);
-						break;
-					case "3": // tomorrow
-						date1.setDate(date1.getDate() + 2);
-						break;
-					case "4": // next week
-						date1.setDate(date1.getDate() + 7);
-						break;
-					case "5": // next month
-						date1.setMonth(date1.getMonth() + 1);
-						break;
-				}
-				if (filter === "6") { // no due date
-					sqlString += " WHERE (duedate = '')";
-				}
-				else {
-					sqlString += " WHERE (duedate < " + date1.getTime() + ")";
-				}
-			}
-			break;
-		case 'completed':
-				date1 = new Date();
-				date1.setHours(0);
-				date1.setMinutes(0);
-				date1.setSeconds(0);
-				date1.setMilliseconds(0);
-			switch (filter) {
-				case "all":
-					break;
-				case "1":
-					date1.setDate(date1.getDate() - 7);
-					break;
-				case "2":
-					date1.setMonth(date1.getMonth() - 1);
-					break;
-				case "3":
-					date1.setFullYear(date1.getFullYear() - 1);
-					break;
-			}
-			if (filter !== 'all') {
-				sqlString += " WHERE (completed > " + date1.getTime() + ")";
-			}
-			break;
-	}
-	if (sort1 === 'duedate' || sort1 === 'status') {
-		sqlString += " ORDER BY " + sort1 + " DESC, duedate DESC, duetime DESC, priority ASC, star ASC, folder ASC, context ASC, modified DESC";
-	}
-	else {
-		sqlString += " ORDER BY " + sort1 + " ASC, duedate DESC, duetime DESC, priority ASC, star ASC, context ASC, modified DESC";		
-	}
-	sqlString += ";GO;";
-	Mojo.Log.info("SQL String: ", sqlString);
-	dao.retrieveTasksByString(sqlString, this.gotTasksDb.bind(this));
-
-	
-};
-
-*/
 IntroAssistant.prototype.deactivate = function(event) {
 	/* remove any event handlers you added in activate and do any other cleanup that should happen before
 	   this scene is popped or another scene is pushed on top */
@@ -1354,6 +1279,35 @@ IntroAssistant.prototype.cleanup = function(event) {
 		this.setSyncTimer(0.1);
 	}
 	  
+};
+
+IntroAssistant.prototype.sortImportance = function (a, b) {
+	if (a.importance > b.importance) {
+		return 1;
+	}
+	else if (a.importance < b.importance) {
+		return -1;
+	}
+	else {
+		return 0;
+	}
+	
+};
+
+IntroAssistant.prototype.sortFolder = function (a, b) {
+	var aFolder, bFolder;
+	aFolder = this.foldersModel.items[a.folder].sortorder;
+	bFolder = this.foldersModel.items[b.folder].sortorder;
+	Mojo.Log.info(a.title, aFolder, b.title, bFolder);
+	if (aFolder > bFolder) {
+		return -1;
+	}
+	else if (aFolder < bFolder) {
+		return 1;
+	}
+	else {
+		return 0;
+	}
 };
 
 IntroAssistant.prototype.specSort = function (a, b) {
