@@ -50,12 +50,15 @@ MyAPP.prefs = {
 	defaultContext: 0,
 	defaultGoal: 0,
 	defaultDueDate: 0,
+	defaultStartDate: 0,
 	defaultRepeat: 0,
 	defaultStar: 0,
 	useCurrent: false,
 	repeatFromCompleted: false,
 	showFolderAndContext: false,
 	showDueDate: true,
+	showNote: false,
+	showPriority: false,
 	showCompleted: false,
 	showDeferred: false,
 	showFutureTasks: false,
@@ -72,7 +75,26 @@ MyAPP.prefs = {
 	syncTimerId: '',
 	syncWifiOnly: false,
 	localWins: false, // if tasks edited on web & device
-	notifications: false
+	notifications: false,
+	notifyTime: 0,
+	notifyAlarm: false
+};
+
+MyAPP.fields = {
+	notes: true,
+	folder: true,
+	context: true,
+	goal: true,
+	tags: true,
+	priority: true,
+	duedate: true,
+	duetime: true,
+	startdate: true, 
+	starttime: true,
+	status: true,
+	repeat: true,
+	repeatfrom: true,
+	reminder: true
 };
 
 MyAPP.server = {
@@ -87,6 +109,7 @@ MyAPP.appMenuModel = {
 	items: [
 		Mojo.Menu.editItem,
 		{label: $L('Preferences & Accounts') + "...", command: 'doPrefs', disabled: false},
+		{label: $L('Folders Contexts & Goals') + "...", command: 'doFolders', disabled: false},
 		Mojo.Menu.helpItem
 	]
 };
@@ -242,6 +265,8 @@ AppAssistant.prototype.initDBandCookies = function () {
 	this.getPrefsCookie();
 	this.getAccountCookie();
 	this.getLocalCookie();
+	this.getSyncLogCookie();
+	this.getFieldsCookie();
 	
 	// Initialize toodledo api
 	api.init();
@@ -284,7 +309,7 @@ AppAssistant.prototype.handleCommand = function (event) {
 */		case Mojo.Menu.helpCmd:
 			this.controller.getActiveStageController().pushScene('support');
 			break;
-		}
+					}
 	}
 };
 
@@ -343,4 +368,32 @@ AppAssistant.prototype.getLocalCookie = function () {
 		}
 	}
 	//Mojo.Log.info("Local info: %j", MyAPP.local);
+};
+
+AppAssistant.prototype.getFieldsCookie = function () {
+	Mojo.Log.info("Get Fields Cookie!");
+	MyAPP.fieldsCookie = new Mojo.Model.Cookie(MyAPP.appName + "fields");
+	var args = MyAPP.fieldsCookie.get();
+	if (args) {
+		for (value in args) {
+			MyAPP.fields[value] = args[value];
+			//Mojo.Log.info("Pref: ", value, args[value], MyAPP.local[value]);
+		}
+	}
+	//Mojo.Log.info("Local info: %j", MyAPP.local);
+};
+
+AppAssistant.prototype.getSyncLogCookie = function () {
+	Mojo.Log.info("Get Cookie!");
+	MyAPP.syncLogCookie = new Mojo.Model.Cookie(MyAPP.appName + "syncLog");
+	var args = MyAPP.syncLogCookie.get();
+/*
+	if (args) {
+		for (value in args) {
+			MyAPP.local[value] = args[value];
+			//Mojo.Log.info("Pref: ", value, args[value], MyAPP.local[value]);
+		}
+	}
+
+*/	//Mojo.Log.info("Local info: %j", MyAPP.local);
 };

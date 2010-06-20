@@ -15,8 +15,11 @@ function IntroAssistant() {
 IntroAssistant.prototype.setup = function() {
 	/* this function is for setup tasks that have to happen when the scene is first created */
 
+/*
 	this.controller.get("syncOutput").innerHTML = $L("Last Sync: ") + 
-		Mojo.Format.formatDate(new Date(MyAPP.prefs.lastSync), "medium");
+		(MyAPP.prefs.lastSync > 0) ? Mojo.Format.formatDate(new Date(MyAPP.prefs.lastSync), "medium") : "Not Synced!";
+
+*/	this.controller.get("syncTaskOutput").innerHTML = MyAPP.syncLogCookie.get();
 	/* use Mojo.View.render to render view templates and add them to the scene, if needed. */
 	
 	/* setup widgets here */
@@ -36,7 +39,9 @@ IntroAssistant.prototype.setup = function() {
 				duetime: this.formatDueTime.bind(this),
 				folder: this.formatFolder.bind(this),
 				context: this.formatContext.bind(this),
-				star: this.formatStar.bind(this)
+				star: this.formatStar.bind(this),
+				note: this.formatNote.bind(this),
+				priority: this.formatPriority.bind(this)
 				},
 			reorderable: false
 		},
@@ -309,6 +314,7 @@ IntroAssistant.prototype.doFilter = function (event) {
 	//Mojo.Log.info("Filter: ", event.value);
 	this.getTasks(this.showListModel.value, event.value);
 	MyAPP.prefs.showFilter = event.value;
+	MyAPP.prefsCookie.put(MyAPP.prefs);
 	this.goTop = true;
 };
 
@@ -353,6 +359,7 @@ IntroAssistant.prototype.doList = function (event) {
 	}
 	MyAPP.prefs.showList = event.value;
 	MyAPP.prefs.showFilter = 'all';
+	MyAPP.prefsCookie.put(MyAPP.prefs);
 
 };
 
@@ -518,6 +525,9 @@ IntroAssistant.prototype.handleCommand = function (event) {
 		this.controller.stageController.pushScene('preferences', 
 			this.foldersArray, this.contextsArray);
 		break;
+	case 'doFolders':
+		this.controller.stageController.pushScene('folders');
+		break;
 	}
 };
 
@@ -620,12 +630,14 @@ IntroAssistant.prototype.setSyncTimer = function (delayInMinutes) {
 	});
 };
 
+/*
 IntroAssistant.prototype.finishSync = function (response) {
 	this.controller.get("syncOutput").innerHTML = $L("Last Sync:") + " " +  
-		Mojo.Format.formatDate(new Date(MyAPP.prefs.lastSync), "medium");
+		(MyAPP.prefs.lastSync > 0) ? Mojo.Format.formatDate(new Date(MyAPP.prefs.lastSync), "medium") : "Not Synced!";
 	
 };
 
+*/
 IntroAssistant.prototype.editTask = function (taskValue) {
 	Mojo.Log.info("Task value:", taskValue);
 	this.controller.stageController.pushScene('addtask', taskValue);
@@ -636,10 +648,18 @@ IntroAssistant.prototype.listTap = function (event) {
 	//Mojo.Log.info("Event: %j", Object.toJSON(event.item));
 	var id = event.originalEvent.target.id,
 		className = event.originalEvent.target.className;
-	//Mojo.Log.info("Classname:", className);
+	Mojo.Log.info("Classname:", className);
 	if (className === 'taskcheck') {
 		this.checkChange (event);
 		event.stop();
+		return;
+	}
+	if (id === 'noteIcon' || className ==='notesDrawer' || className === 'mynote') {
+		Mojo.Log.info("Note Icon or drawer tapped!", id, className);
+		drawers = this.controller.document.getElementsByName('notesDrawer');
+		curDrawer = drawers[event.index];
+		curDrawer.mojo.toggleState();
+		//event.stop();
 		return;
 	}
 	this.controller.stageController.pushScene('addtask', 
@@ -724,12 +744,14 @@ IntroAssistant.prototype.syncFinished = function (response) {
 	//bannerParams = {messageText: MyAPP.appName + " " + response};
 	//Mojo.Controller.getAppController().showBanner(bannerParams, {});
 
+/*
 	// Save list/filter prefs
 	MyAPP.prefs.showList = this.showListModel.value;
 	MyAPP.prefs.showFilter = this.showFilterModel.value;
 	MyAPP.prefsCookie = new Mojo.Model.Cookie(MyAPP.appName + "prefs");
 	MyAPP.prefsCookie.put(MyAPP.prefs);
-	
+
+*/	
 	this.activate();
 	
 	this.controller.get("Scrim").hide();	
@@ -739,9 +761,11 @@ IntroAssistant.prototype.syncFinished = function (response) {
 	this.hideScrim.delay(10);
 	this.spinnerModel.spinning = false;
 	this.controller.modelChanged(this.spinnerModel);
+/*
 	this.controller.get("syncOutput").innerHTML = $L("Last Sync:") + " " +
-		Mojo.Format.formatDate(new Date(MyAPP.prefs.lastSync), "medium");
+		(MyAPP.prefs.lastSync > 0) ? Mojo.Format.formatDate(new Date(MyAPP.prefs.lastSync), "medium") : "Not Synced!";
 
+*/
 };
 
 IntroAssistant.prototype.taskDivider = function(itemModel) {
@@ -908,8 +932,9 @@ IntroAssistant.prototype.activate = function(event){
 		this.controller.stageController.setWindowOrientation("up");
 		//Mojo.Log.info("Rotate UP!");
 	}
-	this.controller.get("syncOutput").innerHTML = $L("Last Sync:") + " " +
-		Mojo.Format.formatDate(new Date(MyAPP.prefs.lastSync), "medium");
+	var syncString = $L("Last Sync:") + " ";
+	syncString += (MyAPP.prefs.lastSync > 0) ? Mojo.Format.formatDate(new Date(MyAPP.prefs.lastSync), "medium") : "Not Synced!";
+	this.controller.get("syncOutput").innerHTML = syncString;
 	
 };
 
@@ -924,22 +949,26 @@ IntroAssistant.prototype.loadData = function () {
 IntroAssistant.prototype.gotFoldersDb = function (response) {
 	var i;
 	//Mojo.Log.info("Folders response is %j", response, response.length);
-	// sortorder 9999 is a hack!
+	response.sort(this.sortBySortorder);
 	this.foldersArray = response;
 	this.foldersArray.push({id: 0, label: $L("No Folder"), value: 0});
 	this.foldersModel.items = [];
 	this.foldersModel.items[0] = {id: 0, label: $L("No Folder"), value: 0};
 	for (i = 0; i < response.length; i++) {
 		//Mojo.Log.info("Response folder %j", response[i], i);
-		this.foldersModel.items[response[i].id] = response[i];
+		this.foldersModel.items[response[i].value] = response[i];
 	}
 	
 	// Retrieve contexts
 	dao.retrieveContexts(this.gotContextsDb.bind(this));
 };
 
+IntroAssistant.prototype.sortBySortorder = function (a, b) {
+	return (a.sortorder - b.sortorder);
+};
+
 IntroAssistant.prototype.gotContextsDb = function (response) {
-	//Mojo.Log.info("Contexts response is %j", response);
+	Mojo.Log.info("Contexts response is %j", response);
 	var i;
 	this.contextsArray = response;
 	this.contextsArray.push({id: 0, label: $L("No Context"), value: 0});
@@ -947,7 +976,7 @@ IntroAssistant.prototype.gotContextsDb = function (response) {
 	this.contextsModel.items[0] = {id: 0, label: $L("No Context"), value: 0};
 	for (i = 0; i < response.length; i++) {
 		//Mojo.Log.info("Response context %j", response[i], i);
-		this.contextsModel.items[response[i].id] = response[i];
+		this.contextsModel.items[response[i].value] = response[i];
 	}
 	//this.contextsModel.items = response;
 	//Mojo.Log.info("Contexts model items %j", this.contextsModel.items);
@@ -965,7 +994,7 @@ IntroAssistant.prototype.gotGoalsDb = function (response) {
 	this.goalsModel.items[0] = {id: 0, label: $L("No Goal"), value: 0};
 	for (i = 0; i < response.length; i++) {
 		//Mojo.Log.info("Response context %j", response[i], i);
-		this.goalsModel.items[response[i].id] = response[i];
+		this.goalsModel.items[response[i].value] = response[i];
 	}
 	//this.goalsModel.items = response;
 	//Mojo.Log.info("Goals model items %j", this.goalsModel.items);
@@ -1258,7 +1287,7 @@ IntroAssistant.prototype.deactivate = function(event) {
 	// Save list/filter prefs
 	MyAPP.prefs.showList = this.showListModel.value;
 	MyAPP.prefs.showFilter = this.showFilterModel.value;
-	MyAPP.prefsCookie = new Mojo.Model.Cookie(MyAPP.appName + "prefs");
+	//MyAPP.prefsCookie = new Mojo.Model.Cookie(MyAPP.appName + "prefs");
 	MyAPP.prefsCookie.put(MyAPP.prefs);
 
 };
@@ -1298,7 +1327,7 @@ IntroAssistant.prototype.sortFolder = function (a, b) {
 	var aFolder, bFolder;
 	aFolder = this.foldersModel.items[a.folder].sortorder;
 	bFolder = this.foldersModel.items[b.folder].sortorder;
-	Mojo.Log.info(a.title, aFolder, b.title, bFolder);
+	//Mojo.Log.info(a.title, aFolder, b.title, bFolder);
 	if (aFolder > bFolder) {
 		return -1;
 	}
@@ -1438,5 +1467,26 @@ IntroAssistant.prototype.formatContext = function (value, model) {
 IntroAssistant.prototype.formatStar = function (value, model) {
 	//Mojo.Log.info("Model Duedate", value, model.duedate);
 	return (MyAPP.prefs.showStar) ? "0" : "";
+};
+
+IntroAssistant.prototype.formatNote = function (value, model) {
+	//Mojo.Log.info("Model Duedate", value, model.duedate);
+	if (MyAPP.prefs.showNotes && value) {
+		return "done-icon-note";
+	}
+	else {
+		return "";
+	}
+};
+
+IntroAssistant.prototype.formatPriority = function (value, model) {
+	//Mojo.Log.info("Model Duedate", value, model.duedate);
+	//return (value) ? "taskbox priority" + value : "";
+	if (MyAPP.prefs.showPriority) {
+		return "taskbox priority" + value;
+	}
+	else {
+		return "";
+	}
 };
 

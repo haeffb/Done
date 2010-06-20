@@ -41,13 +41,30 @@ DashnotifyAssistant.prototype.setup = function () {
 	// Display initial notification.
 	this.addNotify();
 
+}; 
+
+DashnotifyAssistant.prototype.addNotify = function () {
+	this.dashInfos = [];
+	this.display = 1;
+	var sqlString, nowDate;
+	nowDate = new Date().getTime();
+	
+	sqlString = "SELECT * FROM tasks WHERE (duedate<" + nowDate + 
+		" OR duetime<"	+ nowDate + " OR startdate<" + nowDate +
+		" OR starttime<" + nowDate + ") AND (completed=0 OR completed='') " +
+		"ORDER BY duetime ASC, duedate ASC, " +
+		"starttime ASC, startdate ASC, title DESC;GO;";
+	Mojo.Log.info("SQLString in Notification dashboard:", sqlString);
+	dao.retrieveTasksByString(sqlString, this.gotTasksDB.bind(this));
 };
 
 DashnotifyAssistant.prototype.gotTasksDB = function (response) {
 	Mojo.Log.info("Notify for ", response.length, " tasks");
 	var myDateString;
+
 	if (response && response.length) {
 		//response.reverse();
+		response.sort(this.sortDates);
 		for (i = 0; i < response.length; i++) {
 			Mojo.Log.info("Task: %j", response[i]);
 			myDateString = (response[i].duedate) ? Mojo.Format.formatDate(new Date(response[i].duedate), {
@@ -67,6 +84,9 @@ DashnotifyAssistant.prototype.gotTasksDB = function (response) {
 		//this.display = response.length;
 		this.display = 1;
 		this.displayDashboard();
+		if (MyAPP.prefs.notifyAlarm) {
+			Mojo.Controller.getAppController().playSoundNotification("alerts", "");
+		}
 	}
 	else {
 		Mojo.Log.info("No tasks to notify!!!");
@@ -74,26 +94,42 @@ DashnotifyAssistant.prototype.gotTasksDB = function (response) {
 	}
 };
 
-DashnotifyAssistant.prototype.addNotify = function () {
-	this.dashInfos = [];
-	this.display = 1;
-	var sqlString, nowDate;
-	nowDate = new Date().getTime();
+DashnotifyAssistant.prototype.sortDates = function (a, b) {
 	
-	sqlString = "SELECT * FROM tasks WHERE (duedate<" + nowDate + 
-		" OR duetime<"	+ nowDate + " OR startdate<" + nowDate +
-		" OR starttime<" + nowDate + ") AND (completed=0 OR completed='') " +
-		"ORDER BY duedate DESC, duetime DESC, " +
-		"startdate DESC, starttime DESC, title DESC;GO;";
-	Mojo.Log.info("SQLString in Notification dashboard:", sqlString);
-	dao.retrieveTasksByString(sqlString, this.gotTasksDB.bind(this));
+	var aDate, bDate, nowDate = new Date().getTime();
+	
+	Mojo.Log.info("A", a.title, "due", a.duedate, "time", a.duetime, "start", 
+		a.startdate, "time", a.starttime);
+	Mojo.Log.info("B", b.title, "due", b.duedate, "time", b.duetime, "start", 
+		b.startdate, "time", b.starttime);
+	
+	aDate = (a.duetime) ? a.duetime: a.duedate;
+	bDate = (b.duetime) ? b.duetime: b.duedate;
+	
+	if (a.duetime) {
+		aDate = a.duetime;
+	}
+	if (b.duetime) {
+		bDate = b.duetime;
+	}
+	
+	if ((a.startdate < nowDate && a.startdate > aDate) || aDate > nowDate) {
+		aDate = (a.starttime) ? a.starttime : a.startdate;
+	}
+	if ((b.startdate < nowDate && b.startdate > bDate) || bDate > nowDate) {
+		bDate = (b.starttime) ? b.starttime : b.startdate;
+	}
+
+	Mojo.Log.info("A", aDate, "B", bDate);
+	return bDate-aDate;
+		
 };
+
 DashnotifyAssistant.prototype.displayDashboard = function () {
 	var dashInfo = this.dashInfos[this.display - 1];
 	this.controller.get('dash-notify-count').innerHTML = this.dashInfos.length;
 	this.controller.get("dash-notify-title").innerHTML = this.display + ". " + dashInfo.title;
 	this.controller.get('dash-notify-text').innerHTML = dashInfo.message;
-	//Mojo.Controller.getAppController().playSoundNotification("alerts", "");
 	
 };
 
@@ -130,7 +166,7 @@ DashnotifyAssistant.prototype.launchMainEdit = function (event) {
 		}
 	);
 	//Remove the task from the dashboard
-	this.dashInfos.splice(this.display-1, 1);
+	//this.dashInfos.splice(this.display-1, 1);
 	if (this.dashInfos.length) {
 		this.nextNotify();
 	}
@@ -167,8 +203,8 @@ DashnotifyAssistant.prototype.cleanup = function (event) {
 	this.controller.stopListening("dash-notify-message", Mojo.Event.tap, this.launchMainEditHandler);
 	this.controller.stopListening("dash-notify-icon", Mojo.Event.tap, this.launchMainHandler);	
 	
-	this.controller.stopListening("dash-arrow-right", Mojo.Event.tap, this.nextNotifyHandler);	
-	this.controller.stopListening("dash-arrow-left", Mojo.Event.tap, this.prevNotifyHandler);	
+	//this.controller.stopListening("dash-arrow-right", Mojo.Event.tap, this.nextNotifyHandler);	
+	//this.controller.stopListening("dash-arrow-left", Mojo.Event.tap, this.prevNotifyHandler);	
 	  
 	  
 };

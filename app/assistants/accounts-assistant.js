@@ -175,6 +175,13 @@ AccountsAssistant.prototype.clearUser = function (value) {
 				MyAPP.prefsCookie = new Mojo.Model.Cookie(MyAPP.appName + "prefs");
 				MyAPP.prefsCookie.put(MyAPP.prefs);
 				
+				//reset local lastedit timestamps
+				MyAPP.local.lastaddedit = 0;
+				MyAPP.local.lastcontextedit = 0;
+				MyAPP.local.lastdelete = 0;
+				MyAPP.local.lastfolderedit = 0;
+				MyAPP.local.lastgoaledit = 0;
+				
 				//update sync key
 				api.init();
 			}

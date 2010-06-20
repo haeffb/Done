@@ -1,7 +1,7 @@
 [
     {"source": "app/models/utils.js"},
     {"source": "app/models/data.js"},
-	{"source": "app/models/notify.js"},
+    {"source": "app/models/notify.js"},
     {"source": "app/models/toodledo.js"},
     {"source": "app/models/sync.js"},
     {"source": "app/models/md5.js"},
@@ -26,9 +26,9 @@
         "scenes": "preferences",
         "source": "app/assistants/preferences-assistant.js"
     },
-	{"source": "app/assistants/dashsync-assistant.js"},
-	{"source": "app/assistants/dashnotify-assistant.js"},
-	{"source": "app/models/support_info.js"},
+    {"source": "app/assistants/dashsync-assistant.js"},
+    {"source": "app/assistants/dashnotify-assistant.js"},
+    {"source": "app/models/support_info.js"},
     {
         "scenes": "support",
         "source": "app/assistants/support-assistant.js"
@@ -36,5 +36,14 @@
     {
         "scenes": "faq",
         "source": "app/assistants/faq-assistant.js"
+    },
+    {
+        "scenes": "folders",
+        "source": "app/assistants/folders-assistant.js"
+    },
+    {"source": "app/assistants/edit-item-assistant.js"},
+    {
+        "scenes": "field-config",
+        "source": "app/assistants/field-config-assistant.js"
     }
 ]

@@ -12,6 +12,7 @@ function Sync(){
 	this.initSync = function(syncCallback, outputDiv){
 		// function to call when sync finishes
 		this.syncCallback = syncCallback;
+		this.tasksNotStarted = true;
 		if (outputDiv) {
 			this.outputDiv = outputDiv;
 		}
@@ -20,6 +21,7 @@ function Sync(){
 		}
 		
 		Mojo.Log.info("Starting Sync Process");
+		this.syncLog = "<br />" + $L("Starting Sync Process");
 		if (this.outputDiv) {
 			this.outputDiv.innerHTML = "<br />" + $L("Starting Sync Process");
 		}
@@ -29,20 +31,31 @@ function Sync(){
 		this.synced = {
 			tasks: false,
 			deleted: false,
+			localdeleted: false,
 			folders: false,
 			contexts: false,
 			goals: false,
 			tasksadded: false,
-			tasksfinal: false
+			tasksfinal: false,
+			foldersadded: false,
+			contextsadded: false,
+			goalsadded: false,
+			deletedFCG: false
 		};
+		// used to count number of database transactions that need to complete:
 		this.count = {
 			tasks: 0,
 			deleted: 0,
+			localdeleted: 0,
 			folders: 0,
 			contexts: 0,
 			goals: 0,
 			tasksadded: 0,
-			tasksfinal: 0
+			tasksfinal: 0,
+			foldersadded: 0,
+			contextsadded: 0,
+			goalsadded: 0,
+			deletedFCG: 0
 		};
 				
 		//Get info from server:
@@ -57,6 +70,7 @@ function Sync(){
 		Mojo.Log.info("Response from server info: %j", response);
 		if (response.server) {
 		
+			this.syncLog += "<br />" + $L("Retrieved Server Info");
 			if (this.outputDiv) {
 				this.outputDiv.innerHTML += "<br />" + $L("Retrieved Server Info");
 			}
@@ -101,6 +115,9 @@ function Sync(){
 	this.gotAccountInfo = function(response){
 		Mojo.Log.info("Response from account info: %j", response);
 		if (response.account) {
+			this.syncLog += "<br />" + $L("Retrieved Account Info") + 
+					" <br />" + $L("Last web add/edit:") + " " + 
+					Mojo.Format.formatDate(new Date(response.account.lastaddedit * 1000), "short");
 			if (this.outputDiv) {
 				this.outputDiv.innerHTML += "<br />" + $L("Retrieved Account Info") + 
 					" <br />" + $L("Last web add/edit:") + " " + 
@@ -114,22 +131,10 @@ function Sync(){
 			Mojo.Log.info("Last sync server:", this.lastSync, "local:", this.lastSyncLocal);
 			Mojo.Log.info("Last add/edit:", MyAPP.account.lastaddedit, MyAPP.local.lastaddedit);
 			
-			//Check for new/edited tasks on device:
-			if (MyAPP.local.lastaddedit > this.lastSyncLocal) {
-				//retrieve local tasks
-				dao.retrieveTasksFromDate(this.lastSyncLocal * 1000, this.gotLocalTasks.bind(this));
-			}
-			else {
-				Mojo.Log.info("No edits on device!");
-				var notasks = [];
-				this.gotLocalTasks(notasks);
-			}
 			
-			//Check for deleted tasks on device:
-			if (MyAPP.local.lastdelete > this.lastSyncLocal) {
-				Mojo.Log.info("Deleted tasks on device!");
-				
-			}
+			// begin by syncing folders...
+			this.getFolders();
+			
 			
 		}
 		else {
@@ -139,8 +144,32 @@ function Sync(){
 		}
 	};
 	
+	this.beginTaskSync = function () {
+		
+		Mojo.Log.info("Beginning Task Sync");
+		//Check for new/edited tasks on device:
+		if (MyAPP.local.lastaddedit > this.lastSyncLocal) {
+			//retrieve local tasks
+			dao.retrieveTasksFromDate(this.lastSyncLocal * 1000, this.gotLocalTasks.bind(this));
+		}
+		else {
+			Mojo.Log.info("No edits on device!");
+			var notasks = [];
+			this.gotLocalTasks(notasks);
+		}
+		
+		//Check for deleted tasks on device:
+		if (MyAPP.local.lastdelete > this.lastSyncLocal) {
+			Mojo.Log.info("Deleted tasks on device!");
+			
+		}
+		
+	};
+	
 	this.gotLocalTasks = function(tasks){
 		Mojo.Log.info("New or edited tasks on device: %s", tasks.length);
+		this.syncLog += "<br />" + $L("New/edited tasks on device:") + 
+				" " + tasks.length;
 		if (this.outputDiv) {
 			this.outputDiv.innerHTML += "<br />" + $L("New/edited tasks on device:") + 
 				" " + tasks.length;
@@ -179,6 +208,7 @@ function Sync(){
 		}
 		else {
 			Mojo.Log.info("No edited tasks on web!");
+			this.syncLog += "<br />" + $L("New/edited tasks from web:") + " 0";
 			if (this.outputDiv) {
 				this.outputDiv.innerHTML += "<br />" + $L("New/edited tasks from web:") + " 0";
 			}
@@ -197,12 +227,14 @@ function Sync(){
 				
 		var taskXML = responseXML.getElementsByTagName('task');
 		Mojo.Log.info("New or edited Tasks from Web %s", taskXML.length);
+		this.syncLog += "<br />" + $L("New/edited tasks from web:") + 
+				" "  + taskXML.length;
 		if (this.outputDiv) {
 			this.outputDiv.innerHTML += "<br />" + $L("New/edited tasks from web:") + 
 				" "  + taskXML.length;
 		}
 		
-		var tasks = [], id, temp, key;
+		var tasks = [], id, temp, temp2, key;
 		var mykeys = ['parent', 'children', 'title', 'tag', 'folder', 'context', 'goal', 
 			'added', 'modified', 'duedate', 'startdate', 'duetime', 'started', 
 			'starttime', 'reminder', 'repeat', 'completed', 'completedon', 
@@ -246,6 +278,21 @@ function Sync(){
 			
 			tasks[i].value = id;
 			
+			// Make sure duetime is set to same date as duedate
+			// Not sure if Toodledo duetime date can be trusted		
+			if (tasks[i].startdate && tasks[i].starttime) {
+				temp = new Date(tasks[i].starttime);
+				temp2 = new Date(tasks[i].startdate);
+				temp2.setHours(temp.getHours(), temp.getMinutes(), temp.getSeconds(), 0);
+				tasks[i].starttime =  temp2.getTime();
+			}
+			if (tasks[i].duedate && tasks[i].duetime) {
+				temp = new Date(tasks[i].duetime);
+				temp2 = new Date(tasks[i].duedate);
+				temp2.setHours(temp.getHours(), temp.getMinutes(), temp.getSeconds(), 0);
+				tasks[i].duetime =  temp2.getTime();
+			}
+
 			//Set sync to true - will change to false later if
 			//task was also edited on device
 			tasks[i].sync = true;
@@ -265,7 +312,15 @@ function Sync(){
 				start: end * 1 + 1,
 				end: end * 1 + taskChunks
 			};
-			api.getTasks(options, this.gotEditedWebTasks.bind(this));
+			api.getTasks(
+				// options
+				{
+					modafter: this.lastSync * 1 - 60,
+					start: end * 1 + 1,
+					end: end * 1 + taskChunks
+				}, 
+				this.gotEditedWebTasks.bind(this)
+			);
 		}
 		else {
 			this.gotWebTasks();
@@ -275,6 +330,7 @@ function Sync(){
 	
 	this.gotWebTasks = function(){
 		Mojo.Log.info("Entering gotWebTasks function to sync tasks");
+		this.syncLog += "<br />" + $L("Syncing tasks") + "...";
 		if (this.outputDiv) {
 			this.outputDiv.innerHTML += "<br />" + $L("Syncing tasks") + "...";
 		}
@@ -332,6 +388,24 @@ function Sync(){
 			this.finishTransactions('tasksadded');
 		}
 		
+		// Make sure we've retrieved any changes to tasks that we just sent
+		// to Toodledo - i.e. new "modified" timestamp, etc.	
+		if (this.localEditedTasks.length) {
+			this.webEditedTasks = [];
+			var options = {
+				modafter: MyAPP.account.lastaddedit,
+				//get the first 100 tasks...
+				start: 0,
+				end: taskChunks
+			};
+			api.getTasks(options, this.gotFinalWebTasks.bind(this));
+		}
+		else {
+			this.count.tasksfinal += 1;
+			this.finishTransactions('tasksfinal');
+		}
+		
+
 		this.syncWebToLocal();
 		
 	};
@@ -367,19 +441,7 @@ function Sync(){
 			var response = (new DOMParser()).parseFromString(string, "text/xml");
 			this.gotDeletedTasks(response);
 		}		
-		
-		// Make sure we've retrieved any changes to tasks that we just sent
-		// to Toodledo - i.e. new "modified" timestamp, etc.	
-		this.webEditedTasks = [];
-		var options = {
-			modafter: MyAPP.account.lastaddedit,
-			//get the first 100 tasks...
-			start: 0,
-			end: taskChunks
-		};
-		api.getTasks(options, this.gotFinalWebTasks.bind(this));
-
-		
+				
 		
 	};
 	
@@ -469,6 +531,21 @@ function Sync(){
 			
 			tasks[i].value = id;
 			
+			// Make sure duetime is set to same date as duedate
+			// Not sure if Toodledo duetime date can be trusted		
+			if (tasks[i].startdate && tasks[i].starttime) {
+				temp = new Date(tasks[i].starttime);
+				temp2 = new Date(tasks[i].startdate);
+				temp2.setHours(temp.getHours(), temp.getMinutes(), temp.getSeconds(), 0);
+				tasks[i].starttime =  temp2.getTime();
+			}
+			if (tasks[i].duedate && tasks[i].duetime) {
+				temp = new Date(tasks[i].duetime);
+				temp2 = new Date(tasks[i].duedate);
+				temp2.setHours(temp.getHours(), temp.getMinutes(), temp.getSeconds(), 0);
+				tasks[i].duetime =  temp2.getTime();
+			}
+			
 			//Set sync to true - will change to false later if
 			//task was also edited on device
 			tasks[i].sync = true;
@@ -483,12 +560,13 @@ function Sync(){
 		//Mojo.Log.info("Web tasks is: %j", this.webEditedTasks);
 		if (totalTasks > end) {
 			// need to grab more tasks!
-			var options = {
-				modafter: MyAPP.account.lastaddedit,
-				start: end * 1 + 1,
-				end: end * 1 + taskChunks
-			};
-			api.getTasks(options, this.gotEditedWebTasks.bind(this));
+			api.getTasks(
+				{
+					modafter: MyAPP.account.lastaddedit,
+					start: end * 1 + 1,
+					end: end * 1 + taskChunks
+				}, this.gotEditedWebTasks.bind(this)
+			);
 		}
 		else {
 			this.gotFinalTasks();
@@ -524,6 +602,8 @@ function Sync(){
 		
 		if (taskXML.length > 0) {
 			Mojo.Log.info("Tasks deleted on web: %s", taskXML.length);
+			this.syncLog += "<br />" + $L("Deleted tasks from web:") + 
+					" "  + taskXML.length;
 			if (this.outputDiv) {
 				this.outputDiv.innerHTML += "<br />" + $L("Deleted tasks from web:") + 
 					" "  + taskXML.length;
@@ -546,24 +626,33 @@ function Sync(){
 	this.gotLocalDeletedTasks = function(response){
 	
 		Mojo.Log.info("Local Deleted Tasks %s", response.length);
+		this.syncLog += "<br />" + $L("Deleted tasks from device:") + 
+				" "  + response.length;
 		if (this.outputDiv) {
 			this.outputDiv.innerHTML += "<br />" + $L("Deleted tasks from device:") + 
 				" "  + response.length;
 		}
 		var i;
-		for (i = 0; i < response.length; i++) {
-			Mojo.Log.info("API Deleting task: %j", response[i]);
-			api.deleteTask(response[i].id, this.webTaskDeleted.bind(this, response[i].id));
+		if (response.length > 0) {
+			for (i = 0; i < response.length; i++) {
+				Mojo.Log.info("API Deleting task: %j", response[i]);
+				this.count.localdeleted += 1;
+				api.deleteTask(response[i].id, this.webTaskDeleted.bind(this, response[i].id));
+			}
+		}
+		else {
+			this.finishTransactions('localdeleted');
 		}
 		
-		this.getFolders();
+		// Changed to syncing folders first!
+		//this.getFolders();
 	};
 	
 	this.webTaskDeleted = function(taskId, response){
 		Mojo.Log.info("Deleting from deleted tasks table %s", taskId);
 		Mojo.Log.info("response %j", response);
 		if (response.success) {
-			dao.deleteDeletedTask(taskId);
+			dao.deleteDeletedTask(taskId, this.finishTransactions.bind(this, 'localdeleted'));
 		}
 		else {
 			Mojo.Log.info("Error deleting task from Toodledo!");
@@ -574,14 +663,20 @@ function Sync(){
 	this.getFolders = function(){
 		Mojo.Log.info("Entering Get Folders");
 		
+		this.syncLog += "<br />" + $L("Syncing folders") + "...";
 		if (this.outputDiv) {
 			this.outputDiv.innerHTML += "<br />" + $L("Syncing folders") + "...";
 		}
 		//check for folder added/edited on device:
 		if (MyAPP.local.lastfolderedit > this.lastSync) {
+			Mojo.Log.info("last folder edit", MyAPP.local.lastfolderedit, this.lastSync);
 			Mojo.Log.info("Folder added/edited on device!");
+			dao.retrieveFolders(this.gotLocalFolders.bind(this));
 		}
-		
+		else {
+			this.count.foldersadded += 1;
+			this.finishTransactions('foldersadded');
+		}
 		// check for folder added/edited on web:
 		if (MyAPP.account.lastfolderedit > this.lastSync) {
 			Mojo.Log.info("Getting Folders!");
@@ -590,6 +685,21 @@ function Sync(){
 		else {
 			Mojo.Log.info("No web folders changes to sync");
 			this.finishTransactions('folders');
+		}
+		
+//CONTEXTS		
+		this.syncLog += "<br />" + $L("Syncing contexts") + "...";
+		if (this.outputDiv) {
+			this.outputDiv.innerHTML += "<br />" + $L("Syncing contexts") + "...";
+		}
+		//check for context added/edited on device:
+		if (MyAPP.local.lastcontextedit > this.lastSync) {
+			Mojo.Log.info("Context added/edited on device!");
+			dao.retrieveContexts(this.gotLocalContexts.bind(this));
+		}
+		else {
+			this.count.contextsadded += 1;
+			this.finishTransactions('contextsadded');
 		}
 		
 		//check for context added/edited on web:
@@ -601,19 +711,244 @@ function Sync(){
 			Mojo.Log.info("No web context changes to sync");
 			this.finishTransactions('contexts');
 		}
+
+// GOALS		
+		this.syncLog += "<br />" + $L("Syncing goals") + "...";
+		if (this.outputDiv) {
+			this.outputDiv.innerHTML += "<br />" + $L("Syncing goals") + "...";
+		}
+		//check for goal added/edited on device:
+		if (MyAPP.local.lastgoaledit > this.lastSync) {
+			Mojo.Log.info("Goal added/edited on device!");
+			dao.retrieveGoals(this.gotLocalGoals.bind(this));
+		}
+		else {
+			this.count.goalsadded += 1;
+			this.finishTransactions('goalsadded');
+		}
 		
 		//check for goals added/edited on web
 		if (MyAPP.account.lastgoaledit > this.lastSync) {
 			Mojo.Log.info("Getting Goals!");
-			api.getFolders(this.gotGoals.bind(this));
+			api.getGoals(this.gotGoals.bind(this));
 		}
 		else {
 			Mojo.Log.info("No web goal changes to sync");
 			this.finishTransactions('goals');
 		}
+
+
+		//check for folders/contexts/goals deleted on device:
+		dao.retrieveDeletedFCGs(this.gotLocalFCGs.bind(this));		
 		
 	};
 	
+	//Retrieved deleted FCGs from Database
+	this.gotLocalFCGs = function (response) {
+		Mojo.Log.info("Deleted FCGs response %j", response);
+		var i;
+		if (response.length) {
+			Mojo.Log.info ("Deleting FGCs on web", response.length);
+			for (i = 0; i < response.length; i++) {
+				switch (response[i].type) {
+					case 'foldersList':
+						api.deleteFolder(response[i].id, this.webFCGDeleted.bind(this, response[i].id, response[i].type));
+						break;
+					case 'contextsList':
+						api.deleteContext(response[i].id, this.webFCGDeleted.bind(this, response[i].id, response[i].type));
+						break;
+					case 'goalsList':
+						api.deleteGoal(response[i].id, this.webFCGDeleted.bind(this, response[i].id, response[i].type));
+						break;
+				}
+			}
+		}
+		else {
+			this.finishTransactions('deletedFCG');
+		}
+		
+	};
+	
+	this.webFCGDeleted = function (id, type) {
+		Mojo.Log.info("Deleting from deleted FCG table", id, type);
+		this.count.deletedFCG += 1;
+		dao.deleteDeletedFCG(id, type, this.finishTransactions.bind(this, 'deletedFCG'));
+	//	Mojo.Log.info("response %j", response);
+/*
+		if (response.success) {
+			dao.deleteDeletedFCG(id);
+		}
+		else {
+			Mojo.Log.info("Error deleting FCG from Toodledo!");
+		}
+
+*/	};
+	
+	//Retrieved folders from Database
+	this.gotLocalFolders = function (response) {
+		var i;
+		for (i = 0; i < response.length; i++) {
+			if (response[i].modified > this.lastSync) {
+				if (!response[i].id) {
+					// folder added on device - sync to Toodledo
+					this.count.foldersadded += 1;
+					api.addFolder(response[i], this.folderAdded.bind(this, response[i]));
+				}
+				else {
+					// folder modified on device - sync to Toodledo
+					api.editFolder(response[i], function(){});
+				}
+			}
+		}
+		if (!this.count.foldersadded) {
+			// no folders added
+			this.finishTransactions('foldersadded');
+		}	
+	};
+	
+	this.folderAdded = function (folder, response) {
+		Mojo.Log.info("Folder Added");
+		Mojo.Log.info("response: %j", response);
+		Mojo.Log.info("folder: %j", folder);
+		if (response.added) {
+			//delete original (local only) folder
+			//Mojo.Log.info("Deleting folder with value: ", folder.value);
+			dao.deleteFolder(folder.value, function(){
+			});
+			
+			//update any tasks with the old folder value
+			dao.updateTasksWithFCG(folder.value, 'foldersList', response.added);
+			
+			Mojo.Log.info("List", MyAPP.prefs.showList, "Filter", MyAPP.prefs.showFilter, folder.value);
+			
+			if (MyAPP.prefs.showList === 'folder' && MyAPP.prefs.showFilter == folder.value) {
+				Mojo.Log.info("ShowFilter:", MyAPP.prefs.showFilter);
+				MyAPP.prefs.showFilter = response.added;
+				Mojo.Log.info("ShowFilter:", MyAPP.prefs.showFilter);
+				MyAPP.prefsCookie.put(MyAPP.prefs);
+			}
+
+			//create new folder with id from web
+			folder.id = response.added;
+			folder.value = folder.id;
+			Mojo.Log.info("Adding folder: %j", folder);
+			dao.updateFolder(folder, this.finishTransactions.bind(this, 'foldersadded'));
+		}
+		else {
+			Mojo.Log.info("Error adding folder to Toodledo");
+			this.finishTransactions('foldersadded');
+		}
+		
+	};
+	
+	this.contextAdded = function (context, response) {
+		Mojo.Log.info("Context Added");
+		Mojo.Log.info("response: %j", response);
+		Mojo.Log.info("context: %j", context);
+		if (response.added) {
+			//delete original (local only) task
+			//Mojo.Log.info("Deleting context with value: ", context.value);
+			dao.deleteContext(context.value, function(){
+			});
+			
+			//update any tasks with the old folder value
+			dao.updateTasksWithFCG(context.value, 'contextsList', response.added);
+
+			if (MyAPP.prefs.showList === 'context' && MyAPP.prefs.showFilter == context.value) {
+				MyAPP.prefs.showFilter = response.added;
+				MyAPP.prefsCookie.put(MyAPP.prefs);
+			}
+
+			//create new context with id from web
+			context.id = response.added;
+			context.value = context.id;
+			Mojo.Log.info("Adding context: %j", context);
+			dao.updateContext(context, this.finishTransactions.bind(this, 'contextsadded'));
+		}
+		else {
+			Mojo.Log.info("Error adding context to Toodledo");
+			this.finishTransactions('contextsadded');
+		}
+		
+	};
+	
+	this.goalAdded = function (goal, response) {
+		Mojo.Log.info("Goal Added");
+		Mojo.Log.info("response: %j", response);
+		Mojo.Log.info("goal: %j", goal);
+		if (response.added) {
+			//delete original (local only) goal
+			//Mojo.Log.info("Deleting goal with value: ", goal.value);
+			dao.deleteGoal(goal.value, function(){
+			});
+			
+			//update any tasks with the old folder value
+			dao.updateTasksWithFCG(goal.value, 'goalsList', response.added);
+
+			if (MyAPP.prefs.showList === 'goal' && MyAPP.prefs.showFilter == goal.value) {
+				Mojo.Log.info("ShowFilter:", MyAPP.prefs.showFilter);
+				MyAPP.prefs.showFilter = response.added;
+				Mojo.Log.info("ShowFilter:", MyAPP.prefs.showFilter);
+				MyAPP.prefsCookie.put(MyAPP.prefs);
+			}
+
+			//create new goal with id from web
+			goal.id = response.added;
+			goal.value = goal.id;
+			Mojo.Log.info("Adding goal: %j", goal);
+			dao.updateGoal(goal, this.finishTransactions.bind(this, 'goalsadded'));
+		}
+		else {
+			Mojo.Log.info("Error adding gal to Toodledo");
+			this.finishTransactions('goalsadded');
+		}
+		
+	};
+	
+	//Retrieved contexts from Database
+	this.gotLocalContexts = function (response) {
+		var i;
+		for (i = 0; i < response.length; i++) {
+			if (response[i].modified > this.lastSync) {
+				if (!response[i].id) {
+					// context added on device - sync to Toodledo
+					this.count.contextsadded += 1;
+					api.addContext(response[i], this.contextAdded.bind(this, response[i]));
+				}
+				else {
+					// context modified on device - sync to Toodledo
+					api.editContext(response[i], function(){
+					});
+				}
+			}
+		}
+		if (!this.count.contextsadded) {
+			this.finishTransactions('contextsadded');
+		}
+	};
+	
+	//Retrieved goals from Database
+	this.gotLocalGoals = function (response) {
+		var i;
+		for (i=0; i < response.length; i++) {
+			if (response[i].modified > this.lastSync) {
+				if (!response[i].id) {
+					// goal added on device - sync to Toodledo
+					this.count.goalsadded += 1;
+					api.addGoal(response[i], this.goalAdded.bind(this, response[i]));
+				}
+				else {
+					// goal modified on device - sync to Toodledo
+					api.editGoal(response[i], function () {});
+				}
+			}
+		}
+		if (!this.count.goalsadded) {
+			this.finishTransactions('goalsadded');
+		}
+	};
+	
+	// Retrieved folders from web
 	this.gotFolders = function(responseXML){
 		Mojo.Log.info("Entering Folders");
 		Mojo.Log.info("Folders XML ", responseXML);
@@ -624,7 +959,7 @@ function Sync(){
 		if (folderXML.length) {
 			//Delete any existing folders
 			Mojo.Log.info("Found Folders", folderXML.length);
-			dao.deleteAllFolders();
+			//dao.deleteAllFolders();
 			Mojo.Log.info("number folders", folderXML.length);
 			for (i = 0; i < folderXML.length; i++) {
 				id = folderXML[i].getAttribute('id');
@@ -635,11 +970,12 @@ function Sync(){
 				folders[id].privy = folderXML[i].getAttribute('private');
 				folders[id].archived = folderXML[i].getAttribute('archived');
 				folders[id].sortorder = folderXML[i].getAttribute('order');
+				//folders[id].modified = folderXML[i].getAttribute('modified') * 1000;
 				folders[id].label = this.toodleDecode(folderXML[i].childNodes[0].nodeValue);
 				folders[id].value = id;
 				//Mojo.Log.info("Folder: %j", folders[id]);
 				this.count.folders += 1;
-				dao.createFolder(folders[id], this.finishTransactions.bind(this, 'folders'));
+				dao.updateFolder(folders[id], this.finishTransactions.bind(this, 'folders'));
 			}
 		}
 		else {
@@ -650,25 +986,23 @@ function Sync(){
 	
 	this.gotContexts = function(responseXML){
 		Mojo.Log.info("Entering gotContexts");
-		if (this.outputDiv) {
-			this.outputDiv.innerHTML += "<br />" + $L("Syncing contexts") + "...";
-		}
 		var contexts = [], id;
 		var contextXML = responseXML.getElementsByTagName('context');
 		if (contextXML.length) {
 			Mojo.Log.info("Number contexts: ", contextXML.length);
 			
-			dao.deleteAllContexts();
+			//dao.deleteAllContexts();
 			for (i = 0; i < contextXML.length; i++) {
 				id = contextXML[i].getAttribute('id');
 				Mojo.Log.info("Context id: ", id);
 				contexts[id] = {};
 				contexts[id].id = id;
 				contexts[id].label = this.toodleDecode(contextXML[i].childNodes[0].nodeValue);
+				//contexts[id].modified = contextXML[i].getAttribute('modified') * 1000;
 				contexts[id].value = id;
 				//Mojo.Log.info("Context: %j", contexts[id]);
 				this.count.contexts += 1;
-				dao.createContext(contexts[id], this.finishTransactions.bind(this, 'contexts'));
+				dao.updateContext(contexts[id], this.finishTransactions.bind(this, 'contexts'));
 			}
 		}
 		else {
@@ -679,28 +1013,30 @@ function Sync(){
 	
 	this.gotGoals = function(responseXML){
 		Mojo.Log.info("Entering gotGoals");
-		if (this.outputDiv) {
-			this.outputDiv.innerHTML += "<br />" + $L("Syncing goals") + "...";
-		}
 		var goals = [], id;
 		var goalXML = responseXML.getElementsByTagName('goal');
 		if (goalXML.length) {
 			Mojo.Log.info("Number goals: ", goalXML.length);
 			
-			dao.deleteAllGoals();
+			//dao.deleteAllGoals();
 			for (i = 0; i < goalXML.length; i++) {
 				id = goalXML[i].getAttribute('id');
 				Mojo.Log.info("Goal id: ", id);
 				goals[id] = {};
 				goals[id].id = id;
-				goals[id].label = this.toodleDecode(contextXML[i].childNodes[0].nodeValue);
+				goals[id].label = this.toodleDecode(goalXML[i].childNodes[0].nodeValue);
+				//goals[id].modified = goalXML[i].getAttribute('modified') * 1000;
+				goals[id].contributes = goalXML[i].getAttribute('contributes');
+				goals[id].level = goalXML[i].getAttribute('level');
+				goals[id].archived = goalXML[i].getAttribute('archived');
 				goals[id].value = id;
 				//Mojo.Log.info("Goal: %j", goals[id]);
 				this.count.goals += 1;
-				dao.createGoal(goals[id], this.finishTransactions.bind(this, 'goals'));
+				dao.updateGoal(goals[id], this.finishTransactions.bind(this, 'goals'));
 			}
 		}
 		else {
+			Mojo.Log.info("Unable to retrieve goals from Toodledo");
 			Mojo.Controller.errorDialog("Unable to retrieve goals from Toodledo");
 			this.finishTransactions('goals');
 		}
@@ -708,16 +1044,33 @@ function Sync(){
 	
 	this.finishTransactions = function(type){
 		this.count[type] -= 1;
-		//Mojo.Log.info("Transaction type: ", type); //, this.count[type]);
+		Mojo.Log.info("Transaction type: ", type, this.count[type]);
 		if (this.count[type] <= 0) {
 			Mojo.Log.info("Sync finished for ", type);
 			this.synced[type] = true;
 		}
-		if (this.synced.tasks && this.synced.deleted && this.synced.folders &&
-		this.synced.contexts &&
-		this.synced.goals &&
-		this.synced.tasksadded &&
-		this.synced.tasksfinal) {
+		
+		if (this.synced.folders &&
+			this.synced.contexts &&
+			this.synced.goals &&
+			this.synced.foldersadded && 
+			this.synced.contextsadded &&
+			this.synced.goalsadded && 
+			this.synced.deletedFCG &&
+			this.tasksNotStarted
+			) {
+				this.tasksNotStarted = false;
+				this.beginTaskSync();
+				
+		}		
+		if (this.synced.tasks && this.synced.deleted &&
+			this.synced.tasksadded &&
+			this.synced.tasksfinal && 
+			this.synced.localdeleted
+			) {
+				
+			this.syncLog += "<br />" + $L("Finished Syncing!");
+			MyAPP.syncLogCookie.put(this.syncLog);
 			if (this.outputDiv) {
 				this.outputDiv.innerHTML += "<br />" + $L("Finished Syncing!");
 			}
@@ -725,6 +1078,7 @@ function Sync(){
 			MyAPP.prefs.lastSync = new Date().getTime();
 			//MyAPP.prefs.lastSync = this.ourTime * 1000;
 			MyAPP.prefsCookie.put(MyAPP.prefs);
+		
 			Mojo.Log.info("Finished Syncing", MyAPP.prefs.lastSync);
 			this.syncCallback($L("Finished Syncing!"));
 			notify.getNextDate();
@@ -732,10 +1086,10 @@ function Sync(){
 	};
 	
 	this.toodleDecode = function(aString){
-		Mojo.Log.info("Original String: " + aString);
+		//Mojo.Log.info("Original String: " + aString);
 		var bString = aString.replace(/%26/g, "&");
 		bString = bString.replace(/%3B/g, ";");
-		Mojo.Log.info("New String: " + bString);
+		//Mojo.Log.info("New String: " + bString);
 		return bString;
 	};
 	
@@ -801,8 +1155,7 @@ function Sync(){
 			},
 			onSuccess: function(){
 				Mojo.Log.info("Success in Setting up Sync!!! at", dStr);
-			}
-.bind(this)
+			}.bind(this)
 		});
 	};
 	

@@ -15,6 +15,7 @@ AddtaskAssistant.prototype.setup = function(){
 	this.controller.get('startTimeLabelId').innerHTML = $L("Start Time");
 	this.controller.get('repeatFromLabel').innerHTML = $L("Repeat From");
 	this.controller.get('notesLabel').innerHTML = $L("Note");
+	this.controller.get('tagsLabel').innerHTML = $L("Tags");
 
 		
 	/* use Mojo.View.render to render view templates and add them to the scene, if needed */
@@ -83,6 +84,21 @@ AddtaskAssistant.prototype.setup = function(){
 			label: $L("Context")           
 			},
  		this.contextModel
+	);
+
+	// Add Goal Selector List
+	this.goalModel = {
+		choices: [],
+		value: 0, 
+		disabled: false
+	};
+
+	//Mojo.Log.info("Context Model: %j", this.contextModel);
+	this.controller.setupWidget("GoalSelectorId",
+        this.contextAttributes = {
+			label: $L("Goal")           
+			},
+ 		this.goalModel
 	);
 	
 	// Add Status Selector List
@@ -169,6 +185,37 @@ AddtaskAssistant.prototype.setup = function(){
 		}
 	);
 
+	// Add Reminder selector button
+	this.controller.setupWidget("ReminderSelectorId",
+        this.reminderAttributes = {
+			label: $L("Reminder"),            
+			choices: [
+                {label: $L("No Reminder"), value: "0"},
+                {label: $L("15 minutes"), value: "15"},
+                {label: $L("30 minutes"), value: "30"},
+                {label: $L("45 minutes"), value: "45"},
+                {label: $L("1 hour"), value: "60"},
+                {label: $L("1.5 hours"), value: "90"},
+                {label: $L("2 hr"), value: "120"},
+                {label: $L("3 hours"), value: "180"},
+                {label: $L("4 hours"), value: "240"},
+                {label: $L("1 day"), value: "1440"},
+				{label: $L("2 days"), value: "2880"},
+                {label: $L("3 days"), value: "4320"},
+               {label: $L("4 days"), value: "5760"},
+               {label: $L("5 days"), value: "7200"},
+               {label: $L("6 days"), value: "8640"},
+               {label: $L("1 week"), value: "10080"},
+               {label: $L("1 year"), value: "20160"},
+               {label: $L("2 years"), value: "40320"}
+               ]
+			},
+        this.reminderModel = {
+	        value: this.reminder,
+	        disabled: false
+	    }
+	);
+
 	// Add Note text input field
 	this.controller.setupWidget("NoteId",
          this.noteAttributes = {
@@ -177,9 +224,25 @@ AddtaskAssistant.prototype.setup = function(){
              enterSubmits: false,
              autoFocus: false,
 			 changeOnKeyPress: true,
+			 autoReplace: true,
 			 focusMode: Mojo.Widget.focusInsertMode
 		     },
 		this.noteModel = {
+			value: ""
+		}
+	);
+
+	// Add Tags text input field
+	this.controller.setupWidget("TagsId",
+         this.noteAttributes = {
+             hintText: $L('Tags') + '...',
+             multiline: true,
+             enterSubmits: false,
+             autoFocus: false,
+			 changeOnKeyPress: true,
+			 focusMode: Mojo.Widget.focusInsertMode
+		     },
+		this.tagModel = {
 			value: ""
 		}
 	);
@@ -202,20 +265,23 @@ AddtaskAssistant.prototype.setup = function(){
 		items: [{
 			label: $L("Duplicate Task"),
 			command: "copy-task"
+		},
+		{
+			label: $L("Config"), 
+			command: "field-config"
 		}]
 	});
-
 		
 	/* add event handlers to listen to events from widgets */
 	this.datePropertyChangedHandler = this.datePropertyChanged.bind(this);
 	this.controller.listen('DueDateSelectorId', Mojo.Event.propertyChange, this.datePropertyChangedHandler);
 	this.timePropertyChangedHandler = this.timePropertyChanged.bind(this);
-	this.controller.listen('dueTimeRow', Mojo.Event.tap, this.timePropertyChangedHandler);
+	this.controller.listen('DueTimeRow', Mojo.Event.tap, this.timePropertyChangedHandler);
 
 	this.startdatePropertyChangedHandler = this.startdatePropertyChanged.bind(this);
 	this.controller.listen('StartDateSelectorId', Mojo.Event.propertyChange, this.startdatePropertyChangedHandler);
 	this.starttimePropertyChangedHandler = this.starttimePropertyChanged.bind(this);
-	this.controller.listen('startTimeRow', Mojo.Event.tap, this.starttimePropertyChangedHandler);
+	this.controller.listen('StartTimeRow', Mojo.Event.tap, this.starttimePropertyChangedHandler);
 
 	this.starChangedHandler = this.starChanged.bind(this);
 	this.controller.listen('star', Mojo.Event.tap, this.starChangedHandler);
@@ -227,10 +293,13 @@ AddtaskAssistant.prototype.setup = function(){
 	this.controller.listen('FolderSelectorId', Mojo.Event.propertyChanged, this.dirtyHandler);
 	this.controller.listen('PrioritySelectorId', Mojo.Event.propertyChanged, this.dirtyHandler);
 	this.controller.listen('ContextSelectorId', Mojo.Event.propertyChanged, this.dirtyHandler);
+	this.controller.listen('GoalSelectorId', Mojo.Event.propertyChanged, this.dirtyHandler);
 	this.controller.listen('StatusSelectorId', Mojo.Event.propertyChanged, this.dirtyHandler);
 	this.controller.listen('RepeatSelectorId', Mojo.Event.propertyChanged, this.dirtyHandler);
 	this.controller.listen('RepeatFromToggleId', Mojo.Event.propertyChanged, this.dirtyHandler);
+	this.controller.listen('ReminderSelectorId', Mojo.Event.propertyChanged, this.dirtyHandler);
 	this.controller.listen('NoteId', Mojo.Event.propertyChanged, this.dirtyHandler);
+	this.controller.listen('TagsId', Mojo.Event.propertyChanged, this.dirtyHandler);
 		
 };
 
@@ -238,6 +307,9 @@ AddtaskAssistant.prototype.handleCommand = function (event) {
 	switch (event.command) {
 		case "copy-task":
 			this.copyTask();
+			break;
+		case "field-config":
+			this.controller.stageController.pushScene('field-config');
 			break;
 	}
 };
@@ -469,18 +541,52 @@ AddtaskAssistant.prototype.activate = function(event) {
 AddtaskAssistant.prototype.loadData = function () {
 	// Retrieve info from database - start with folders
 	dao.retrieveFolders(this.gotFoldersDb.bind(this));
+	
+	//Hide fields based on field-config settings
+	var fields = [
+			{field: "notes", row: "NotesRow", value: MyAPP.fields.notes},
+			{field: "folder", row: "FolderRow", value: MyAPP.fields.folder},
+			{field: "context", row: "ContextRow", value: MyAPP.fields.context},
+			{field: "goal", row: "GoalRow", value: MyAPP.fields.goal},
+			{field: "tags", row: "TagsRow", value: MyAPP.fields.tags},
+			{field: "priority", row: "PriorityRow", value: MyAPP.fields.priority},
+			{field: "duedate", row: "DueDateRow", value: MyAPP.fields.duedate},
+			{field: "duetime", row: "DueTimeRow", value: MyAPP.fields.duetime},
+			{field: "startdate", row: "StartDateRow", value: MyAPP.fields.startdate},
+			{field: "starttime", row: "StartTimeRow", value: MyAPP.fields.starttime},
+			{field: "status", row: "StatusRow", value: MyAPP.fields.status},
+			{field: "repeat", row: "RepeatRow", value: MyAPP.fields.repeat},
+			{field: "repeatfrom", row: "RepeatFromRow", value: MyAPP.fields.repeatfrom},
+			{field: "reminder", row: "ReminderRow", value: MyAPP.fields.reminder}
+		];
+
+	for (i = 0; i < fields.length; i++) {
+		if (fields[i].value) {
+			this.controller.get(fields[i].row).show();
+		}
+		else {
+			this.controller.get(fields[i].row).hide();			
+		}
+	}
+
+	
+	//can't remember why this is here...!
 	MyAPP.saveCookie.remove();
 };
 
 AddtaskAssistant.prototype.gotFoldersDb = function (response) {
-	//Mojo.Log.info("Folders response is %j", response, response.length);
+	Mojo.Log.info("Folders response is %j", response, response.length);
 	this.folders = [{id: 0, label: $L("No Folder"), value: 0}];
 	this.folders = this.folders.concat(response);
+	this.folders.sort(this.sortByFolderSort.bind(this));
 	
 	// Retrieve contexts
 	dao.retrieveContexts(this.gotContextsDb.bind(this));
 };
 
+AddtaskAssistant.prototype.sortByFolderSort = function (a, b) {
+	return (a.sortorder - b.sortorder);
+};
 AddtaskAssistant.prototype.gotContextsDb = function (response) {
 	//Mojo.Log.info("Contexts response is %j", response);
 	this.contexts = [{id: 0, label: $L("No Context"), value: 0}];
@@ -605,6 +711,9 @@ AddtaskAssistant.prototype.gotTasks = function (responseText) {
 
 	this.repeatFromModel.value = this.repeatFromCompleted;
 	this.controller.modelChanged(this.repeatFromModel);
+
+	this.reminderModel.value = this.task.reminder;
+	this.controller.modelChanged(this.reminderModel);
 	
 	this.duedateModel.choices = this.dueChoices;
 	this.duedateModel.value = this.task.duedateval;
@@ -618,13 +727,24 @@ AddtaskAssistant.prototype.gotTasks = function (responseText) {
 	this.contextModel.choices = this.contexts;
 	this.contextModel.value = this.task.context;
 	this.controller.modelChanged(this.contextModel);
+	
 	this.folderModel.choices = this.folders;
 	this.folderModel.value = this.task.folder;
 	this.controller.modelChanged(this.folderModel);
+	
+	this.goalModel.choices = this.goals;
+	this.goalModel.value = this.task.goal;
+	this.controller.modelChanged(this.goalModel);
+	
 	this.statusModel.value = this.task.status;
 	this.controller.modelChanged(this.statusModel);
+	
 	this.noteModel.value = this.task.note;
 	this.controller.modelChanged(this.noteModel);
+	
+	this.tagModel.value = this.task.tag;
+	this.controller.modelChanged(this.tagModel);
+	
 	this.isDirty = false; // set to true if any data is changed
 
 	
@@ -650,14 +770,17 @@ AddtaskAssistant.prototype.deactivate = function(event){
 AddtaskAssistant.prototype.saveTask = function () {
 	/* remove any event handlers you added in activate and do any other cleanup that should happen before
 	   this scene is popped or another scene is pushed on top */
-	var temp;
+	var temp, temp2;
 	if (this.isDirty) {
 		this.task.title = this.taskModel.value;
 		this.task.folder = this.folderModel.value ? this.folderModel.value : 0;
 		this.task.priority = this.priorityModel.value;
 		this.task.context = this.contextModel.value ? this.contextModel.value : "0";
+		this.task.goal = this.goalModel.value ? this.goalModel.value : 0;
+		this.task.tag = this.tagModel.value;
 		this.task.status = this.statusModel.value;
 		this.task.repeat = this.repeatModel.value;
+		this.task.reminder = this.reminderModel.value;
 		if (this.repeatFromModel.value) {
 			this.task.repeat = this.task.repeat * 1 + 100;
 		}
@@ -666,17 +789,18 @@ AddtaskAssistant.prototype.saveTask = function () {
 
 		if (this.task.duedate && this.task.duetime) {
 			temp = new Date(this.task.duetime);
-			this.task.duetime = new Date(this.task.duedate);
-			this.task.duetime.setHours(temp.getHours(), temp.getMinutes(), temp.getSeconds(), 0);
-			this.task.duetime = this.task.duetime.getTime();
+			temp2 = new Date(this.task.duedate);
+			temp2.setHours(temp.getHours(), temp.getMinutes(), temp.getSeconds(), 0);
+			this.task.duetime = temp2.getTime();
 		}
+		
 		this.task.startdate = utils.makeDueDate(this.startdateModel.value, this.task.startdate);
 
 		if (this.task.startdate && this.task.starttime) {
 			temp = new Date(this.task.starttime);
-			this.task.starttime = new Date(this.task.startdate);
-			this.task.startime.setHours(temp.getHours(), temp.getMinutes(), temp.getSeconds(), 0);
-			this.task.starttime =  this.task.startime.getTime();
+			temp2 = new Date(this.task.startdate);
+			temp2.setHours(temp.getHours(), temp.getMinutes(), temp.getSeconds(), 0);
+			this.task.starttime =  temp2.getTime();
 		}
 		
 		this.task.note = this.noteModel.value;
@@ -714,10 +838,10 @@ AddtaskAssistant.prototype.cleanup = function(event) {
 	/* this function should do any cleanup needed before the scene is destroyed as 
 	   a result of being popped off the scene stack */
 	this.controller.stopListening('DueDateSelectorId', Mojo.Event.propertyChange, this.datePropertyChangedHandler);
-	this.controller.stopListening('dueTimeId', Mojo.Event.tap, this.timePropertyChangedHandler);
+	this.controller.stopListening('DueTimeRow', Mojo.Event.tap, this.timePropertyChangedHandler);
 
 	this.controller.stopListening('StartDateSelectorId', Mojo.Event.propertyChange, this.startdatePropertyChangedHandler);
-	this.controller.stopListening('startTimeRow', Mojo.Event.tap, this.starttimePropertyChangedHandler);
+	this.controller.stopListening('StartTimeRow', Mojo.Event.tap, this.starttimePropertyChangedHandler);
 
 	this.controller.stopListening('star', Mojo.Event.tap, this.starChangedHandler);
 	this.controller.stopListening('notstar', Mojo.Event.tap, this.starChangedHandler);
@@ -726,8 +850,12 @@ AddtaskAssistant.prototype.cleanup = function(event) {
 	this.controller.stopListening('FolderSelectorId', Mojo.Event.propertyChanged, this.dirtyHandler);
 	this.controller.stopListening('PrioritySelectorId', Mojo.Event.propertyChanged, this.dirtyHandler);
 	this.controller.stopListening('ContextSelectorId', Mojo.Event.propertyChanged, this.dirtyHandler);
+	this.controller.stopListening('GoalSelectorId', Mojo.Event.propertyChanged, this.dirtyHandler);
 	this.controller.stopListening('StatusSelectorId', Mojo.Event.propertyChanged, this.dirtyHandler);
 	this.controller.stopListening('RepeatSelectorId', Mojo.Event.propertyChanged, this.dirtyHandler);
 	this.controller.stopListening('RepeatFromToggleId', Mojo.Event.propertyChanged, this.dirtyHandler);
+	this.controller.stopListening('ReminderSelectorId', Mojo.Event.propertyChanged, this.dirtyHandler);
 	this.controller.stopListening('NoteId', Mojo.Event.propertyChanged, this.dirtyHandler);
+	this.controller.stopListening('TagsId', Mojo.Event.propertyChanged, this.dirtyHandler);
+
 };

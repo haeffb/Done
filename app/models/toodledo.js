@@ -17,14 +17,17 @@ function API () {
 
 	this.doAPI = function (apiString, inCallback) {
 		Mojo.Log.info("---Entering doAPI in Toodledo---");
-		var fullApiString = apiString + ";key=" + this.key;
+		var error, fullApiString = apiString + ";key=" + this.key;
 		Mojo.Log.info("apiString is ", fullApiString);
 		new Ajax.Request(fullApiString, {
 	  		method: 'get',
 	  		onSuccess: function(response){
-				Mojo.Log.info("Success!");
-				//inCallback(response.responseXML);
-				if (response.responseXML.getElementsByTagName('error').length) {
+				Mojo.Log.info("responseXML returned from Toodledo!");
+				error = response.responseXML.getElementsByTagName('error');
+				if (error.length &&
+					error.item(0).textContent === 'key did not validate'
+					) {
+					Mojo.Log.info("Error:", error.item(0).textContent);
 					Mojo.Log.info("***** Key not valid. Calling getToken. *****", MyAPP.account.userid);
 					this.getToken(MyAPP.account.userid, this.gotToken.bind(this), 
 						this.doAPI.bind(this, apiString, inCallback));
@@ -320,9 +323,9 @@ function API () {
 		Mojo.Log.info("---Entering addFolder in Toodledo---");
 		var method = "addFolder";
 		var apiString = this.url + method + ";title=" +
-			folder.title + ";private=" +
-			folder.priv;
-		this.doAPI(apiString, inCallback);
+			folder.label + ";private=" +
+			folder.privy;
+		this.doAPIJSON(apiString, inCallback);
 	};
 	
 	this.editFolder = function (folder, inCallback) {
@@ -330,17 +333,17 @@ function API () {
 		var method = "editFolder";
 		var apiString = this.url + method + ";id=" +
 			folder.id + ";title=" +
-			folder.title + ";private=" +
-			folder.priv + ";archived=" + 
+			folder.label + ";private=" +
+			folder.privy + ";archived=" + 
 			folder.archived;
 		this.doAPI(apiString, inCallback);
 	};
 	
-	this.deleteFolder = function (folder, inCallback) {
+	this.deleteFolder = function (id, inCallback) {
 		Mojo.Log.info("---Entering deleteFolder in Toodledo---");
 		var method = "deleteFolder";
 		var apiString = this.url + method + ";id=" +
-			folder.id;
+			id;
 		this.doAPI(apiString, inCallback);
 	};
 	
@@ -359,24 +362,24 @@ function API () {
 		Mojo.Log.info("---Entering addContext in Toodledo---");
 		var method = "addContext";
 		var apiString = this.url + method + ";title=" +
-			context.title;
-		this.doAPI(apiString, inCallback);
+			context.label;
+		this.doAPIJSON(apiString, inCallback);
 	};
 	
 	this.editContext = function (context, inCallback) {
 		Mojo.Log.info("---Entering getTasks in Toodledo---");
-		var method = "addContext";
+		var method = "editContext";
 		var apiString = this.url + method + ";id=" +
 			context.id + ";title=" +
-			context.title;
+			context.label;
 		this.doAPI(apiString, inCallback);
 	};
 	
-	this.deleteContext = function (context, inCallback) {
+	this.deleteContext = function (id, inCallback) {
 		Mojo.Log.info("---Entering getTasks in Toodledo---");
 		var method = "deleteContext";
 		var apiString = this.url + method + ";id=" +
-			context.id;
+			id;
 		this.doAPI(apiString, inCallback);
 	};
 
@@ -392,32 +395,32 @@ function API () {
 	};
 	
 	this.addGoal = function (goal, inCallback) {
-		Mojo.Log.info("---Entering getTasks in Toodledo---");
+		Mojo.Log.info("---Entering addGoal in Toodledo---");
 		var method = "addGoal";
 		var apiString = this.url + method + ";title=" +
-			goal.title + ";level=" +
+			goal.label + ";level=" +
 			goal.level + ";contributes=" +
 			goal.contributes;
-		this.doAPI(apiString, inCallback);
+		this.doAPIJSON(apiString, inCallback);
 	};
 	
 	this.editGoal = function (goal, inCallback) {
-		Mojo.Log.info("---Entering getTasks in Toodledo---");
-		var method = "addGoal";
+		Mojo.Log.info("---Entering editGoal in Toodledo---");
+		var method = "editGoal";
 		var apiString = this.url + method + ";id=" +
 			goal.id + ";title=" +
-			goal.title + ";level=" +
+			goal.label + ";level=" +
 			goal.level + ";contributes=" +
 			goal.contributes + ";archived=" +
 			goal.archived;
 		this.doAPI(apiString, inCallback);
 	};
 
-	this.deleteGoal = function (goal, inCallback) {
+	this.deleteGoal = function (id, inCallback) {
 		Mojo.Log.info("---Entering getTasks in Toodledo---");
-		var method = "addGoal";
+		var method = "deleteGoal";
 		var apiString = this.url + method + ";id=" +
-			goal.id;
+			id;
 		this.doAPI(apiString, inCallback);
 	};
 	
@@ -441,7 +444,7 @@ function API () {
 		bString = bString.replace(/;/g, "%3B");
 		bString = bString.replace(/\n/g, "%0D%0A");
 		bString = bString.replace(/#/g,"%23");
-		Mojo.Log.info("New String: " + bString);
+		//Mojo.Log.info("New String: " + bString);
 		return bString;
 	};
 	

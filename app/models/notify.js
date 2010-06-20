@@ -1,10 +1,20 @@
 function Notify() {
 	
 	this.setTomorrow = function() {
-		var tomorrow;
+		var tomorrow, daily;
 		tomorrow = new Date();
-		tomorrow.setHours(0, 0, 0, 0);
-		tomorrow.setDate(tomorrow.getDate() + 1);
+		daily = new Date(MyAPP.prefs.notifyTime);
+		Mojo.Log.info("Daily: ", daily);
+		//tomorrow.setHours(0, 0, 0, 0);
+		tomorrow.setHours(
+			daily.getHours(),
+			daily.getMinutes(),
+			0, 0
+		);
+		if (tomorrow.getTime() < new Date().getTime()) {
+			tomorrow.setDate(tomorrow.getDate() + 1);
+		}
+		Mojo.Log.info("Tomorrow:", tomorrow);
 		return tomorrow;
 	};
 	
@@ -30,23 +40,23 @@ function Notify() {
 			for (i = 0; i < response.length; i++) {
 				//Mojo.Log.info("Task:", response[i].title, response[i].duetime, response[i].starttime);
 				//Mojo.Log.info("Task: %j", response[i]);
-				//now = new Date();
-				//Mojo.Log.info("Now:", now.getTime(), now);
+				now = new Date();
+				Mojo.Log.info("Now:", now.getTime(), now);
 				due = new Date();
-//				if (response[i].duetime && response[i].duetime > now.getTime()) {
+				if (response[i].duetime && response[i].duetime > now.getTime()) {
 					temp = new Date(response[i].duetime);
 					due.setHours(temp.getHours(), temp.getMinutes(), temp.getSeconds(), 0);
 					thisDate = (due < thisDate) ? due : thisDate;
 					//Mojo.Log.info("this, due, temp", thisDate, due, temp);
-//				}
+				}
 				
-//				if (response[i].starttime && response[i].starttime > now.getTime()) {
+				if (response[i].starttime && response[i].starttime > now.getTime()) {
 					start = new Date();
 					temp = new Date(response[i].starttime);
 					start.setHours(temp.getHours(), temp.getMinutes(), temp.getSeconds(), 0);
 					thisDate = (start < thisDate) ? start : thisDate;
 					//Mojo.Log.info("this, start, temp", thisDate, start, temp);
-//				}
+				}
 			}
 		}
 		this.setAlarm(thisDate);

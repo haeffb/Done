@@ -27,6 +27,7 @@ PreferencesAssistant.prototype.setup = function() {
 	this.controller.get('repeatFromLabel').innerHTML = $L("Repeat From");
 
 	this.controller.get('accountOptionsTitle').innerHTML = $L("Account Settings");
+	this.controller.get('folderOptionsTitle').innerHTML = $L("Folders Contexts & Goals");
 
 	this.controller.setupWidget("EditAccountButtonId", 
 		this.accountButtonAttributes = {}, 
@@ -35,6 +36,16 @@ PreferencesAssistant.prototype.setup = function() {
 			buttonClass : '',        
 			disabled : false        
 		});
+		
+	this.controller.setupWidget("EditFoldersButtonId", 
+		this.folderButtonAttributes = {}, 
+		this.folderButtonModel = {
+			buttonLabel : $L('Edit Folders/Contexts/Goals'),        
+			buttonClass : '',        
+			disabled : false        
+		});
+		
+		
 	// Add Folder Selector List
 	this.controller.setupWidget("FolderSelectorId",
         this.folderAttributes = {
@@ -54,6 +65,17 @@ PreferencesAssistant.prototype.setup = function() {
 		this.contextModel = {
 			choices: []
 			//value: MyAPP.prefs.defaultContext
+		}
+    );
+	
+	// Add Goal Selector List
+	this.controller.setupWidget("GoalSelectorId",
+        this.goalAttributes = {
+			label: $L("Goal")
+			},
+		this.goalModel = {
+			choices: []
+			//value: MyAPP.prefs.defaultGoal
 		}
     );
 	
@@ -174,6 +196,24 @@ PreferencesAssistant.prototype.setup = function() {
         disabled: false
     });
 	
+	// Add StartDate Selector List
+	this.controller.setupWidget("StartDateSelectorId",
+        this.startdateAttributes = {
+			label: $L("Start Date"),            
+			choices: [
+                {label: $L("No Start Date"), value: "0"},
+				{label: $L("Today"), value: "1"},
+				{label: $L("Tomorrow"), value: "2"},
+				{label: $L("In One Week"), value: "3"},
+				{label: $L("In One Month"), value: "4"},
+				{label: $L("In One Year"), value: "5"}
+                ]
+			},
+        this.startDateModel = {
+        value: MyAPP.prefs.defaultStartDate,
+        disabled: false
+    });
+
 	// Add Repeat From toggle button
 	this.controller.setupWidget('RepeatFromToggleId',
 		this.repeatFromAttributes = {
@@ -217,6 +257,24 @@ PreferencesAssistant.prototype.setup = function() {
 			disabled: false			
 		});
 	this.controller.get('showFolderLabel').innerHTML = $L("Show Folder/Context");
+	
+	// Add Show Notes toggle
+	this.controller.setupWidget('showNotesToggleId',
+		this.toggleAttributes,
+		this.showNotesModel = {
+			value: MyAPP.prefs.showNotes,
+			disabled: false			
+		});
+	this.controller.get('showNotesLabel').innerHTML = $L("Show Notes");
+	
+	// Add Show Priority toggle
+	this.controller.setupWidget('showPriorityToggleId',
+		this.toggleAttributes,
+		this.showPriorityModel = {
+			value: MyAPP.prefs.showPriority,
+			disabled: false			
+		});
+	this.controller.get('showPriorityLabel').innerHTML = $L("Show Priority");
 
 	// Add useCurrent Folder & Context toggle
 	this.controller.setupWidget('useCurrentToggleId',
@@ -317,6 +375,23 @@ PreferencesAssistant.prototype.setup = function() {
 			disabled: false			
 		});
 	this.controller.get('notificationsLabel').innerHTML = $L("Enable Notifications");
+	
+	// Notification time picker
+	this.controller.setupWidget('notificationTime', 
+	{
+		label: $L('Daily:')
+	}, this.notificationTimePickerModel = {
+		time: new Date(MyAPP.prefs.notifyTime)
+	});
+	
+	// Add Notifications Alarm toggle
+	this.controller.setupWidget('notifyAlarmToggleId',
+		this.toggleAttributes,
+		this.notifyAlarmModel = {
+			value: MyAPP.prefs.notifyAlarm,
+			disabled: false			
+		});
+	this.controller.get('notifyAlarmLabel').innerHTML = $L("Alert Sound");
 
 /*
 	// Add Show Due Date & Due Time toggle
@@ -357,11 +432,13 @@ PreferencesAssistant.prototype.setup = function() {
 	/* add event handlers to listen to events from widgets */
 	this.editAccountHandler = this.editAccount.bind(this);
 	this.controller.listen('EditAccountButtonId', Mojo.Event.tap, this.editAccountHandler);
+	this.editFolderHandler = this.editFolder.bind(this);
+	this.controller.listen('EditFoldersButtonId', Mojo.Event.tap, this.editFolderHandler);
 	
 	this.notificationsChangeHandler = this.notificationsChange.bind(this);
 	this.controller.listen('notificationsToggleId', Mojo.Event.propertyChange, this.notificationsChangeHandler);
 
-	//this.controller.setInitialFocusedElement(null);
+	this.controller.setInitialFocusedElement(null);
 
 };
 
@@ -377,6 +454,10 @@ PreferencesAssistant.prototype.notificationsChange = function (event) {
 PreferencesAssistant.prototype.editAccount = function (event) {
 	Mojo.Log.info('Going to accounts scene');
 	this.controller.stageController.pushScene('accounts');
+};
+PreferencesAssistant.prototype.editFolder = function (event) {
+	Mojo.Log.info('Going to folders scene');
+	this.controller.stageController.pushScene('folders');
 };
 
 PreferencesAssistant.prototype.activate = function(event) {
@@ -414,10 +495,10 @@ PreferencesAssistant.prototype.gotContextsDb = function (response) {
 
 PreferencesAssistant.prototype.gotGoalsDb = function(response){
 	//Mojo.Log.info("Goals response is %j", response);
-	//this.goalModel.choices = response;
-	//this.goalModel.choices.push({id: 0, label: $L("No Goal"), value: 0});
-	//this.goalModel.value = MyAPP.prefs.defaultGoal;
-	//this.controller.modelChanged(this.goalModel);
+	this.goalModel.choices = response;
+	this.goalModel.choices.push({id: 0, label: $L("No Goal"), value: 0});
+	this.goalModel.value = MyAPP.prefs.defaultGoal;
+	this.controller.modelChanged(this.goalModel);
 	
 	// Update widget models
 };
@@ -432,7 +513,9 @@ PreferencesAssistant.prototype.deactivate = function(event) {
 	MyAPP.prefs.defaultRepeat = this.repeatModel.value;
 	MyAPP.prefs.defaultStatus = this.statusModel.value;
 	MyAPP.prefs.defaultDueDate = this.dueDateModel.value;
+	MyAPP.prefs.defaultStartDate = this.startDateModel.value;
 	MyAPP.prefs.defaultContext = this.contextModel.value;
+	MyAPP.prefs.defaultGoal = this.goalModel.value;
 	MyAPP.prefs.useCurrent = this.useCurrentModel.value;
 	MyAPP.prefs.repeatFromCompleted = this.repeatFromModel.value;
 	MyAPP.prefs.wrapTitle = this.wrapTitleModel.value;
@@ -450,6 +533,10 @@ PreferencesAssistant.prototype.deactivate = function(event) {
 	MyAPP.prefs.syncOnInterval = this.syncOnIntervalModel.value;
 	MyAPP.prefs.syncWifiOnly = this.syncWifiOnlyModel.value;
 	MyAPP.prefs.notifications = this.notificationsModel.value;
+	MyAPP.prefs.notifyTime = this.notificationTimePickerModel.time.getTime();
+	MyAPP.prefs.notifyAlarm = this.notifyAlarmModel.value;
+	MyAPP.prefs.showNotes = this.showNotesModel.value;
+	MyAPP.prefs.showPriority = this.showPriorityModel.value;
 	
 	Mojo.Log.info("Leaving Prefs Scene with %j", MyAPP.prefs);
 	MyAPP.prefsCookie = new Mojo.Model.Cookie(MyAPP.appName + "prefs");
