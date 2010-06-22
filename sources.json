@@ -1,5 +1,6 @@
 [
-    {"source": "app/models/utils.js"},
+    {"source": "app/models/debug.js"},
+	{"source": "app/models/utils.js"},
     {"source": "app/models/data.js"},
     {"source": "app/models/notify.js"},
     {"source": "app/models/toodledo.js"},

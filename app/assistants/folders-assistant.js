@@ -21,7 +21,7 @@ FoldersAssistant.prototype.setup = function() {
 		renderLimit: 20,
 		reorderable: true,
 		autoconfirmDelete: false,
-		addItemLabel: $L('Add a folder')
+		addItemLabel: $L('Add folder')
 	}, this.foldersModel = {
 		items: [],
 		disabled: false
@@ -34,7 +34,7 @@ FoldersAssistant.prototype.setup = function() {
 		autoconfirmDelete: false,
 		renderLimit: 20,
 		reorderable: false,
-		addItemLabel: $L('Add a context')
+		addItemLabel: $L('Add context')
 	}, this.contextsModel = {
 		items: [],
 		disabled: false
@@ -47,7 +47,7 @@ FoldersAssistant.prototype.setup = function() {
 		autoconfirmDelete: false,
 		renderLimit: 20,
 		reorderable: false,
-		addItemLabel: $L('Add a goal')
+		addItemLabel: $L('Add goal')
 	}, this.goalsModel = {
 		items: [],
 		disabled: false
@@ -71,7 +71,7 @@ FoldersAssistant.prototype.setup = function() {
 };
 
 FoldersAssistant.prototype.reorderItem = function (event) {
-	Mojo.Log.info("reorder event %j", event.item, event.toIndex, event.fromIndex);
+	//Mojo.Log.info("reorder event %j", event.item, event.toIndex, event.fromIndex);
 	
 	this.foldersModel.items.splice(event.fromIndex, 1);
 	this.foldersModel.items.splice(event.toIndex, 0, event.item);
@@ -80,7 +80,7 @@ FoldersAssistant.prototype.reorderItem = function (event) {
 		this.foldersModel.items[i].sortorder = i+1;
 		this.foldersModel.items[i].modified = nowTime;
 		dao.updateFolder(this.foldersModel.items[i], function () {});
-		Mojo.Log.info("Folder: %j", this.foldersModel.items[i]);
+		//Mojo.Log.info("Folder: %j", this.foldersModel.items[i]);
 	}
 	//this.foldersModel.items.sort(this.sortByFolderSort);
 	//this.foldersModel.items.sort(this.sortByFolderSort);
@@ -93,7 +93,7 @@ FoldersAssistant.prototype.reorderItem = function (event) {
 };
 
 FoldersAssistant.prototype.addItem = function (event) {
-	Mojo.Log.info("Add Event in %j", event.target.id);
+	//Mojo.Log.info("Add Event in %j", event.target.id);
 	var object = {}, 
 		nowTime = Math.floor(new Date().getTime() / 1000) * 1000;
 	switch (event.target.id) {
@@ -140,8 +140,8 @@ FoldersAssistant.prototype.addItem = function (event) {
 };
 
 FoldersAssistant.prototype.deleteItem = function (event) {
-	Mojo.Log.info("Delete Event in %j", event.target.id);
-	Mojo.Log.info("Event Model %j", event.model.items[event.index]);
+	//Mojo.Log.info("Delete Event in %j", event.target.id);
+	//Mojo.Log.info("Event Model %j", event.model.items[event.index]);
 	
 	var nowTime = Math.floor(new Date().getTime() / 1000) * 1000;
 	
@@ -184,7 +184,7 @@ FoldersAssistant.prototype.deleteItem = function (event) {
 
 	
 	// add to DeletedFCG table to sync later
-	Mojo.Log.info("Event ID", event.model.items[event.index].id);
+	//Mojo.Log.info("Event ID", event.model.items[event.index].id);
 	if (event.model.items[event.index].id) {
 		dao.createDeletedFCG(event.model.items[event.index].id, event.target.id);
 	}
@@ -195,10 +195,10 @@ FoldersAssistant.prototype.deleteItem = function (event) {
 };
 
 FoldersAssistant.prototype.editItem = function (event) {
-	Mojo.Log.info("Edit Event in %j", event.target.id);
-	Mojo.Log.info("Event Model %j", event.model.items[event.index]);
-	Mojo.Log.info("Event Model %j", event.model);
-	Mojo.Log.info("Event index %j", event.index);
+	//Mojo.Log.info("Edit Event in %j", event.target.id);
+	//Mojo.Log.info("Event Model %j", event.model.items[event.index]);
+	//Mojo.Log.info("Event Model %j", event.model);
+	//Mojo.Log.info("Event index %j", event.index);
 	
 	switch (event.target.id) {
 		case 'foldersList':
@@ -217,7 +217,7 @@ FoldersAssistant.prototype.editItem = function (event) {
 
 FoldersAssistant.prototype.updateItem = function (type, object) {
 	
-	Mojo.Log.info("Update item: %s %j", type, object);
+	//Mojo.Log.info("Update item: %s %j", type, object);
 	this.activate();
 	
 // NOTE: there is a currently a bug in webOS that loses your scroll position when calling a customDialog.
@@ -234,7 +234,7 @@ FoldersAssistant.prototype.activate = function(event) {
 };
 
 FoldersAssistant.prototype.gotFoldersDb = function (response) {
-	Mojo.Log.info("Folders response is %j", response, response.length);
+	//Mojo.Log.info("Folders response is %j", response, response.length);
 	response.sort(this.sortByFolderSort);
 	this.foldersModel.items = response;
 	//this.foldersModel.items.push({id: 0, label: $L("No Folder"), value: 0});
@@ -249,7 +249,7 @@ FoldersAssistant.prototype.sortByFolderSort = function (a, b) {
 };
 
 FoldersAssistant.prototype.gotContextsDb = function (response) {
-	Mojo.Log.info("Contexts response is %j", response);
+	//Mojo.Log.info("Contexts response is %j", response);
 	this.contextsModel.items = response;
 	//this.contextsModel.items.push({id: 0, label: $L("No Context"), value: 0});
 	this.controller.modelChanged(this.contextsModel);
@@ -259,7 +259,7 @@ FoldersAssistant.prototype.gotContextsDb = function (response) {
 };
 
 FoldersAssistant.prototype.gotGoalsDb = function(response){
-	Mojo.Log.info("Goals response is %j", response);
+	//Mojo.Log.info("Goals response is %j", response);
 	this.goalsModel.items = response;
 	//this.goalsModel.items.push({id: 0, label: $L("No Goal"), value: 0});
 	this.controller.modelChanged(this.goalsModel);

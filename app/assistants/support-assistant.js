@@ -92,7 +92,7 @@ SupportAssistant.prototype.setup = function () {
 			});
 		}
 	}catch (e) {
-		Mojo.Log.error(e);
+		//Mojo.Log.error(e);
 	}
 	this.controller.setupWidget('AppSupport_list', 
 		{
@@ -117,7 +117,7 @@ SupportAssistant.prototype.setup = function () {
 };
 
 SupportAssistant.prototype.doTap = function (event) {
-	Mojo.Log.info("Tap Handler");
+	//Mojo.Log.info("Tap Handler");
 	if (this.controller.get('license').getStyle('display') === 'none') {
 		this.controller.get('license').show();
 		this.controller.get('license').setStyle({visibility: 'visible'});

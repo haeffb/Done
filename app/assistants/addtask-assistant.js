@@ -3,7 +3,7 @@ function AddtaskAssistant(task) {
 	   additional parameters (after the scene name) that were passed to pushScene. The reference
 	   to the scene controller (this.controller) has not be established yet, so any initialization
 	   that needs the scene controller should be done in the setup function below. */
-	Mojo.Log.info("Entering AddTaskAssitant Constructor");
+	//Mojo.Log.info("Entering AddTaskAssitant Constructor");
 	this.taskValue = task;
 	this.isDirty = false; // set to true if any data is changed
 }
@@ -191,23 +191,23 @@ AddtaskAssistant.prototype.setup = function(){
 			label: $L("Reminder"),            
 			choices: [
                 {label: $L("No Reminder"), value: "0"},
-                {label: $L("15 minutes"), value: "15"},
-                {label: $L("30 minutes"), value: "30"},
-                {label: $L("45 minutes"), value: "45"},
-                {label: $L("1 hour"), value: "60"},
-                {label: $L("1.5 hours"), value: "90"},
-                {label: $L("2 hr"), value: "120"},
-                {label: $L("3 hours"), value: "180"},
-                {label: $L("4 hours"), value: "240"},
-                {label: $L("1 day"), value: "1440"},
-				{label: $L("2 days"), value: "2880"},
-                {label: $L("3 days"), value: "4320"},
-               {label: $L("4 days"), value: "5760"},
-               {label: $L("5 days"), value: "7200"},
-               {label: $L("6 days"), value: "8640"},
-               {label: $L("1 week"), value: "10080"},
-               {label: $L("1 year"), value: "20160"},
-               {label: $L("2 years"), value: "40320"}
+                {label: "15 " + $L("minutes"), value: "15"},
+                {label: "30 " + $L("minutes"), value: "30"},
+                {label: "45 " + $L("minutes"), value: "45"},
+                {label: "1 " + $L("hour"), value: "60"},
+                {label: "1.5 " + $L("hours"), value: "90"},
+                {label: "2 " + $L("hours"), value: "120"},
+                {label: "3 " + $L("hours"), value: "180"},
+                {label: "4 " + $L("hours"), value: "240"},
+                {label: "1 " + $L("day"), value: "1440"},
+				{label: "2 " + $L("days"), value: "2880"},
+                {label: "3 " + $L("days"), value: "4320"},
+               {label: "4 " + $L("days"), value: "5760"},
+               {label: "5 " + $L("days"), value: "7200"},
+               {label: "6 " + $L("days"), value: "8640"},
+               {label: "1 " + $L("week"), value: "10080"},
+               {label: "1 " + $L("year"), value: "20160"},
+               {label: "2 " + $L("years"), value: "40320"}
                ]
 			},
         this.reminderModel = {
@@ -333,7 +333,7 @@ AddtaskAssistant.prototype.copyTask = function () {
 };
 
 AddtaskAssistant.prototype.dirtyFunction = function (event) {
-	Mojo.Log.info("Something Dirty!");
+	//Mojo.Log.info("Something Dirty!");
 	this.isDirty = true;
 	this.saveTask();
 };
@@ -575,7 +575,7 @@ AddtaskAssistant.prototype.loadData = function () {
 };
 
 AddtaskAssistant.prototype.gotFoldersDb = function (response) {
-	Mojo.Log.info("Folders response is %j", response, response.length);
+	//Mojo.Log.info("Folders response is %j", response, response.length);
 	this.folders = [{id: 0, label: $L("No Folder"), value: 0}];
 	this.folders = this.folders.concat(response);
 	this.folders.sort(this.sortByFolderSort.bind(this));
@@ -608,7 +608,7 @@ AddtaskAssistant.prototype.gotGoalsDb = function (response) {
 };
 
 AddtaskAssistant.prototype.gotTasks = function (responseText) {
-	Mojo.Log.info("Task: %j", responseText);
+	//Mojo.Log.info("Task: %j", responseText);
 	this.task = responseText[0];
 
 	var startTimeString = $L("No Start Time");
@@ -752,7 +752,7 @@ AddtaskAssistant.prototype.gotTasks = function (responseText) {
 };
 
 AddtaskAssistant.prototype.loadNewTask = function (taskValue) {
-	Mojo.Log.info("Load New Task:", taskValue);
+	//Mojo.Log.info("Load New Task:", taskValue);
 	this.saveTask();
 	sqlString = "SELECT * FROM tasks WHERE value=" + taskValue + ";GO;";
 	dao.retrieveTasksByString(sqlString, this.gotTasks.bind(this));
@@ -820,7 +820,7 @@ AddtaskAssistant.prototype.saveTask = function () {
 		// Save info to database
 		// update existing entry in database
 		
-		Mojo.Log.info("Updating Task: %j", this.task);
+		//Mojo.Log.info("Updating Task: %j", this.task);
 		dao.updateTask(this.task, this.returnFromDb.bind(this));
 	}
 };

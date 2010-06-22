@@ -49,7 +49,7 @@ GoToDateAssistant.prototype.setup = function(widget){
 
 GoToDateAssistant.prototype.updateDateLabel = function (event) {
 	var day = Mojo.Format.formatDate(this.goToDatePickerModel.date, {date: 'full'}).split(" ")[0];
-	Mojo.Log.info("Day:", day);
+	//Mojo.Log.info("Day:", day);
 	this.dateButtonModel.label= $L("Use") + " " + day + " " +
 		Mojo.Format.formatDate(this.goToDatePickerModel.date, {date: 'medium'});
 	this.sceneAssistant.controller.modelChanged(this.dateButtonModel);
@@ -57,14 +57,14 @@ GoToDateAssistant.prototype.updateDateLabel = function (event) {
 
 GoToDateAssistant.prototype.goToDate = function() {
 	var otherDate = this.goToDatePickerModel.date;
-	Mojo.Log.info("Date is", otherDate);
+	//Mojo.Log.info("Date is", otherDate);
 	this.inCallback(otherDate);
 	this.widget.mojo.close();
 };
 
 GoToDateAssistant.prototype.goToToday = function() {
 	var otherDate = new Date();
-	Mojo.Log.info("Date is", otherDate);
+	//Mojo.Log.info("Date is", otherDate);
 	this.inCallback(otherDate);
 	this.widget.mojo.close();
 };

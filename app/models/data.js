@@ -40,15 +40,15 @@ function DAO () {
 // Initialize database
 // **********************************************
 	this.init = function() {
-		Mojo.Log.info("Entering db init");
+		//Mojo.Log.info("Entering db init");
 
-		Mojo.Log.info("Database info:", databaseName, version, displayName);
-		Mojo.Log.info("SQL =", sqlCreateFoldersTable);
+		//Mojo.Log.info("Database info:", databaseName, version, displayName);
+		//Mojo.Log.info("SQL =", sqlCreateFoldersTable);
 	
 	    this.db = openDatabase(databaseName, version, displayName);
 		
 		if (!this.db) {
-			Mojo.Log.info("DAO ERROR! - Could not Open Database!");
+			//Mojo.Log.info("DAO ERROR! - Could not Open Database!");
 		    Mojo.Controller.errorDialog(
 		     	$L("DAO ERROR! - Could not Open Database!")
 		    );
@@ -56,33 +56,33 @@ function DAO () {
 	    this.db.transaction((function (inTransaction) {
 
 			inTransaction.executeSql(sqlCreateTasksTable, [], 
-				function() {Mojo.Log.info("Created Tasks Table"); }, 
+				function() {//Mojo.Log.info("Created Tasks Table"); }, 
 				this.errorHandler
 			);
 	    	inTransaction.executeSql(sqlCreateFoldersTable, [], 
-				function() {Mojo.Log.info("Created Folders Table"); }, 
+				function() {//Mojo.Log.info("Created Folders Table"); }, 
 				this.errorHandler
 			);
 	    	inTransaction.executeSql(sqlCreateContextsTable, [], 
-				function () {Mojo.Log.info("Created Contexts Table"); }, 
+				function () {//Mojo.Log.info("Created Contexts Table"); }, 
 				this.errorHandler
 			);
 	    	inTransaction.executeSql(sqlCreateGoalsTable, [], 
-				function () {Mojo.Log.info("Created Goals Table"); }, 
+				function () {//Mojo.Log.info("Created Goals Table"); }, 
 				this.errorHandler
 			);
 	    	inTransaction.executeSql(sqlCreateDeletedTasksTable, [], 
-				function () {Mojo.Log.info("Created Deleted Tasks Table"); }, 
+				function () {//Mojo.Log.info("Created Deleted Tasks Table"); }, 
 				this.errorHandler
 			);
 	    	inTransaction.executeSql(sqlCreateDeletedFCGTable, [], 
-				function () {Mojo.Log.info("Created Deleted FCG Table"); }, 
+				function () {//Mojo.Log.info("Created Deleted FCG Table"); }, 
 				this.errorHandler
 			);
 
 	    }).bind(this));
 
-		Mojo.Log.info("****** Leaving db init *******");
+		//Mojo.Log.info("****** Leaving db init *******");
   }; // End init().
 // **********************************************
 // Folder functions
@@ -108,15 +108,15 @@ function DAO () {
 
 	// ***** FOLDERS methods *****
 	this.createFolder = function (f, inCallback) {
-		Mojo.Log.info("Entering db createFolder()");
+		//Mojo.Log.info("Entering db createFolder()");
 		
-		Mojo.Log.info("Folder is %j", f);
+		//Mojo.Log.info("Folder is %j", f);
 
 	    this.db.transaction((function (inTransaction) { 
 			inTransaction.executeSql(sqlCreateFolder, [ f.id, f.label, 
 					f.privy, f.archived, f.sortorder, f.modified, f.value ], 
 				function(inTransaction, inResultSet){
-					Mojo.Log.info("DB results: %j", inResultSet);
+					//Mojo.Log.info("DB results: %j", inResultSet);
 					var results = inResultSet.insertId;
 					inCallback(results);
 				},
@@ -135,7 +135,7 @@ function DAO () {
 			inTransaction.executeSql(sqlUpdateFolder, 
 				[f.id, f.label, f.privy, f.archived, f.sortorder, f.modified, f.value],
 				function(inTransaction, inResultSet){
-					Mojo.Log.info("DB results: %j", inResultSet);
+					//Mojo.Log.info("DB results: %j", inResultSet);
 					var results = inResultSet.insertId;
 					inCallback(results);
 				},
@@ -151,7 +151,7 @@ function DAO () {
 			inTransaction.executeSql(sqlRetrieveFolders,
 			[ ],
 			function (inTransaction, inResultSet) {
-				Mojo.Log.info("Retrieve Folders Success");
+				//Mojo.Log.info("Retrieve Folders Success");
 				var results = [], i;
 				if (inResultSet.rows) {
 					for (i = 0; i < inResultSet.rows.length; i++) {
@@ -174,7 +174,7 @@ function DAO () {
 			inTransaction.executeSql(sqlDeleteFolder,
 				[inFolder], 
 				function(){
-					Mojo.Log.info("Deleted Folder", inFolder);
+					//Mojo.Log.info("Deleted Folder", inFolder);
 				},
 				this.errorHandler);
 	    }).bind(this));
@@ -186,22 +186,22 @@ function DAO () {
 			inTransaction.executeSql(sqlDeleteAllFolders,
 				[], 
 				function(){
-					Mojo.Log.info("Deleted Folders");
+					//Mojo.Log.info("Deleted Folders");
 				},
 				this.errorHandler);
 	    }).bind(this));
 	};
 	
 	this.updateTasksWithFolder = function (inFolder) {
-		Mojo.Log.info("Entering db updateTasksWithFolder()");
+		//Mojo.Log.info("Entering db updateTasksWithFolder()");
 		// Reset any folders with this value to default (0) value
 		this.db.transaction((function (inTransaction) {
 			inTransaction.executeSql(sqlUpdateTasksWithFolder,
 				[0, inFolder],
 				function (inTransaction, inResultSet) { 
-					Mojo.Log.info("SQL =", sqlUpdateTasksWithFolder);
-					Mojo.Log.info("Updated Tasks With Folder", inFolder);
-					Mojo.Log.info("Results: %j", inResultSet.rows);
+					//Mojo.Log.info("SQL =", sqlUpdateTasksWithFolder);
+					//Mojo.Log.info("Updated Tasks With Folder", inFolder);
+					//Mojo.Log.info("Results: %j", inResultSet.rows);
 				},
 				function(inTransaction, inError) {
 				    Mojo.Controller.errorDialog(
@@ -230,7 +230,7 @@ function DAO () {
 
 	// ***** CONTEXTS methods *****
 	this.createContext = function (c, inCallback) {
-		Mojo.Log.info("Entering db createContext()");
+		//Mojo.Log.info("Entering db createContext()");
 		
 	    this.db.transaction((function (inTransaction) { 
 		inTransaction.executeSql(sqlCreateContext, [ c.id, c.label, 
@@ -254,7 +254,7 @@ function DAO () {
 			inTransaction.executeSql(sqlUpdateContext, 
 				[c.id, c.label, c.modified, c.value],
 				function(inTransaction, inResultSet){
-					Mojo.Log.info("DB results: %j", inResultSet);
+					//Mojo.Log.info("DB results: %j", inResultSet);
 					var results = inResultSet.insertId;
 					inCallback(results);
 				},
@@ -270,7 +270,7 @@ function DAO () {
 			inTransaction.executeSql(sqlRetrieveContexts,
 			[ ],
 			function (inTransaction, inResultSet) {
-				Mojo.Log.info("Retrieve Contexts Success");
+				//Mojo.Log.info("Retrieve Contexts Success");
 				var results = [], i;
 				if (inResultSet.rows) {
 					for (i = 0; i < inResultSet.rows.length; i++) {
@@ -293,7 +293,7 @@ function DAO () {
 			inTransaction.executeSql(sqlDeleteContext,
 				[inContext], 
 				function(){
-					Mojo.Log.info("Deleted Context", inContext);
+					//Mojo.Log.info("Deleted Context", inContext);
 				},
 				this.errorHandler);
 	    }).bind(this));
@@ -306,22 +306,22 @@ function DAO () {
 			inTransaction.executeSql(sqlDeleteAllContexts,
 				[], 
 				function(){
-					Mojo.Log.info("Deleted Contexts");
+					//Mojo.Log.info("Deleted Contexts");
 				},
 				this.errorHandler);
 	    }).bind(this));
 	};
 	
 	this.updateTasksWithContext = function (inContext) {
-		Mojo.Log.info("Entering db updateTasksWithContext()");
+		//Mojo.Log.info("Entering db updateTasksWithContext()");
 		// Reset any contexts with this value to default (0) value
 		this.db.transaction((function (inTransaction) {
 			inTransaction.executeSql(sqlUpdateTasksWithContext,
 				[0, inContext],
 				function (inTransaction, inResultSet) { 
-					Mojo.Log.info("SQL =", sqlUpdateTasksWithContext);
-					Mojo.Log.info("Updated Tasks With Folder", inContext);
-					Mojo.Log.info("Results: %j", inResultSet.rows);
+					//Mojo.Log.info("SQL =", sqlUpdateTasksWithContext);
+					//Mojo.Log.info("Updated Tasks With Folder", inContext);
+					//Mojo.Log.info("Results: %j", inResultSet.rows);
 				},
 				function(inTransaction, inError) {
 				    Mojo.Controller.errorDialog(
@@ -354,15 +354,15 @@ function DAO () {
 
 	// ***** Goal methods *****
 	this.createGoal = function (g, inCallback) {
-		Mojo.Log.info("Entering db createGoal()");
+		//Mojo.Log.info("Entering db createGoal()");
 		
-		Mojo.Log.info("Creating Goal: %j", g);
+		//Mojo.Log.info("Creating Goal: %j", g);
 
 	    this.db.transaction((function (inTransaction) { 
 			inTransaction.executeSql(sqlCreateGoal, [ g.id, g.label, g.level,
 				g.archived, g.contributes, g.modified, g.value ], 
 			function(inTransaction, inResultSet){
-				Mojo.Log.info("DB results: %j", inResultSet);
+				//Mojo.Log.info("DB results: %j", inResultSet);
 				var results = inResultSet.insertId;
 				inCallback(results);
 			},
@@ -380,7 +380,7 @@ function DAO () {
 				[g.id, g.label, g.level, g.archived, g.contributes, g.modified, 
 					g.value],
 				function(inTransaction, inResultSet){
-					Mojo.Log.info("DB results: %j", inResultSet);
+					//Mojo.Log.info("DB results: %j", inResultSet);
 					var results = inResultSet.insertId;
 					inCallback(results);
 				},
@@ -396,7 +396,7 @@ function DAO () {
 			inTransaction.executeSql(sqlRetrieveGoals,
 			[ ],
 			function (inTransaction, inResultSet) {
-				Mojo.Log.info("Retrieve Goals Success");
+				//Mojo.Log.info("Retrieve Goals Success");
 				var results = [], i;
 				if (inResultSet.rows) {
 					for (i = 0; i < inResultSet.rows.length; i++) {
@@ -419,7 +419,7 @@ function DAO () {
 			inTransaction.executeSql(sqlDeleteGoal,
 				[inGoal], 
 				function(){
-					Mojo.Log.info("Deleted Goal", inGoal);
+					//Mojo.Log.info("Deleted Goal", inGoal);
 				},
 				this.errorHandler);
 	    }).bind(this));
@@ -431,22 +431,22 @@ function DAO () {
 			inTransaction.executeSql(sqlDeleteAllGoals,
 				[], 
 				function(){
-					Mojo.Log.info("Deleted Goals");
+					//Mojo.Log.info("Deleted Goals");
 				},
 				this.errorHandler);
 	    }).bind(this));
 	};
 	
 	this.updateTasksWithGoal = function (inGoal) {
-		Mojo.Log.info("Entering db updateTasksWithGoal()");
+		//Mojo.Log.info("Entering db updateTasksWithGoal()");
 		// Reset any goals with this value to default (0) value
 		this.db.transaction((function (inTransaction) {
 			inTransaction.executeSql(sqlUpdateTasksWithGoal,
 				[0, inGoal],
 				function (inTransaction, inResultSet) { 
-					Mojo.Log.info("SQL =", sqlUpdateTasksWithGoal);
-					Mojo.Log.info("Updated Tasks With Folder", inGoal);
-					Mojo.Log.info("Results: %j", inResultSet.rows);
+					//Mojo.Log.info("SQL =", sqlUpdateTasksWithGoal);
+					//Mojo.Log.info("Updated Tasks With Folder", inGoal);
+					//Mojo.Log.info("Results: %j", inResultSet.rows);
 				},
 				function(inTransaction, inError) {
 				    Mojo.Controller.errorDialog(
@@ -473,14 +473,14 @@ function DAO () {
 
 	// ***** Deleted Task methods *****
 	this.createDeletedTask = function (t, inCallback) {
-		Mojo.Log.info("Entering db createDeletedTask()");
+		//Mojo.Log.info("Entering db createDeletedTask()");
 		
-		Mojo.Log.info("Creating Deleted Task: %j", t);
+		//Mojo.Log.info("Creating Deleted Task: %j", t);
 
 	    this.db.transaction((function (inTransaction) { 
 			inTransaction.executeSql(sqlCreateDeletedTask, [ t.id, t.label, t.value ], 
 			function(inTransaction, inResultSet){
-				Mojo.Log.info("DB results: %j", inResultSet);
+				//Mojo.Log.info("DB results: %j", inResultSet);
 				var results = inResultSet.insertId;
 				inCallback(results);
 			},
@@ -496,7 +496,7 @@ function DAO () {
 			inTransaction.executeSql(sqlRetrieveDeletedTasks,
 			[ ],
 			function (inTransaction, inResultSet) {
-				Mojo.Log.info("Retrieve DeletedTasks Success");
+				//Mojo.Log.info("Retrieve DeletedTasks Success");
 				var results = [], i;
 				if (inResultSet.rows) {
 					for (i = 0; i < inResultSet.rows.length; i++) {
@@ -519,7 +519,7 @@ function DAO () {
 			inTransaction.executeSql(sqlDeleteDeletedTask,
 				[inTaskValue], 
 				function(inTransaction, inResultSet){
-					Mojo.Log.info("Deleted Deleted Task ", inTaskValue);
+					//Mojo.Log.info("Deleted Deleted Task ", inTaskValue);
 					inCallback();
 				},
 				this.errorHandler);
@@ -532,7 +532,7 @@ function DAO () {
 			inTransaction.executeSql(sqlDeleteAllDeletedTasks,
 				[], 
 				function(){
-					Mojo.Log.info("Deleted DeletedTasks");
+					//Mojo.Log.info("Deleted DeletedTasks");
 				},
 				this.errorHandler);
 	    }).bind(this));
@@ -555,14 +555,14 @@ function DAO () {
 
 	// ***** Deleted FCG methods *****
 	this.createDeletedFCG = function (id, type) {
-		Mojo.Log.info("Entering db createDeletedFCG()");
+		//Mojo.Log.info("Entering db createDeletedFCG()");
 		
-		Mojo.Log.info("Creating Deleted FCG: %j", id, type);
+		//Mojo.Log.info("Creating Deleted FCG: %j", id, type);
 
 	    this.db.transaction((function (inTransaction) { 
 			inTransaction.executeSql(sqlCreateDeletedFCG, [ id, type ], 
 			function(inTransaction, inResultSet){
-				Mojo.Log.info("DB results: %j", inResultSet);
+				//Mojo.Log.info("DB results: %j", inResultSet);
 				var results = inResultSet.insertId;
 				//inCallback(results);
 			},
@@ -578,7 +578,7 @@ function DAO () {
 			inTransaction.executeSql(sqlRetrieveDeletedFCGs,
 			[ ],
 			function (inTransaction, inResultSet) {
-				Mojo.Log.info("Retrieve DeletedFCGs Success");
+				//Mojo.Log.info("Retrieve DeletedFCGs Success");
 				var results = [], i;
 				if (inResultSet.rows) {
 					for (i = 0; i < inResultSet.rows.length; i++) {
@@ -595,13 +595,13 @@ function DAO () {
 	};
 
 	this.deleteDeletedFCG = function (inValue, inType, inCallback) {
-		Mojo.Log.info("Entering db deleteDeletedFCGs()");
+		//Mojo.Log.info("Entering db deleteDeletedFCGs()");
 		// Delete FCG with id inValue
 		this.db.transaction((function (inTransaction) {
 			inTransaction.executeSql(sqlDeleteDeletedFCG,
 				[inValue, inType], 
 				function(inTransaction, inResultSet){
-					Mojo.Log.info("Deleted Deleted FCG ", inValue, inType);
+					//Mojo.Log.info("Deleted Deleted FCG ", inValue, inType);
 					inCallback();
 				},
 				this.errorHandler);
@@ -614,7 +614,7 @@ function DAO () {
 			inTransaction.executeSql(sqlDeleteAllDeletedFCGs,
 				[], 
 				function(){
-					Mojo.Log.info("Deleted DeletedFCGs");
+					//Mojo.Log.info("Deleted DeletedFCGs");
 				},
 				this.errorHandler);
 	    }).bind(this));
@@ -794,7 +794,7 @@ function DAO () {
 			inTransaction.executeSql(sqlDeleteAllTasks,
 				[], 
 				function ( ) { 
-					Mojo.Log.info("Deleted ALL tasks");
+					//Mojo.Log.info("Deleted ALL tasks");
 					//inCallback();
 				},
 				this.errorHandler);
@@ -816,7 +816,7 @@ function DAO () {
 
 	// Update tasks when deleting folder, context, goal
 	this.updateTasksWithFCG = function (inValue, inType, inNewValue) {
-		Mojo.Log.info("Entering updateTasksWithFCG", inType, inValue, inNewValue);
+		//Mojo.Log.info("Entering updateTasksWithFCG", inType, inValue, inNewValue);
 		// 60000 milliseconds hack to make sure tasks are re-sycned with new 
 		//folder, context, or goal,
 		// NEED TO FIX THIS!!!!

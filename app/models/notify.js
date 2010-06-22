@@ -4,7 +4,7 @@ function Notify() {
 		var tomorrow, daily;
 		tomorrow = new Date();
 		daily = new Date(MyAPP.prefs.notifyTime);
-		Mojo.Log.info("Daily: ", daily);
+		//Mojo.Log.info("Daily: ", daily);
 		//tomorrow.setHours(0, 0, 0, 0);
 		tomorrow.setHours(
 			daily.getHours(),
@@ -14,7 +14,7 @@ function Notify() {
 		if (tomorrow.getTime() < new Date().getTime()) {
 			tomorrow.setDate(tomorrow.getDate() + 1);
 		}
-		Mojo.Log.info("Tomorrow:", tomorrow);
+		//Mojo.Log.info("Tomorrow:", tomorrow);
 		return tomorrow;
 	};
 	
@@ -41,7 +41,7 @@ function Notify() {
 				//Mojo.Log.info("Task:", response[i].title, response[i].duetime, response[i].starttime);
 				//Mojo.Log.info("Task: %j", response[i]);
 				now = new Date();
-				Mojo.Log.info("Now:", now.getTime(), now);
+				//Mojo.Log.info("Now:", now.getTime(), now);
 				due = new Date();
 				if (response[i].duetime && response[i].duetime > now.getTime()) {
 					temp = new Date(response[i].duetime);
@@ -81,7 +81,7 @@ function Notify() {
 				}
 			},
 			onSuccess: function(){
-				Mojo.Log.info("Success in Setting up Notification at", myDateString);
+				//Mojo.Log.info("Success in Setting up Notification at", myDateString);
 			}.bind(this)
 		});
 		
@@ -94,7 +94,7 @@ function Notify() {
 					"key": Mojo.appInfo.id + '.notify'
 				},
 				onSuccess: function(){
-					Mojo.Log.info("Cleared Notification Timer!");
+					//Mojo.Log.info("Cleared Notification Timer!");
 				}
 			});
 		

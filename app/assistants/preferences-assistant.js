@@ -16,7 +16,7 @@ PreferencesAssistant.prototype.setup = function() {
 	/* use Mojo.View.render to render view templates and add them to the scene, if needed */
 	
 	/* setup widgets here */
-	this.controller.get('prefsHeader').innerHTML = MyAPP.appName + " " + $L(" Preferences");
+	this.controller.get('prefsHeader').innerHTML = MyAPP.appName + " " + $L("Preferences");
 	this.controller.get('AccountId').innerHTML = $L("Email:") + " " + MyAPP.prefs.email;
 	this.controller.get('taskOptionsTitle').innerHTML = $L("Default Task Options");
 	this.controller.get('accountOptionsTitle').innerHTML = $L("Account Settings");
@@ -379,7 +379,7 @@ PreferencesAssistant.prototype.setup = function() {
 	// Notification time picker
 	this.controller.setupWidget('notificationTime', 
 	{
-		label: $L('Daily:')
+		label: " " //$L('Daily') + ":"
 	}, this.notificationTimePickerModel = {
 		time: new Date(MyAPP.prefs.notifyTime)
 	});
@@ -452,11 +452,11 @@ PreferencesAssistant.prototype.notificationsChange = function (event) {
 };
 
 PreferencesAssistant.prototype.editAccount = function (event) {
-	Mojo.Log.info('Going to accounts scene');
+	//Mojo.Log.info('Going to accounts scene');
 	this.controller.stageController.pushScene('accounts');
 };
 PreferencesAssistant.prototype.editFolder = function (event) {
-	Mojo.Log.info('Going to folders scene');
+	//Mojo.Log.info('Going to folders scene');
 	this.controller.stageController.pushScene('folders');
 };
 
@@ -538,17 +538,17 @@ PreferencesAssistant.prototype.deactivate = function(event) {
 	MyAPP.prefs.showNotes = this.showNotesModel.value;
 	MyAPP.prefs.showPriority = this.showPriorityModel.value;
 	
-	Mojo.Log.info("Leaving Prefs Scene with %j", MyAPP.prefs);
+	//Mojo.Log.info("Leaving Prefs Scene with %j", MyAPP.prefs);
 	MyAPP.prefsCookie = new Mojo.Model.Cookie(MyAPP.appName + "prefs");
 	MyAPP.prefsCookie.put(MyAPP.prefs);
 	
 	// Set auto-syncing if selected
 	if (MyAPP.prefs.syncOnInterval) {
-		Mojo.Log.info("Setting up Auto-Sync in", MyAPP.prefs.syncInterval, "minutes");
+		//Mojo.Log.info("Setting up Auto-Sync in", MyAPP.prefs.syncInterval, "minutes");
 		sync.setSyncTimer(MyAPP.prefs.syncInterval);
 	}
 	else {
-		Mojo.Log.info("Clearing Auto-Sync Timer");
+		//Mojo.Log.info("Clearing Auto-Sync Timer");
 		sync.clearSyncTimer(MyAPP.prefs.syncTimerId);
 	}
 };

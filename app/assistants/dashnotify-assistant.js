@@ -18,7 +18,7 @@ function DashnotifyAssistant() {
 
 DashnotifyAssistant.prototype.setup = function () {
 	/* this function is for setup tasks that have to happen when the scene is first created */
-	Mojo.Log.info("Dashnotify setup.");		
+	//Mojo.Log.info("Dashnotify setup.");		
 	/* use Mojo.View.render to render view templates and add them to the scene, if needed. */
 	
 	/* setup widgets here */
@@ -54,19 +54,19 @@ DashnotifyAssistant.prototype.addNotify = function () {
 		" OR starttime<" + nowDate + ") AND (completed=0 OR completed='') " +
 		"ORDER BY duetime ASC, duedate ASC, " +
 		"starttime ASC, startdate ASC, title DESC;GO;";
-	Mojo.Log.info("SQLString in Notification dashboard:", sqlString);
+	//Mojo.Log.info("SQLString in Notification dashboard:", sqlString);
 	dao.retrieveTasksByString(sqlString, this.gotTasksDB.bind(this));
 };
 
 DashnotifyAssistant.prototype.gotTasksDB = function (response) {
-	Mojo.Log.info("Notify for ", response.length, " tasks");
+	//Mojo.Log.info("Notify for ", response.length, " tasks");
 	var myDateString;
 
 	if (response && response.length) {
 		//response.reverse();
 		response.sort(this.sortDates);
 		for (i = 0; i < response.length; i++) {
-			Mojo.Log.info("Task: %j", response[i]);
+			//Mojo.Log.info("Task: %j", response[i]);
 			myDateString = (response[i].duedate) ? Mojo.Format.formatDate(new Date(response[i].duedate), {
 				date: 'medium'
 			}) : $L("no due date");
@@ -89,7 +89,7 @@ DashnotifyAssistant.prototype.gotTasksDB = function (response) {
 		}
 	}
 	else {
-		Mojo.Log.info("No tasks to notify!!!");
+		//Mojo.Log.info("No tasks to notify!!!");
 		this.controller.window.close();
 	}
 };
@@ -98,10 +98,10 @@ DashnotifyAssistant.prototype.sortDates = function (a, b) {
 	
 	var aDate, bDate, nowDate = new Date().getTime();
 	
-	Mojo.Log.info("A", a.title, "due", a.duedate, "time", a.duetime, "start", 
-		a.startdate, "time", a.starttime);
-	Mojo.Log.info("B", b.title, "due", b.duedate, "time", b.duetime, "start", 
-		b.startdate, "time", b.starttime);
+	//Mojo.Log.info("A", a.title, "due", a.duedate, "time", a.duetime, "start", 
+	//	a.startdate, "time", a.starttime);
+	//Mojo.Log.info("B", b.title, "due", b.duedate, "time", b.duetime, "start", 
+	//	b.startdate, "time", b.starttime);
 	
 	aDate = (a.duetime) ? a.duetime: a.duedate;
 	bDate = (b.duetime) ? b.duetime: b.duedate;
@@ -120,7 +120,7 @@ DashnotifyAssistant.prototype.sortDates = function (a, b) {
 		bDate = (b.starttime) ? b.starttime : b.startdate;
 	}
 
-	Mojo.Log.info("A", aDate, "B", bDate);
+	//Mojo.Log.info("A", aDate, "B", bDate);
 	return bDate-aDate;
 		
 };
@@ -151,7 +151,7 @@ DashnotifyAssistant.prototype.nextNotify = function () {
 };
 
 DashnotifyAssistant.prototype.launchMainEdit = function (event) {
-	Mojo.Log.info("Tap on DashAlarm!!! %j", event.target.className);
+	//Mojo.Log.info("Tap on DashAlarm!!! %j", event.target.className);
 	//Mojo.Log.logProperties(event.target, "event");
 	this.controller.serviceRequest('palm://com.palm.applicationManager', 
 		{
@@ -175,7 +175,7 @@ DashnotifyAssistant.prototype.launchMainEdit = function (event) {
 	}
 };
 DashnotifyAssistant.prototype.launchMain = function (event) {
-	Mojo.Log.info("Tap on DashAlarm!!! %j", event.target.className);
+	//Mojo.Log.info("Tap on DashAlarm!!! %j", event.target.className);
 	this.controller.serviceRequest('palm://com.palm.applicationManager', 
 		{
 			method: 'launch',

@@ -7,7 +7,7 @@ function API () {
 	this.invalidKey = 'key did not validate';
 	
 	this.init = function(){
-		Mojo.Log.info("Setting Key to", MyAPP.prefs.key);
+		//Mojo.Log.info("Setting Key to", MyAPP.prefs.key);
 		this.key = MyAPP.prefs.key;
 	};
 	
@@ -16,19 +16,19 @@ function API () {
 	// **************************************************************
 
 	this.doAPI = function (apiString, inCallback) {
-		Mojo.Log.info("---Entering doAPI in Toodledo---");
+		//Mojo.Log.info("---Entering doAPI in Toodledo---");
 		var error, fullApiString = apiString + ";key=" + this.key;
-		Mojo.Log.info("apiString is ", fullApiString);
+		//Mojo.Log.info("apiString is ", fullApiString);
 		new Ajax.Request(fullApiString, {
 	  		method: 'get',
 	  		onSuccess: function(response){
-				Mojo.Log.info("responseXML returned from Toodledo!");
+				//Mojo.Log.info("responseXML returned from Toodledo!");
 				error = response.responseXML.getElementsByTagName('error');
 				if (error.length &&
 					error.item(0).textContent === 'key did not validate'
 					) {
-					Mojo.Log.info("Error:", error.item(0).textContent);
-					Mojo.Log.info("***** Key not valid. Calling getToken. *****", MyAPP.account.userid);
+					//Mojo.Log.info("Error:", error.item(0).textContent);
+					//Mojo.Log.info("***** Key not valid. Calling getToken. *****", MyAPP.account.userid);
 					this.getToken(MyAPP.account.userid, this.gotToken.bind(this), 
 						this.doAPI.bind(this, apiString, inCallback));
 				}
@@ -42,9 +42,9 @@ function API () {
 	};
 	
 	this.doAPIJSON = function (apiString, inCallback) {
-		Mojo.Log.info("---Entering doAPI JSON in Toodledo---");
+		//Mojo.Log.info("---Entering doAPI JSON in Toodledo---");
 		var fullApiString = apiString + ";key=" + this.key;
-		Mojo.Log.info("apiString is ", fullApiString);
+		//Mojo.Log.info("apiString is ", fullApiString);
 		new Ajax.Request(fullApiString, {
 	  		method: 'get',
 	  		onSuccess: function(response){
@@ -53,7 +53,7 @@ function API () {
 				//Mojo.Log.info("Response in doAPIJSON %j", resp);
 				if (resp.error === 'key did not validate' || 
 					resp.error === 'No Key Specified') {
-					Mojo.Log.info("Invalid Key", apiString, MyAPP.account.userid);
+					//Mojo.Log.info("Invalid Key", apiString, MyAPP.account.userid);
 					this.getToken(MyAPP.account.userid, this.gotToken.bind(this), 
 						this.doAPIJSON.bind(this, apiString, inCallback));
 				}
@@ -71,17 +71,17 @@ function API () {
 	// **************************************************************
 
 	this.getToken = function (uniqueUserid, inCallback, outCallback) {
-		Mojo.Log.info("---Entering getToken in Toodledo---");
+		//Mojo.Log.info("---Entering getToken in Toodledo---");
 		
 		var method = "getToken";
 		var apiString = this.url + method + ";userid=" + uniqueUserid +
 			";appid=" + this.appid; 
-		Mojo.Log.info("API String: ", apiString);
+		//Mojo.Log.info("API String: ", apiString);
 		//this.doAPIJSON(apiString, inCallback, type);
 		new Ajax.Request(apiString, {
 	  		method: 'get',
 	  		onSuccess: function(response){
-				Mojo.Log.info("Response:", response.responseText);
+				//Mojo.Log.info("Response:", response.responseText);
 				inCallback(xml2json.parser(response.responseText), outCallback);
 			},
 			onFailure: this.hadFailure.bind(this)
@@ -89,10 +89,10 @@ function API () {
 	};
 	
 	this.gotToken = function(response, inCallback){
-		Mojo.Log.info("Response from getToken %j", response);
+		//Mojo.Log.info("Response from getToken %j", response);
 		if (response.token) {
 			this.key = MD5(MD5(MyAPP.prefs.password) + response.token + MyAPP.account.userid);
-			Mojo.Log.info("Key is", this.key, "for", response.token, MyAPP.account.userid, MyAPP.prefs.password);
+			//Mojo.Log.info("Key is", this.key, "for", response.token, MyAPP.account.userid, MyAPP.prefs.password);
 
 			MyAPP.prefs.key = this.key;
 			MyAPP.prefsCookie.put(MyAPP.prefs);
@@ -105,11 +105,11 @@ function API () {
 	};
 
 	this.getUniqueUserid = function (email, password, inCallback) {
-		Mojo.Log.info("---Entering getUniqueUserid in Toodledo---");
+		//Mojo.Log.info("---Entering getUniqueUserid in Toodledo---");
 		var method = "getUserid";
 		var apiString = this.url + method + ";email=" + 
 			encodeURIComponent(email) + ";pass=" + encodeURIComponent(password);
-		Mojo.Log.info("API String: ", apiString);
+		//Mojo.Log.info("API String: ", apiString);
 		this.doAPIJSON(apiString, inCallback);
 	};
 	
@@ -122,15 +122,15 @@ function API () {
 	};
 
 	this.createAccount = function (email, password, inCallback) {
-		Mojo.Log.info("---Entering createAccount in Toodledo---");
+		//Mojo.Log.info("---Entering createAccount in Toodledo---");
 		var method = "createAccount";
 		var apiString = this.url + method + ";email=" + email + ";pass=" + password;
-		Mojo.Log.info("API String: ", apiString);
+		//Mojo.Log.info("API String: ", apiString);
 		this.doAPIJSON(apiString, inCallback);
 	};
 	
 	this.getServerInfo = function (inCallback) {
-		Mojo.Log.info("Entering getServerInfo");
+		//Mojo.Log.info("Entering getServerInfo");
 		var method = "getServerInfo";
 		var apiString = this.url + method ;
 		this.doAPIJSON(apiString, inCallback);
@@ -141,7 +141,7 @@ function API () {
 	// ***** TASKS *****
 	// **************************************************************
 	this.getTasks = function (options, inCallback) {
-		Mojo.Log.info("---Entering getTasks in Toodledo---");
+		//Mojo.Log.info("---Entering getTasks in Toodledo---");
 		var method = "getTasks";
 		var apiString = this.url + method;
 		apiString += ";unix=1";
@@ -154,7 +154,7 @@ function API () {
 	};
 	
 	this.getDeletedTasks = function (after, inCallback) {
-		Mojo.Log.info("---Entering getDeletedTasks in Toodledo---");
+		//Mojo.Log.info("---Entering getDeletedTasks in Toodledo---");
 		var method = "getDeleted";
 		var apiString = this.url + method;
 		apiString += ";unix=1";
@@ -163,7 +163,7 @@ function API () {
 	};
 	
 	this.addTask = function (task, timeDiff, inCallback) {
-		Mojo.Log.info("---Entering addTask in Toodledo---");
+		//Mojo.Log.info("---Entering addTask in Toodledo---");
 		var method = "addTask";
 		var apiString = this.url + method;
 		//apiString += ";unix=1";
@@ -256,7 +256,7 @@ function API () {
 	};
 
 	this.editTask = function (task, timeDiff, inCallback) {
-		Mojo.Log.info("---Entering addTask in Toodledo---");
+		//Mojo.Log.info("---Entering addTask in Toodledo---");
 		var method = "editTask", repeat;
 		var apiString = this.url + method;
 		//apiString += ";unix=1;reschedule=1";
@@ -267,12 +267,12 @@ function API () {
 			}
 			if (repeat > 49){
 				// Let Toodledo handle advanced repeats
-				Mojo.Log.info("Advanced Repeat - Toodledo Do It!", task.title);
+				//Mojo.Log.info("Advanced Repeat - Toodledo Do It!", task.title);
 				apiString += ";reschedule=1";
 			}
 		}
 		for (prop in task) {
-			Mojo.Log.info("Property:", prop, task[prop]);
+			//Mojo.Log.info("Property:", prop, task[prop]);
 			//if (task[prop]) {
 				if (prop === 'added' || prop === 'modified') {
 					apiString += ";" + prop + "=" + this.formatDate(task[prop], true);
@@ -291,7 +291,7 @@ function API () {
 					apiString += ";" + prop + "=" + task[prop];
 				}
 				else {
-					Mojo.Log.info("OH!!!! Property:", prop, task[prop]);
+					//Mojo.Log.info("OH!!!! Property:", prop, task[prop]);
 				}
 			//}
 		}
@@ -300,7 +300,7 @@ function API () {
 	};
 	
 	this.deleteTask = function (taskID, inCallback) {
-		Mojo.Log.info("---Entering deleteTask in Toodledo---");
+		//Mojo.Log.info("---Entering deleteTask in Toodledo---");
 		var method = "deleteTask";
 		var apiString = this.url + method;
 		apiString += ";id=" + taskID;
@@ -313,14 +313,14 @@ function API () {
 	// **************************************************************
 
 	this.getFolders = function (inCallback) {
-		Mojo.Log.info("---Entering getFolders in Toodledo---");
+		//Mojo.Log.info("---Entering getFolders in Toodledo---");
 		var method = "getFolders";
 		var apiString = this.url + method;
 		this.doAPI( apiString, inCallback);
 	};
 	
 	this.addFolder = function (folder, inCallback) {
-		Mojo.Log.info("---Entering addFolder in Toodledo---");
+		//Mojo.Log.info("---Entering addFolder in Toodledo---");
 		var method = "addFolder";
 		var apiString = this.url + method + ";title=" +
 			folder.label + ";private=" +
@@ -329,7 +329,7 @@ function API () {
 	};
 	
 	this.editFolder = function (folder, inCallback) {
-		Mojo.Log.info("---Entering editFolder in Toodledo---");
+		//Mojo.Log.info("---Entering editFolder in Toodledo---");
 		var method = "editFolder";
 		var apiString = this.url + method + ";id=" +
 			folder.id + ";title=" +
@@ -340,7 +340,7 @@ function API () {
 	};
 	
 	this.deleteFolder = function (id, inCallback) {
-		Mojo.Log.info("---Entering deleteFolder in Toodledo---");
+		//Mojo.Log.info("---Entering deleteFolder in Toodledo---");
 		var method = "deleteFolder";
 		var apiString = this.url + method + ";id=" +
 			id;
@@ -352,14 +352,14 @@ function API () {
 	// **************************************************************
 
 	this.getContexts = function (inCallback) {
-		Mojo.Log.info("---Entering getContexts in Toodledo---");
+		//Mojo.Log.info("---Entering getContexts in Toodledo---");
 		var method = "getContexts";
 		var apiString = this.url + method;
 		this.doAPI(apiString, inCallback);
 	};
 
 	this.addContext = function (context, inCallback) {
-		Mojo.Log.info("---Entering addContext in Toodledo---");
+		//Mojo.Log.info("---Entering addContext in Toodledo---");
 		var method = "addContext";
 		var apiString = this.url + method + ";title=" +
 			context.label;
@@ -367,7 +367,7 @@ function API () {
 	};
 	
 	this.editContext = function (context, inCallback) {
-		Mojo.Log.info("---Entering getTasks in Toodledo---");
+		//Mojo.Log.info("---Entering getTasks in Toodledo---");
 		var method = "editContext";
 		var apiString = this.url + method + ";id=" +
 			context.id + ";title=" +
@@ -376,7 +376,7 @@ function API () {
 	};
 	
 	this.deleteContext = function (id, inCallback) {
-		Mojo.Log.info("---Entering getTasks in Toodledo---");
+		//Mojo.Log.info("---Entering getTasks in Toodledo---");
 		var method = "deleteContext";
 		var apiString = this.url + method + ";id=" +
 			id;
@@ -388,14 +388,14 @@ function API () {
 	// **************************************************************
 
 	this.getGoals = function (inCallback) {
-		Mojo.Log.info("---Entering getGoals in Toodledo---");
+		//Mojo.Log.info("---Entering getGoals in Toodledo---");
 		var method = "getGoals";
 		var apiString = this.url + method;
 		this.doAPI(apiString, inCallback);
 	};
 	
 	this.addGoal = function (goal, inCallback) {
-		Mojo.Log.info("---Entering addGoal in Toodledo---");
+		//Mojo.Log.info("---Entering addGoal in Toodledo---");
 		var method = "addGoal";
 		var apiString = this.url + method + ";title=" +
 			goal.label + ";level=" +
@@ -405,7 +405,7 @@ function API () {
 	};
 	
 	this.editGoal = function (goal, inCallback) {
-		Mojo.Log.info("---Entering editGoal in Toodledo---");
+		//Mojo.Log.info("---Entering editGoal in Toodledo---");
 		var method = "editGoal";
 		var apiString = this.url + method + ";id=" +
 			goal.id + ";title=" +
@@ -417,7 +417,7 @@ function API () {
 	};
 
 	this.deleteGoal = function (id, inCallback) {
-		Mojo.Log.info("---Entering getTasks in Toodledo---");
+		//Mojo.Log.info("---Entering getTasks in Toodledo---");
 		var method = "deleteGoal";
 		var apiString = this.url + method + ";id=" +
 			id;

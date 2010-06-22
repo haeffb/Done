@@ -369,7 +369,7 @@ IntroAssistant.prototype.checkChange = function (event) {
 	if (event.target.id === 'taskCheck') {
 		// Changed the "Completed" checkbox
 		//Mojo.Log.info("Check Change: %j", event.model.id);
-		Mojo.Log.info("Check Change: %j", event.model);
+		//Mojo.Log.info("Check Change: %j", event.model);
 		//this.controller.get('testOutput').innerHTML = Object.toJSON(event);
 		var nowTime = Math.floor(new Date().getTime() / 1000) * 1000;
 		event.model.modified = nowTime;
@@ -377,7 +377,7 @@ IntroAssistant.prototype.checkChange = function (event) {
 			event.model.completed = nowTime;
 			if (event.model.repeat && (event.model.duedate || event.model.startdate)) {
 				//diff = event.model.duedate *1 - event.model.startdate *1;
-				Mojo.Log.info("Repeat Task!", event.model.repeat);
+				//Mojo.Log.info("Repeat Task!", event.model.repeat);
 				repeatFromCompleted = false;
 				repeat = event.model.repeat;
 				if (repeat > 99) {
@@ -385,7 +385,7 @@ IntroAssistant.prototype.checkChange = function (event) {
 					repeat = repeat - 100;
 				}
 				if (repeat > 49) {
-					Mojo.Log.info("Can't handle advanced repeats!!");
+					//Mojo.Log.info("Can't handle advanced repeats!!");
 				}
 				else {
 					newDueDate = (repeatFromCompleted) ? 
@@ -426,13 +426,13 @@ IntroAssistant.prototype.checkChange = function (event) {
 							newStartDate.setMonth(newStartDate.getMonth() + 3);
 							break;
 						case 9: // with parent
-							Mojo.Log.info("Can't handle with parent!!");
+							//Mojo.Log.info("Can't handle with parent!!");
 							break;
 					}
 					newDueDate.setHours(0, 0, 0, 0);
 					newStartDate.setHours(0, 0, 0, 0);
-					Mojo.Log.info("New due date:", newDueDate);
-					Mojo.Log.info("New start date:", newStartDate);
+					//Mojo.Log.info("New due date:", newDueDate);
+					//Mojo.Log.info("New start date:", newStartDate);
 					newTask = Object.clone(event.model);
 					
 					// Add new task with completed true
@@ -440,7 +440,7 @@ IntroAssistant.prototype.checkChange = function (event) {
 					newTask.id = 0;
 					newTask.value = nowTime;
 					dao.updateTask(newTask, function(){
-						Mojo.Log.info("Created repeat task");
+						//Mojo.Log.info("Created repeat task");
 					});
 					
 					// Update task with new due date & not completed
@@ -461,7 +461,7 @@ IntroAssistant.prototype.checkChange = function (event) {
 		}
 		MyAPP.local.lastaddedit = Math.floor(event.model.modified / 1000);
 		MyAPP.localCookie.put(MyAPP.local);
-		Mojo.Log.info("Updating Task %j", event.model);
+		//Mojo.Log.info("Updating Task %j", event.model);
 		dao.updateTask(event.model, this.activate.bind(this));	
 		//event.stop();
 	}
@@ -474,7 +474,7 @@ IntroAssistant.prototype.testNotify = function() {
 };
 
 IntroAssistant.prototype.handleCommand = function (event) {
-	Mojo.Log.info("Command", event.command);
+	//Mojo.Log.info("Command", event.command);
 	switch(event.command) {
 	case 'doAdd':
 		this.listAdd('');
@@ -499,13 +499,13 @@ IntroAssistant.prototype.handleCommand = function (event) {
 /*
 		var dashInfo = {};
 		//var syncCallback = "Whatever"; //this.syncFinished.bind(this);
-		Mojo.Log.info("Starting Sync");
+		//Mojo.Log.info("Starting Sync");
 		dashInfo = {
 			title: MyAPP.appName + " Starting Sync!", 
 			message: "Swipe to Cancel", 
 			count: 1
 		};
-		Mojo.Log.info("Dash Info %j", dashInfo);
+		//Mojo.Log.info("Dash Info %j", dashInfo);
 		MyAPP.SyncId = this.controller.serviceRequest('palm://com.palm.applicationManager', {
 		    method: 'launch',
 		    parameters:  {
@@ -548,12 +548,12 @@ IntroAssistant.prototype.startSync = function () {
 					sync.initSync(this.syncFinished.bind(this), syncOutput);
 				}	
 				else {
-				Mojo.Log.info("Wifi connection not available!");			
+				//Mojo.Log.info("Wifi connection not available!");			
 				Mojo.Controller.errorDialog($L("Wifi connection not available!"));						
 				}		
 			}
 			else {
-				Mojo.Log.info("Internet connection not available!");			
+				//Mojo.Log.info("Internet connection not available!");			
 				Mojo.Controller.errorDialog($L("Internet connection not available!"));	
 			}
 		}.bind(this),
@@ -570,7 +570,7 @@ IntroAssistant.prototype.setSyncTimer = function (delayInMinutes) {
 		myDateString, dStr,
 		bannerParams,
 		date;
-	Mojo.Log.info("Starting Sync");
+	//Mojo.Log.info("Starting Sync");
 	dashInfo = {
 		title: MyAPP.appName + " " + $L("Starting Sync!"), 
 		message: "Swipe to Cancel", 
@@ -602,10 +602,10 @@ IntroAssistant.prototype.setSyncTimer = function (delayInMinutes) {
 		secs = '0' + secs;
 	}
 	myDateString = mo + "/" + date + "/" + yr + " " + hrs + ":" + mins + ":" + secs;
-	Mojo.Log.info("Date String", myDateString);
+	//Mojo.Log.info("Date String", myDateString);
 	
 	dStr = Mojo.Format.formatDate(d, 'medium');
-	Mojo.Log.info("Time in setSyncTimer is", dStr);
+	//Mojo.Log.info("Time in setSyncTimer is", dStr);
 
 
 	MyAPP.SyncTimerId = new Mojo.Service.Request("palm://com.palm.power/timeout", {
@@ -625,7 +625,7 @@ IntroAssistant.prototype.setSyncTimer = function (delayInMinutes) {
 			}
 		},
 		onSuccess: function () {
-			Mojo.Log.info("Success in Setting up Sync!!!");
+			//Mojo.Log.info("Success in Setting up Sync!!!");
 		}.bind(this)
 	});
 };
@@ -639,7 +639,7 @@ IntroAssistant.prototype.finishSync = function (response) {
 
 */
 IntroAssistant.prototype.editTask = function (taskValue) {
-	Mojo.Log.info("Task value:", taskValue);
+	//Mojo.Log.info("Task value:", taskValue);
 	this.controller.stageController.pushScene('addtask', taskValue);
 };
 
@@ -648,14 +648,14 @@ IntroAssistant.prototype.listTap = function (event) {
 	//Mojo.Log.info("Event: %j", Object.toJSON(event.item));
 	var id = event.originalEvent.target.id,
 		className = event.originalEvent.target.className;
-	Mojo.Log.info("Classname:", className);
+	//Mojo.Log.info("Classname:", className);
 	if (className === 'taskcheck') {
 		this.checkChange (event);
 		event.stop();
 		return;
 	}
 	if (id === 'noteIcon' || className ==='notesDrawer' || className === 'mynote') {
-		Mojo.Log.info("Note Icon or drawer tapped!", id, className);
+		//Mojo.Log.info("Note Icon or drawer tapped!", id, className);
 		drawers = this.controller.document.getElementsByName('notesDrawer');
 		curDrawer = drawers[event.index];
 		curDrawer.mojo.toggleState();
@@ -738,7 +738,7 @@ IntroAssistant.prototype.listAdd = function (title) {
 };
 
 IntroAssistant.prototype.syncFinished = function (response) {
-	Mojo.Log.info("Sync Finished with %j", response);
+	//Mojo.Log.info("Sync Finished with %j", response);
 
 	//this.controller.modelChanged(this.taskListModel);
 	//bannerParams = {messageText: MyAPP.appName + " " + response};
@@ -914,7 +914,7 @@ IntroAssistant.prototype.activate = function(event){
 	MyAPP.saveCookie = new Mojo.Model.Cookie(MyAPP.appName + ".save");
 	var oldTask = MyAPP.saveCookie.get();
 	if (oldTask) {
-		Mojo.Log.info("Updating Task from cookie: %j", oldTask);
+		//Mojo.Log.info("Updating Task from cookie: %j", oldTask);
 		dao.updateTask(oldTask, this.loadData.bind(this));
 	}
 	else {
@@ -922,7 +922,7 @@ IntroAssistant.prototype.activate = function(event){
 	}
 	
 	// Handle landscape
-	Mojo.Log.info("Rotate:", MyAPP.prefs.allowRotate);
+	//Mojo.Log.info("Rotate:", MyAPP.prefs.allowRotate);
 	if (MyAPP.prefs.allowRotate) {
 		//this.controller.modelChanged(this.viewMenuModel);
 		this.controller.stageController.setWindowOrientation("free");
@@ -940,7 +940,7 @@ IntroAssistant.prototype.activate = function(event){
 
 IntroAssistant.prototype.loadData = function () {
 	// Retrieve info from database - start with folders
-	Mojo.Log.info("Entering loadData in IntroAssistant");
+	//Mojo.Log.info("Entering loadData in IntroAssistant");
 	dao.retrieveFolders(this.gotFoldersDb.bind(this));
 	MyAPP.saveCookie.remove();
 	notify.getNextDate();
@@ -968,7 +968,7 @@ IntroAssistant.prototype.sortBySortorder = function (a, b) {
 };
 
 IntroAssistant.prototype.gotContextsDb = function (response) {
-	Mojo.Log.info("Contexts response is %j", response);
+	//Mojo.Log.info("Contexts response is %j", response);
 	var i;
 	this.contextsArray = response;
 	this.contextsArray.push({id: 0, label: $L("No Context"), value: 0});
@@ -1014,7 +1014,7 @@ IntroAssistant.prototype.gotGoalsDb = function (response) {
 IntroAssistant.prototype.gotTasksDb = function (response) {
 	//Mojo.Log.info("Tasks response is %j", response);
 	//Mojo.Log.info("List in gotTasksDb: ", this.showListModel.value);
-	var doneTime = new Date(), myWrap;
+	var i, j, doneTime = new Date(), myWrap, tags = [], thisTags = [];
 	
 	if (response.length > 0) {
 		
@@ -1029,6 +1029,26 @@ IntroAssistant.prototype.gotTasksDb = function (response) {
 		for (i = 0; i < response.length; i++) {
 			response[i].done = false;
 			response[i].importance = this.calcImportance(response[i]);
+			
+/*
+			// grab tags
+			if (response[i].tag) {
+				thisTags = response[i].tag.split(",");
+				for (j = 0; j < thisTags.length; j++) {
+					thisTags[j] = thisTags[j].strip();
+					if (!tags.include(thisTags[j])) {
+						tags.push(thisTags[j]);
+					}
+				}
+				Mojo.Log.info("thisTags %j", thisTags);
+				Mojo.Log.info("tags %j", tags);
+				tags.each(function (tag) {
+					Mojo.Log.info("tag", tag);
+
+				});
+			}
+
+*/			
 			
 			// Set boolean value for completed tasks
 			if (response[i].completed) {
@@ -1117,7 +1137,7 @@ IntroAssistant.prototype.calcImportance = function (task) {
 };
 
 IntroAssistant.prototype.getTasks = function (listType, filter) {
-	Mojo.Log.info("List: %s, filter: %s, sort %s",listType, filter, this.sortSpec);
+	//Mojo.Log.info("List: %s, filter: %s, sort %s",listType, filter, this.sortSpec);
 	var sqlString, date1, date2, val1;
 	//sqlString = "SELECT * FROM tasks WHERE (VALUE>0)";
 	sqlString = "SELECT t.id as id, t.parent, t.children, t.title, t.tag, " +
@@ -1169,7 +1189,7 @@ IntroAssistant.prototype.getTasks = function (listType, filter) {
 					date1 = new Date();
 					date1.setHours(0, 0, 0, 0);
 					date1.setDate(date1.getDate() + MyAPP.account.hotlistduedate * 1);
-					Mojo.Log.info("Date for hotlist:", date1);
+					//Mojo.Log.info("Date for hotlist:", date1);
 					val1 = MyAPP.account.hotlistpriority * 1 - 1;
 					sqlString += " AND (t.duedate < " + date1.getTime() + 
 					" OR t.priority > " + 
@@ -1272,7 +1292,7 @@ IntroAssistant.prototype.getTasks = function (listType, filter) {
 		sqlString += " ORDER BY " + sort1 + " ASC, t.duedate DESC, t.duetime DESC, t.priority ASC, t.star ASC, t.context ASC, t.added DESC";		
 	}
 	sqlString += ";GO;";
-	Mojo.Log.info("SQL String: ", sqlString);
+	//Mojo.Log.info("SQL String: ", sqlString);
 	dao.retrieveTasksByString(sqlString, this.gotTasksDb.bind(this));
 };
 

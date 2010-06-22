@@ -116,13 +116,13 @@ MyAPP.appMenuModel = {
 
 function AppAssistant(appController) {
 	//save global reference to App Assistant
-	Mojo.Log.info("AppAssistant CONSTRUCTOR!");
+	//Mojo.Log.info("AppAssistant CONSTRUCTOR!");
 	MyAPP.appAssistant = this;
 	this.appController = appController;
 }
 
 AppAssistant.prototype.setup = function () {
-	Mojo.Log.info("AppAssistant setup()");
+	//Mojo.Log.info("AppAssistant setup()");
 	
 	this.initDBandCookies();
 };
@@ -135,21 +135,21 @@ AppAssistant.prototype.setup = function () {
 // -------------------------------------------------------------------
 
 AppAssistant.prototype.handleLaunch = function (launchParams) {
-	Mojo.Log.info(" ********** App handleLaunch ***********");
+	//Mojo.Log.info(" ********** App handleLaunch ***********");
 	
 	var cardStageController, pushMainScene, stageArgs,
 		dashboardStage, pushDashboard;
 	cardStageController = this.controller.getStageController('mainStage');
-	Mojo.Log.info("controller is: " + cardStageController);
+	//Mojo.Log.info("controller is: " + cardStageController);
 	if (!launchParams) {
 		//FIRST LAUNCH or TAP on Icon when minimized
 		if (cardStageController) {
 			// Application already running
-			Mojo.Log.info("Relaunch!");
+			//Mojo.Log.info("Relaunch!");
 			cardStageController.activate();
 		}
 		else {
-			Mojo.Log.info("Launch new intro stage!");
+			//Mojo.Log.info("Launch new intro stage!");
 			//this.initDBandCookies();
 			pushMainScene = function (stageController) {
 				stageController.pushScene({
@@ -165,7 +165,7 @@ AppAssistant.prototype.handleLaunch = function (launchParams) {
 		}
 	}
 	else {
-		Mojo.Log.info(" Launch Parameters: %j", launchParams);
+		//Mojo.Log.info(" Launch Parameters: %j", launchParams);
 		switch (launchParams.action) {
 		case "sync":
 
@@ -183,7 +183,7 @@ AppAssistant.prototype.handleLaunch = function (launchParams) {
 					method: 'getstatus',
 					parameters: {},
 					onSuccess: function(response){
-						Mojo.Log.info("Response %j", response);
+						//Mojo.Log.info("Response %j", response);
 						if (response.isInternetConnectionAvailable) {
 							if (!MyAPP.prefs.syncWifiOnly ||
 							response.wifi.state === 'connected') {
@@ -192,7 +192,7 @@ AppAssistant.prototype.handleLaunch = function (launchParams) {
 						}
 					},
 					onFailure: function () {
-						Mojo.Log.info("Connection Status Service Request FAILED!");
+						//Mojo.Log.info("Connection Status Service Request FAILED!");
 					}
 				});
 			}
@@ -203,11 +203,11 @@ AppAssistant.prototype.handleLaunch = function (launchParams) {
 		case 'notify':
 			dashboardStage = this.controller.getStageProxy("dashnotify");
 			if (dashboardStage) {
-				Mojo.Log.info("Notify Dashboard already running");
+				//Mojo.Log.info("Notify Dashboard already running");
 				dashboardStage.delegateToSceneAssistant("addNotify");
 			}
 			else {
-				Mojo.Log.info("No notify dashboardStage found.");
+				//Mojo.Log.info("No notify dashboardStage found.");
 				//this.initDBandCookies();
 				pushDashboard = function(stageController){
 					stageController.pushScene('dashnotify');
@@ -222,7 +222,7 @@ AppAssistant.prototype.handleLaunch = function (launchParams) {
 		case 'openTask':
 			if (cardStageController) {
 				// Application already running
-				Mojo.Log.info("Relaunch!");
+				//Mojo.Log.info("Relaunch!");
 				if (cardStageController.activeScene().sceneName === 'intro') {
 					cardStageController.delegateToSceneAssistant("editTask", launchParams.taskValue);
 				}
@@ -232,7 +232,7 @@ AppAssistant.prototype.handleLaunch = function (launchParams) {
 
 			}
 			else {
-				Mojo.Log.info("Launch new intro stage!");
+				//Mojo.Log.info("Launch new intro stage!");
 				//this.initDBandCookies();
 				pushMainScene = function (stageController) {
 					stageController.pushScene({
@@ -275,11 +275,11 @@ AppAssistant.prototype.initDBandCookies = function () {
 AppAssistant.prototype.launchDashSync = function (launchParams) {
 		dashboardStage = this.controller.getStageController("dashsync");
 		if (dashboardStage) {
-			Mojo.Log.info("Sync Dashboard already running");
+			//Mojo.Log.info("Sync Dashboard already running");
 			dashboardStage.delegateToSceneAssistant("displayDashboard", launchParams.dashInfo);
 		}
 		else {
-			Mojo.Log.info("No Sync dashboardStage found.");
+			//Mojo.Log.info("No Sync dashboardStage found.");
 			//this.initDBandCookies();
 			pushDashboard = function(stageController){
 				stageController.pushScene('dashsync', launchParams.dashInfo);
@@ -315,7 +315,7 @@ AppAssistant.prototype.handleCommand = function (event) {
 
 AppAssistant.prototype.deactivate = function (event) {
 	if (this.connectRequest) {
-		Mojo.Log.info("Deleting connection request object");
+		//Mojo.Log.info("Deleting connection request object");
 		delete this.connectRequest;
 	}
 };
@@ -324,7 +324,7 @@ AppAssistant.prototype.deactivate = function (event) {
 // 	COOKIES
 // ********************************************************
 AppAssistant.prototype.getPrefsCookie = function () {
-	Mojo.Log.info("Get Cookie!");
+	//Mojo.Log.info("Get Cookie!");
 	MyAPP.prefsCookie = new Mojo.Model.Cookie(MyAPP.appName + "prefs");
 	var args = MyAPP.prefsCookie.get();
 	if (args) {
@@ -338,14 +338,14 @@ AppAssistant.prototype.getPrefsCookie = function () {
 };
 
 AppAssistant.prototype.putPrefsCookie = function () {
-	Mojo.Log.info("Put Cookie!");
+	//Mojo.Log.info("Put Cookie!");
 	var args = MyAPP.prefs;
 	MyAPP.prefsCookie.put(args);
 	
 };
 
 AppAssistant.prototype.getAccountCookie = function () {
-	Mojo.Log.info("Get Cookie!");
+	//Mojo.Log.info("Get Cookie!");
 	MyAPP.accountCookie = new Mojo.Model.Cookie(MyAPP.appName + "account");
 	var args = MyAPP.accountCookie.get();
 	if (args) {
@@ -358,7 +358,7 @@ AppAssistant.prototype.getAccountCookie = function () {
 };
 
 AppAssistant.prototype.getLocalCookie = function () {
-	Mojo.Log.info("Get Cookie!");
+	//Mojo.Log.info("Get Cookie!");
 	MyAPP.localCookie = new Mojo.Model.Cookie(MyAPP.appName + "local");
 	var args = MyAPP.localCookie.get();
 	if (args) {
@@ -371,7 +371,7 @@ AppAssistant.prototype.getLocalCookie = function () {
 };
 
 AppAssistant.prototype.getFieldsCookie = function () {
-	Mojo.Log.info("Get Fields Cookie!");
+	//Mojo.Log.info("Get Fields Cookie!");
 	MyAPP.fieldsCookie = new Mojo.Model.Cookie(MyAPP.appName + "fields");
 	var args = MyAPP.fieldsCookie.get();
 	if (args) {
@@ -384,7 +384,7 @@ AppAssistant.prototype.getFieldsCookie = function () {
 };
 
 AppAssistant.prototype.getSyncLogCookie = function () {
-	Mojo.Log.info("Get Cookie!");
+	//Mojo.Log.info("Get Cookie!");
 	MyAPP.syncLogCookie = new Mojo.Model.Cookie(MyAPP.appName + "syncLog");
 	var args = MyAPP.syncLogCookie.get();
 /*

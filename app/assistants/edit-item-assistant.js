@@ -3,11 +3,11 @@ function EditItemAssistant(sceneAssistant, type, object, callBackFunc) {
 	this.callBackFunc = callBackFunc;
 	this.object = object;
 	this.type = type;
-	Mojo.Log.info("Object is: %j", object);
+	//Mojo.Log.info("Object is: %j", object);
 }
 
 EditItemAssistant.prototype.setup = function (widget) {
-	var typeString;
+	var localizationData = {}, typeString;
 	switch (this.type) {
 		case 'foldersList':
 			typeString = $L("Folder");
@@ -19,7 +19,8 @@ EditItemAssistant.prototype.setup = function (widget) {
 			typeString = $L("Goal");
 			break;
 	}
-	this.sceneAssistant.controller.get('dialog-title').innerHTML = $L('Edit') + " " + typeString + "...";
+	localizationData = {typeString: typeString, action: $L("Edit")};
+	this.sceneAssistant.controller.get('dialog-title').innerHTML = $L('#{action} #{typeString}').interpolate(localizationData) + "...";
 	this.sceneAssistant.controller.get('itemGroupLabel').innerHTML = typeString + " " + $L('Info');
 	this.sceneAssistant.controller.get('itemNameLabel').innerHTML = typeString;
 	//this.sceneAssistant.controller.get('textField1Label').innerHTML = $L('Field 1');
@@ -65,9 +66,10 @@ EditItemAssistant.prototype.setup = function (widget) {
 	);
 
 */	
+	localizationData = {typeString: typeString, action: $L("Update")};
 	
 	this.sceneAssistant.controller.setupWidget('updateItem', {}, {
-		label: $L("Update") + " " + typeString
+		label: $L('#{action} #{typeString}').interpolate(localizationData)
 	});
 
 	this.updateItemHandler = this.updateItem.bindAsEventListener(this);
@@ -84,7 +86,7 @@ EditItemAssistant.prototype.onlyNum = function (charCode) {
 
 EditItemAssistant.prototype.updateItem = function () {	
 
-	Mojo.Log.info("The ID is:", this.object.value);
+	//Mojo.Log.info("The ID is:", this.object.value);
 
 	var nowTime = Math.floor(new Date().getTime() / 1000) * 1000;
 
@@ -116,10 +118,10 @@ EditItemAssistant.prototype.dummy = function () {
 };
 
 EditItemAssistant.prototype.returnFromCreateVehicle = function (results) {
-	Mojo.Log.info("Return from Create Vehicle with results: %j", results, this.index);
+	//Mojo.Log.info("Return from Create Vehicle with results: %j", results, this.index);
 	Miles.vehicles[this.index].value = results;
 	Miles.vehiclesByIndex[results] = Miles.vehicles[this.index];
-	Mojo.Log.info("Vehicle is: %j", Miles.vehicles[this.index]);
+	//Mojo.Log.info("Vehicle is: %j", Miles.vehicles[this.index]);
 };
 
 EditItemAssistant.prototype.cleanup = function () {

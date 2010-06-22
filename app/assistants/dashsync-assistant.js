@@ -6,7 +6,7 @@ function DashsyncAssistant(dashInfo) {
 
 	if (dashInfo) {
 		this.dashInfo = dashInfo;
-		Mojo.Log.info("Dash Info %j", dashInfo);
+		//Mojo.Log.info("Dash Info %j", dashInfo);
 	}
 }
 
@@ -56,7 +56,7 @@ DashsyncAssistant.prototype.displayDashboard = function (dashInfo, syncCallback)
 };
 
 DashsyncAssistant.prototype.syncFinished = function (response) {
-	Mojo.Log.info("Sync Finished with %j", response);
+	//Mojo.Log.info("Sync Finished with %j", response);
 
 	//this.controller.modelChanged(this.taskListModel);
 	bannerParams = {messageText: MyAPP.appName + " " + response};
@@ -74,7 +74,7 @@ DashsyncAssistant.prototype.launchSnooze = function () {
 };
 
 DashsyncAssistant.prototype.launchMain = function () {
-	Mojo.Log.info("Tap on DashAlarm!!!");
+	//Mojo.Log.info("Tap on DashAlarm!!!");
 	this.controller.serviceRequest('palm://com.palm.applicationManager', 
 		{
 			method: 'launch',

@@ -12,7 +12,7 @@ FieldConfigAssistant.prototype.setup = function() {
 	
 	/* setup widgets here */
 
-	Mojo.Log.info("Fields: %j", MyAPP.fields);
+	//Mojo.Log.info("Fields: %j", MyAPP.fields);
 	
 	this.fieldConfigModel = {
 		items: [
@@ -75,8 +75,8 @@ FieldConfigAssistant.prototype.deactivate = function(event) {
 	MyAPP.fields.reminder = this.fieldConfigModel.items[13].value;
 	
 	MyAPP.fieldsCookie.put(MyAPP.fields);
-	Mojo.Log.info("Fields: %j", MyAPP.fields);
-	Mojo.Log.info("Field Config Saved");
+	//Mojo.Log.info("Fields: %j", MyAPP.fields);
+	//Mojo.Log.info("Field Config Saved");
 	
 };
 

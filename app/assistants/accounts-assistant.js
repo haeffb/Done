@@ -156,7 +156,7 @@ AccountsAssistant.prototype.updateInfo = function(event){
 };
 
 AccountsAssistant.prototype.clearUser = function (value) {
-		Mojo.Log.info("Value: ", value);
+		//Mojo.Log.info("Value: ", value);
 		//Mojo.Controller.errorDialog ("Can't change account settings yet! Coming soon...");
 		if (value === 'newUser' || value === 'clearUser' || value === 'newAccount' || value === 'clearNewAccount') {
 			if (value === 'clearUser' || value === 'clearNewAccount') {
@@ -187,7 +187,7 @@ AccountsAssistant.prototype.clearUser = function (value) {
 			}
 			var email = this.emailModel.value;
 			var pass = this.passwordModel.value;
-			Mojo.Log.info("Email is " + email + " Password is " + pass);
+			//Mojo.Log.info("Email is " + email + " Password is " + pass);
 			if (value === 'newUser' || value === 'clearUser') {
 				this.controller.get('UpdateButtonId').mojo.activate();
 				api.getUniqueUserid(email, pass, this.gotUserid.bind(this));
@@ -204,7 +204,7 @@ AccountsAssistant.prototype.clearUser = function (value) {
 };
 
 AccountsAssistant.prototype.gotUserid = function (response) {
-	Mojo.Log.info("Response from getUniqueUserid %j", response);
+	//Mojo.Log.info("Response from getUniqueUserid %j", response);
 	this.controller.get('UpdateButtonId').mojo.deactivate();
 	this.controller.get('CreateButtonId').mojo.deactivate();
 	if (response.userid == 1) {
@@ -212,7 +212,7 @@ AccountsAssistant.prototype.gotUserid = function (response) {
 	}
 	else if (response.userid){
 		MyAPP.account.userid = response.userid;
-		Mojo.Log.info("Put Cookie!");
+		//Mojo.Log.info("Put Cookie!");
 		MyAPP.accountCookie.put(MyAPP.account);
 		
 		MyAPP.prefs.email = this.emailModel.value;
@@ -222,7 +222,7 @@ AccountsAssistant.prototype.gotUserid = function (response) {
 		this.controller.stageController.popScene();
 	}	
 	else if (response.error) {
-		Mojo.Log.info("Error! ", response.error);
+		//Mojo.Log.info("Error! ", response.error);
 		this.controller.get('accountErrorText').innerHTML = 
 			$L("Toodledo Error - ") + response.error + " " + $L("Please use a new email address address or use 'Login to Toodledo'.");	
 	}
