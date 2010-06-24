@@ -41,6 +41,7 @@ IntroAssistant.prototype.setup = function() {
 				context: this.formatContext.bind(this),
 				star: this.formatStar.bind(this),
 				note: this.formatNote.bind(this),
+				hasnote: this.formatHasNote.bind(this),
 				priority: this.formatPriority.bind(this)
 				},
 			reorderable: false
@@ -648,7 +649,7 @@ IntroAssistant.prototype.listTap = function (event) {
 	//Mojo.Log.info("Event: %j", Object.toJSON(event.item));
 	var id = event.originalEvent.target.id,
 		className = event.originalEvent.target.className;
-	//Mojo.Log.info("Classname:", className);
+	Mojo.Log.info("Classname:", className, "Id:", id);
 	if (className === 'taskcheck') {
 		this.checkChange (event);
 		event.stop();
@@ -660,6 +661,9 @@ IntroAssistant.prototype.listTap = function (event) {
 		curDrawer = drawers[event.index];
 		curDrawer.mojo.toggleState();
 		//event.stop();
+		return;
+	}
+	if (!id && !className) {
 		return;
 	}
 	this.controller.stageController.pushScene('addtask', 
@@ -1029,6 +1033,8 @@ IntroAssistant.prototype.gotTasksDb = function (response) {
 		for (i = 0; i < response.length; i++) {
 			response[i].done = false;
 			response[i].importance = this.calcImportance(response[i]);
+			response[i].hasnote = (response[i].note) ? true: false;
+	
 			
 /*
 			// grab tags
@@ -1262,11 +1268,11 @@ IntroAssistant.prototype.getTasks = function (listType, filter) {
 			}
 			break;
 		case 'completed':
-				date1 = new Date();
-				date1.setHours(0);
-				date1.setMinutes(0);
-				date1.setSeconds(0);
-				date1.setMilliseconds(0);
+			date1 = new Date();
+			date1.setHours(0);
+			date1.setMinutes(0);
+			date1.setSeconds(0);
+			date1.setMilliseconds(0);
 			switch (filter) {
 				case "all":
 					break;
@@ -1286,10 +1292,10 @@ IntroAssistant.prototype.getTasks = function (listType, filter) {
 			break;
 	}
 	if (sort1 === 'duedate' || sort1 === 'status' || sort1 === 'sortorder') {
-		sqlString += " ORDER BY " + sort1 + " DESC, t.duedate DESC, t.duetime DESC, t.priority ASC, t.star ASC, sortorder ASC, t.context ASC, added DESC";
+		sqlString += " ORDER BY " + sort1 + " DESC, t.duedate DESC, t.duetime DESC, t.priority ASC, t.star ASC, sortorder ASC, t.context ASC, t.modified DESC";
 	}
 	else {
-		sqlString += " ORDER BY " + sort1 + " ASC, t.duedate DESC, t.duetime DESC, t.priority ASC, t.star ASC, t.context ASC, t.added DESC";		
+		sqlString += " ORDER BY " + sort1 + " ASC, t.duedate DESC, t.duetime DESC, t.priority ASC, t.star ASC, t.context ASC, t.modified DESC";		
 	}
 	sqlString += ";GO;";
 	//Mojo.Log.info("SQL String: ", sqlString);
@@ -1489,10 +1495,20 @@ IntroAssistant.prototype.formatStar = function (value, model) {
 	return (MyAPP.prefs.showStar) ? "0" : "";
 };
 
-IntroAssistant.prototype.formatNote = function (value, model) {
+IntroAssistant.prototype.formatHasNote = function (value, model) {
 	//Mojo.Log.info("Model Duedate", value, model.duedate);
 	if (MyAPP.prefs.showNotes && value) {
 		return "done-icon-note";
+	}
+	else {
+		return "";
+	}
+};
+
+IntroAssistant.prototype.formatNote = function (value, model) {
+	//Mojo.Log.info("Model Duedate", value, model.duedate);
+	if (value) {
+		return Mojo.Format.runTextIndexer(value.replace(/\n/g, "<br />"));
 	}
 	else {
 		return "";

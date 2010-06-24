@@ -56,27 +56,39 @@ function DAO () {
 	    this.db.transaction((function (inTransaction) {
 
 			inTransaction.executeSql(sqlCreateTasksTable, [], 
-				function() {//Mojo.Log.info("Created Tasks Table"); }, 
+				function() {
+					//Mojo.Log.info("Created Tasks Table"); 
+				}, 
 				this.errorHandler
 			);
 	    	inTransaction.executeSql(sqlCreateFoldersTable, [], 
-				function() {//Mojo.Log.info("Created Folders Table"); }, 
+				function() {
+					//Mojo.Log.info("Created Folders Table"); 
+				}, 
 				this.errorHandler
 			);
 	    	inTransaction.executeSql(sqlCreateContextsTable, [], 
-				function () {//Mojo.Log.info("Created Contexts Table"); }, 
+				function () {
+					//Mojo.Log.info("Created Contexts Table"); 
+				}, 
 				this.errorHandler
 			);
 	    	inTransaction.executeSql(sqlCreateGoalsTable, [], 
-				function () {//Mojo.Log.info("Created Goals Table"); }, 
+				function () {
+					//Mojo.Log.info("Created Goals Table"); 
+				}, 
 				this.errorHandler
 			);
 	    	inTransaction.executeSql(sqlCreateDeletedTasksTable, [], 
-				function () {//Mojo.Log.info("Created Deleted Tasks Table"); }, 
+				function () {
+					//Mojo.Log.info("Created Deleted Tasks Table"); 
+				}, 
 				this.errorHandler
 			);
 	    	inTransaction.executeSql(sqlCreateDeletedFCGTable, [], 
-				function () {//Mojo.Log.info("Created Deleted FCG Table"); }, 
+				function () {
+					//Mojo.Log.info("Created Deleted FCG Table"); 
+				}, 
 				this.errorHandler
 			);
 

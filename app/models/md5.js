@@ -12,11 +12,20 @@ function MD5(sMessage) {
 	lX4 = (lX & 0x40000000);
 	lY4 = (lY & 0x40000000);
 	lResult = (lX & 0x3FFFFFFF)+(lY & 0x3FFFFFFF);
-	if (lX4 & lY4) return (lResult ^ 0x80000000 ^ lX8 ^ lY8);
+	if (lX4 & lY4) {
+		return (lResult ^ 0x80000000 ^ lX8 ^ lY8);
+	}
 	if (lX4 | lY4) {
-		if (lResult & 0x40000000) return (lResult ^ 0xC0000000 ^ lX8 ^ lY8);
-		else return (lResult ^ 0x40000000 ^ lX8 ^ lY8);
-	} else return (lResult ^ lX8 ^ lY8);
+		if (lResult & 0x40000000) {
+			return (lResult ^ 0xC0000000 ^ lX8 ^ lY8);
+		}
+		else {
+			return (lResult ^ 0x40000000 ^ lX8 ^ lY8);
+		}
+	}
+	else {
+		return (lResult ^ lX8 ^ lY8);
+	}
  }
  function F(x,y,z) { return (x & y) | ((~x) & z); }
  function G(x,y,z) { return (x & z) | (y & (~z)); }
@@ -70,7 +79,7 @@ function MD5(sMessage) {
 	return WordToHexValue;
  }
 	var x=Array();
-	var k,AA,BB,CC,DD,a,b,c,d
+	var k,AA,BB,CC,DD,a,b,c,d;
 	var S11=7, S12=12, S13=17, S14=22;
 	var S21=5, S22=9 , S23=14, S24=20;
 	var S31=4, S32=11, S33=16, S34=23;
