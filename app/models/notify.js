@@ -37,20 +37,20 @@ function Notify() {
 	this.gotTasksDB = function (response) {
 		var thisDate = this.setTomorrow(), i, due, start, temp, now;
 		if (response.length) {
+			now = new Date();
 			for (i = 0; i < response.length; i++) {
 				//Mojo.Log.info("Task:", response[i].title, response[i].duetime, response[i].starttime);
 				//Mojo.Log.info("Task: %j", response[i]);
-				now = new Date();
 				//Mojo.Log.info("Now:", now.getTime(), now);
 				due = new Date();
-				if (response[i].duetime && response[i].duetime > now.getTime()) {
+				if (response[i].duetime && (response[i].duetime > now.getTime())) {
 					temp = new Date(response[i].duetime);
 					due.setHours(temp.getHours(), temp.getMinutes(), temp.getSeconds(), 0);
 					thisDate = (due < thisDate) ? due : thisDate;
 					//Mojo.Log.info("this, due, temp", thisDate, due, temp);
 				}
 				
-				if (response[i].starttime && response[i].starttime > now.getTime()) {
+				if (response[i].starttime && (response[i].starttime > now.getTime())) {
 					start = new Date();
 					temp = new Date(response[i].starttime);
 					start.setHours(temp.getHours(), temp.getMinutes(), temp.getSeconds(), 0);

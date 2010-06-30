@@ -29,7 +29,7 @@ IntroAssistant.prototype.setup = function() {
 			listTemplate: 'intro/taskListTemplate',
 			swipeToDelete: true,
 			autoconfirmDelete: false,
-			renderLimit: 30,
+			renderLimit: 30,  // had to increase to get drawers in list to work correctly
 			dividerFunction: this.taskDivider.bind(this),
 			dividerTemplate: 'intro/divider',
 			filterFunction: this.filterFunction.bind(this),
@@ -42,7 +42,8 @@ IntroAssistant.prototype.setup = function() {
 				star: this.formatStar.bind(this),
 				note: this.formatNote.bind(this),
 				hasnote: this.formatHasNote.bind(this),
-				priority: this.formatPriority.bind(this)
+				priority: this.formatPriority.bind(this),
+				parent: this.formatParent.bind(this)
 				},
 			reorderable: false
 		},
@@ -52,7 +53,7 @@ IntroAssistant.prototype.setup = function() {
 	);
 	this.controller.setInitialFocusedElement(this.controller.get('taskListing'));
 	
-	this.controller.setupWidget('taskcheck', {
+	this.controller.setupWidget('taskCheck', {
 		modelProperty: "done"
 	});
 	
@@ -143,8 +144,10 @@ IntroAssistant.prototype.setup = function() {
 	/* add event handlers to listen to events from widgets */
 	this.listTapHandler = this.listTap.bindAsEventListener(this);
 	this.controller.listen('taskListing', Mojo.Event.listTap, this.listTapHandler);
+	
 	this.checkChangeHandler = this.checkChange.bindAsEventListener(this);
 	this.controller.listen('taskListing', Mojo.Event.propertyChange, this.checkChangeHandler);
+	
 	this.listDeleteHandler = this.listDelete.bindAsEventListener(this);
 	this.controller.listen('taskListing', Mojo.Event.listDelete, this.listDeleteHandler);
 
@@ -182,6 +185,13 @@ IntroAssistant.prototype.showSyncOutput = function (event) {
 };
 
 IntroAssistant.prototype.onKeyDown = function(event) {
+	//debugObject(event, 'noFuncs');
+	
+	//
+	// note: to capture gesture + keycode, use keyup event:
+	// if (event.keycode === keycode && event.metakey === true)
+	//
+	
     if (Mojo.Char.isEnterKey(event.keyCode) && this.controller.stageController.activeScene().sceneName === 'intro') {
 		//Mojo.Log.info("Enter was pressed!", this.filterString);
 		var myString = '';
@@ -200,6 +210,7 @@ IntroAssistant.prototype.filterList = function (event) {
 
 
 IntroAssistant.prototype.filterFunction = function (filterString, listWidget, offset, count) {
+	this.listOffset = offset;
 	//Mojo.Log.info("FilterFunction", listWidget.id, filterString, offset, count);
 	//Mojo.Log.info("Original length", this.tasks.length);
 	var i, s;
@@ -366,7 +377,7 @@ IntroAssistant.prototype.doList = function (event) {
 
 IntroAssistant.prototype.checkChange = function (event) {
 	var repeatFromCompleted, newDueDate, newStartDate, repeat, newTask, diff;
-	//Mojo.Log.info("Event id:", event.target.id);
+	Mojo.Log.info("Event id:", event.target.id);
 	if (event.target.id === 'taskCheck') {
 		// Changed the "Completed" checkbox
 		//Mojo.Log.info("Check Change: %j", event.model.id);
@@ -378,7 +389,7 @@ IntroAssistant.prototype.checkChange = function (event) {
 			event.model.completed = nowTime;
 			if (event.model.repeat && (event.model.duedate || event.model.startdate)) {
 				//diff = event.model.duedate *1 - event.model.startdate *1;
-				//Mojo.Log.info("Repeat Task!", event.model.repeat);
+				Mojo.Log.info("Repeat Task!", event.model.repeat);
 				repeatFromCompleted = false;
 				repeat = event.model.repeat;
 				if (repeat > 99) {
@@ -386,7 +397,7 @@ IntroAssistant.prototype.checkChange = function (event) {
 					repeat = repeat - 100;
 				}
 				if (repeat > 49) {
-					//Mojo.Log.info("Can't handle advanced repeats!!");
+					Mojo.Log.info("Can't handle advanced repeats!!");
 				}
 				else {
 					newDueDate = (repeatFromCompleted) ? 
@@ -462,7 +473,7 @@ IntroAssistant.prototype.checkChange = function (event) {
 		}
 		MyAPP.local.lastaddedit = Math.floor(event.model.modified / 1000);
 		MyAPP.localCookie.put(MyAPP.local);
-		//Mojo.Log.info("Updating Task %j", event.model);
+		Mojo.Log.info("Updating Task %j", event.model);
 		dao.updateTask(event.model, this.activate.bind(this));	
 		//event.stop();
 	}
@@ -647,21 +658,56 @@ IntroAssistant.prototype.editTask = function (taskValue) {
 IntroAssistant.prototype.listTap = function (event) {
 	//Mojo.Log.logProperties(event, 'event');
 	//Mojo.Log.info("Event: %j", Object.toJSON(event.item));
+	//debugObject(event.originalEvent.target, 'noFuncs');
 	var id = event.originalEvent.target.id,
-		className = event.originalEvent.target.className;
+		className = event.originalEvent.target.className,
+		curDrawer, curDrawerNode;
 	Mojo.Log.info("Classname:", className, "Id:", id);
-	if (className === 'taskcheck') {
+	if (id === 'taskCheck') {
 		this.checkChange (event);
 		event.stop();
 		return;
 	}
-	if (id === 'noteIcon' || className ==='notesDrawer' || className === 'mynote') {
-		//Mojo.Log.info("Note Icon or drawer tapped!", id, className);
+	if (className === 'done-icon-note' || className === 'mynote') {
+		Mojo.Log.info("Note Icon or drawer tapped!", id, className);
+
+/*
 		drawers = this.controller.document.getElementsByName('notesDrawer');
+		//Mojo.Log.info("Drawers: ", drawers.length, this.someTasks.length, this.listOffset, event.index);
 		curDrawer = drawers[event.index];
+		
 		curDrawer.mojo.toggleState();
-		//event.stop();
+		event.stop();
+
+*/		
+		//debugObject(event.originalEvent.target.up(), 'noFuncs');
+		
+		Mojo.Log.info("list", this.controller.get('taskListing').mojo.getList().mojo.getNodeByIndex(event.index));
+		switch (className) {
+			case 'done-icon-note':
+				//Mojo.Log.info("icon!");
+				curDrawer = event.originalEvent.target.up().getElementsByClassName('note-container')[0];
+				break;
+			case 'mynote':
+				//Mojo.Log.info("note!");
+				//debugObject(event.originalEvent.target.up(), 'noFuncs');
+				curDrawer = event.originalEvent.target.up().up().up().up().getElementsByClassName('note-container')[0];
+				break;
+		}
+		curDrawerNode = this.controller.get('taskListing').mojo.getList().mojo.getNodeByIndex(event.index);
+		curDrawer = curDrawerNode.getElementsByClassName('note-container')[0];
+		if (curDrawer.getStyle('display') === 'none') {
+			curDrawer.show();
+		}
+		else {
+			curDrawer.hide();
+			this.controller.get('taskListing').mojo.getList().mojo.revealItem(event.index);
+		}
+		
 		return;
+	}
+	else if (className === 'mynote') {
+		
 	}
 	if (!id && !className) {
 		return;
@@ -1018,8 +1064,11 @@ IntroAssistant.prototype.gotGoalsDb = function (response) {
 IntroAssistant.prototype.gotTasksDb = function (response) {
 	//Mojo.Log.info("Tasks response is %j", response);
 	//Mojo.Log.info("List in gotTasksDb: ", this.showListModel.value);
-	var i, j, doneTime = new Date(), myWrap, tags = [], thisTags = [];
+	var i, j, doneTime = new Date(), myWrap, tags = [], thisTags = [], index;
 	
+	this.tasks = [];
+	this.childTasks = [];
+		
 	if (response.length > 0) {
 		
 		//doneTime.setDate(doneTime.getDate() -  1);
@@ -1027,8 +1076,6 @@ IntroAssistant.prototype.gotTasksDb = function (response) {
 		
 		// Set CSS class value for wrapping title text
 	 	myWrap = (MyAPP.prefs.wrapTitle) ? "" : 'truncating-text';
-		
-		this.tasks =[];
 		
 		for (i = 0; i < response.length; i++) {
 			response[i].done = false;
@@ -1050,10 +1097,8 @@ IntroAssistant.prototype.gotTasksDb = function (response) {
 				Mojo.Log.info("tags %j", tags);
 				tags.each(function (tag) {
 					Mojo.Log.info("tag", tag);
-
 				});
 			}
-
 */			
 			
 			// Set boolean value for completed tasks
@@ -1075,7 +1120,16 @@ IntroAssistant.prototype.gotTasksDb = function (response) {
 						// showCompleted is backwards!!!
 						!MyAPP.prefs.showCompleted)) {
 					response[i].wrap = myWrap;
-					this.tasks.push(response[i]);			
+					
+					// check for parent/child tasks
+					if (!response[i].parent) {
+						//Mojo.Log.info("regular task", response[i].title, response[i].id);
+						this.tasks.push(response[i]);
+					}
+					else {
+						//Mojo.Log.info("subtask", response[i].title, response[i].parent);
+						this.childTasks.push(response[i]);
+					}
 				}
 			}
 		}
@@ -1091,6 +1145,20 @@ IntroAssistant.prototype.gotTasksDb = function (response) {
 			}
 */
 		];
+	}
+		
+	for (i = 0; i < this.childTasks.length; i++) {
+		//Mojo.Log.info("childtask: %j", this.childTasks[i]);
+		//Mojo.Log.info("parent:", this.childTasks[i].parent);
+		index = 0;
+		j = 0;
+		for (j=0; j< this.tasks.length; j++) {
+			if (this.tasks[j].value === this.childTasks[i].parent) {
+				index = j;
+			}
+		}
+		//Mojo.Log.info("index: ", index);
+		this.tasks.splice(index, 0, this.childTasks[i]);
 	}
 	//this.tasks.sort(this.specSort.bind(this));
 	if (this.showListModel.value === 'all') {
@@ -1292,10 +1360,10 @@ IntroAssistant.prototype.getTasks = function (listType, filter) {
 			break;
 	}
 	if (sort1 === 'duedate' || sort1 === 'status' || sort1 === 'sortorder') {
-		sqlString += " ORDER BY " + sort1 + " DESC, t.duedate DESC, t.duetime DESC, t.priority ASC, t.star ASC, sortorder ASC, t.context ASC, t.modified DESC";
+		sqlString += " ORDER BY " + sort1 + " DESC, t.duedate DESC, t.duetime DESC, t.priority ASC, t.star ASC, sortorder ASC, t.context ASC, t.modified ASC";
 	}
 	else {
-		sqlString += " ORDER BY " + sort1 + " ASC, t.duedate DESC, t.duetime DESC, t.priority ASC, t.star ASC, t.context ASC, t.modified DESC";		
+		sqlString += " ORDER BY " + sort1 + " ASC, t.duedate DESC, t.duetime DESC, t.priority ASC, t.star ASC, t.context ASC, t.modified ASC";		
 	}
 	sqlString += ";GO;";
 	//Mojo.Log.info("SQL String: ", sqlString);
@@ -1520,6 +1588,16 @@ IntroAssistant.prototype.formatPriority = function (value, model) {
 	//return (value) ? "taskbox priority" + value : "";
 	if (MyAPP.prefs.showPriority) {
 		return "taskbox priority" + value;
+	}
+	else {
+		return "";
+	}
+};
+IntroAssistant.prototype.formatParent = function (value, model) {
+	//Mojo.Log.info("Model Duedate", value, model.duedate);
+	//return (value) ? "taskbox priority" + value : "";
+	if (value) {
+		return "subtask";
 	}
 	else {
 		return "";

@@ -94,7 +94,8 @@ MyAPP.fields = {
 	status: true,
 	repeat: true,
 	repeatfrom: true,
-	reminder: true
+	reminder: true,
+	star: true
 };
 
 MyAPP.server = {

@@ -574,10 +574,10 @@ function Sync(){
 	};
 	
 	this.gotFinalTasks = function () {
-		//Mojo.Log.info("Adding final web tasks:", this.webEditedTasks.length);
+		Mojo.Log.info("Adding final web tasks:", this.webEditedTasks.length);
 		if (this.webEditedTasks.length) {
 			for (j = 0; j < this.webEditedTasks.length; j++) {
-				//Mojo.Log.info("Adding final web task:", j);
+				Mojo.Log.info("Adding final web task:", j);
 				this.count.tasksfinal += 1;
 				if (this.webEditedTasks[j].sync || !this.localWins) {
 					dao.updateTask(this.webEditedTasks[j], this.finishTransactions.bind(this, 'tasksfinal'));
@@ -656,6 +656,7 @@ function Sync(){
 		}
 		else {
 			//Mojo.Log.info("Error deleting task from Toodledo!");
+			this.finishTransactions('localdeleted');
 		}
 		
 	};

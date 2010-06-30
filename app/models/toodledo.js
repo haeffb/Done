@@ -18,7 +18,7 @@ function API () {
 	this.doAPI = function (apiString, inCallback) {
 		//Mojo.Log.info("---Entering doAPI in Toodledo---");
 		var error, fullApiString = apiString + ";key=" + this.key;
-		//Mojo.Log.info("apiString is ", fullApiString);
+		Mojo.Log.info("apiString is ", fullApiString);
 		new Ajax.Request(fullApiString, {
 	  		method: 'get',
 	  		onSuccess: function(response){
@@ -44,7 +44,7 @@ function API () {
 	this.doAPIJSON = function (apiString, inCallback) {
 		//Mojo.Log.info("---Entering doAPI JSON in Toodledo---");
 		var fullApiString = apiString + ";key=" + this.key;
-		//Mojo.Log.info("apiString is ", fullApiString);
+		Mojo.Log.info("apiString is ", fullApiString);
 		new Ajax.Request(fullApiString, {
 	  		method: 'get',
 	  		onSuccess: function(response){

@@ -29,7 +29,8 @@ FieldConfigAssistant.prototype.setup = function() {
 			{label: $L("Status"), field: "StatusRow", value: MyAPP.fields.status},
 			{label: $L("Repeat"), field: "RepeatRow", value: MyAPP.fields.repeat},
 			{label: $L("Repeat From"), field: "RepeatFromRow", value: MyAPP.fields.repeatfrom},
-			{label: $L("Reminder"), field: "ReminderRow", value: MyAPP.fields.reminder}
+			{label: $L("Reminder"), field: "ReminderRow", value: MyAPP.fields.reminder},
+			{label: $L("Star"), field: "StarRow", value: MyAPP.fields.star}
 		]
 	};
 	
@@ -73,6 +74,7 @@ FieldConfigAssistant.prototype.deactivate = function(event) {
 	MyAPP.fields.repeat = this.fieldConfigModel.items[11].value;
 	MyAPP.fields.repeatfrom = this.fieldConfigModel.items[12].value;
 	MyAPP.fields.reminder = this.fieldConfigModel.items[13].value;
+	MyAPP.fields.star = this.fieldConfigModel.items[14].value;
 	
 	MyAPP.fieldsCookie.put(MyAPP.fields);
 	//Mojo.Log.info("Fields: %j", MyAPP.fields);

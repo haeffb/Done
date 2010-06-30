@@ -2,15 +2,32 @@
 
 /* tasklist styles */ 
 
-/*
- .checkbox { 
-  width: 33px;
-  height: 27px;
-  top: 20px;
-  margin-left: 5px;
-  float: left;
+/* Add-Task-Scene Styles */
+ .checkbox-container {
+	margin:28px 5px 2px 5px;
+	float:left;
 }
-*/
+
+.star-add-container {
+	float: right;
+	clear: right;
+	min-height: 50px;
+	min-width: 32px;
+	margin:  2px 15px 2px 5px;
+	top: 10px;
+}
+.add-task-title {
+	clear: none;
+}
+
+.title, .title.selected {
+	font-size: 16px;
+}
+
+.textfield-group .add-task-title {
+  color: #eee;
+}
+
 
 /*
 .filterField .filter-field-container
@@ -25,9 +42,22 @@ https://developer.palm.com/distribution/viewtopic.php?f=11&t=3814
 }
 */
 
+
+
 body.palm-default {
     background: url('../images/background.png') center repeat;
 }
+
+
+/*
+
+body.palm-default {
+	border-width: 20px;
+	-webkit-border-image: url('../images/background.png') 0 30 10 30 repeat repeat;
+	-webkit-box-sizing: border-box;
+}
+
+*/
 
 .yellowpad {
 	position: fixed;
@@ -35,7 +65,7 @@ body.palm-default {
 	height: 100%;
 	width: 100%;
 	z-index: -2;
-	background: url(../images/yellowbackground.png) top left repeat-y;	
+	background: url(../images/yellowbackground.png) top left repeat;	
 }
 .redstripe {
 	position: fixed;
@@ -74,21 +104,26 @@ body.palm-default {
 	background:url(../images/yellowpad_short.png) top left repeat-y;	
 }
 
+.subtask {
+	width: 55px;
+	height: 20px;
+	float: left;
+}
+
 
 .palm-row .left .checkbox {
 	background:url(../images/checkbox-black.png) top left no-repeat;
 	width:40px;
-	height:36px;
+	height: 36px;
 	top: 15px;
 	margin:2px 8px;
 	float:left;
 }
+
 .palm-row .left .checkbox.true {
 	background-position:bottom left;
 }
-.palm-row .left .red .checkbox {
-	background:url(../images/checkbox-red.png) top left no-repeat;
-}
+
 
 
 .palm-row.tasks-list-header {
@@ -102,7 +137,8 @@ body.palm-default {
 	z-index:1;
 }
 
-.palm-row.add-tasks-list-header {
+.palm-row.add-tasks-list-header
+{
 	background-image:url(../images/groups-backdrop.png);
 	color:black;
 	z-index:1;
@@ -342,9 +378,9 @@ body.palm-default {
  .mynote {
  	color: #000;
 	font-size: 18px;
-	padding: 2px 10px 5px 10px;
-	margin-left: 15px;
-	margin-right: 10px;
+	padding: 5px 5px 5px 5px;
+	margin-left: 8px;
+	margin-right: 8px;
  }
 
  .taskbox2 {
@@ -415,6 +451,10 @@ body.palm-default {
 	
 }
 
+.palm-dark .textfield-group input {
+  color: #000 !important;
+}
+
 .star-list-container-0 {
 	float: left;
 	height: 16px;
@@ -426,31 +466,6 @@ body.palm-default {
 	z-index: 999999;
 
 */}
-.star-add-container {
-	float: right;
-	min-height: 50px;
-	min-width: 32px;
-	border-width: 0px 0px;
-	margin:  2px 5px 0px 0px;
-	-webkit-box-sizing: border-box;
-	z-index: 99999999;
-}
-.add-task-title {
- 	float: left;
-    width: 85%; 
-}
-
-.title .title.selected {
-	font-size: 16px;
-}
-
-.textfield-group .add-task-title {
-  color: #eee;
-}
-.palm-dark .textfield-group input {
-  color: #000 !important;
-}
-
 .done-icon-star-0 {
 	background: url(../images/icon-star-32x32.png) center center no-repeat;	
 }
