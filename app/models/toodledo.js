@@ -256,6 +256,7 @@ function API () {
 	};
 
 	this.editTask = function (task, timeDiff, inCallback) {
+		// no longer useing timeDiff ???
 		//Mojo.Log.info("---Entering addTask in Toodledo---");
 		var method = "editTask", repeat;
 		var apiString = this.url + method;

@@ -176,19 +176,25 @@ function Sync(){
 		}
 		//Mojo.Log.info("Local tasks is: %j", tasks);
 		var i; 
+//<--------------------
 		this.localEditedTasks = [];
 		for (i = 0; i < tasks.length; i++) {
 			//Set sync to true - will change to false later if
 			//task was also edited on web
 			tasks[i].sync = true;
-			this.localEditedTasks[tasks[i].value] = tasks[i];
+			//this.localEditedTasks[tasks[i].value] = tasks[i];
 		}
+/*
 		for (i in this.localEditedTasks) {
 			if (this.localEditedTasks.hasOwnProperty(i)) {
 				//Mojo.Log.info("Local Edited Task: %j", this.localEditedTasks[i].title, this.localEditedTasks[i].modified);
 			}
 		}
-		//this.localEditedTasks = tasks;
+
+*/
+		this.localEditedTasks = tasks;
+		Mojo.Log.info("Local edite tasks %j", this.localEditedTasks);
+// <----------------
 		//create new array for web tasks
 		this.webEditedTasks = [];
 		
@@ -196,10 +202,10 @@ function Sync(){
 		// Adjust modafter by 1 minute to be sure to retrieve any 
 		// "Advanced Repeat" tasks created during last sync.
 		// This may not be necessary - need to test!
-		if ((MyAPP.account.lastaddedit) > this.lastSync * 1) {
+		if ((MyAPP.account.lastaddedit) > MyAPP.local.lastservertaskmod) { //this.lastSync * 1) {
 			//Mojo.Log.info("New or edited tasks on web!");
 			var options = {
-				modafter: this.lastSync,
+				modafter: MyAPP.local.lastservertaskmod, //this.lastSync,
 				//get the first 100 tasks...
 				start: 0,
 				end: taskChunks
@@ -268,6 +274,11 @@ function Sync(){
 			tasks[i].startdate = tasks[i].startdate ? (tasks[i].startdate * 1 + this.timeDiff * 1) * 1000 : "";
 			tasks[i].duetime = (tasks[i].duetime > 0) ? (tasks[i].duetime * 1 + this.timeDiff * 1) * 1000 : "";
 			tasks[i].starttime = (tasks[i].starttime > 0) ? (tasks[i].starttime * 1 + this.timeDiff * 1) * 1000 : "";
+
+			// update last server task modification for next sync
+			if (tasks[i].modified > MyAPP.local.lastservertaskmod) {
+				MyAPP.local.lastservertaskmod = tasks[i].modified;
+			}
 			
 			//tasks[i].added = (tasks[i].added) * 1000;
 			tasks[i].modified = (tasks[i].modified) * 1000;
@@ -297,6 +308,7 @@ function Sync(){
 			//task was also edited on device
 			tasks[i].sync = true;
 			
+			
 			//Mojo.Log.info("Task:", i, tasks[i].title, tasks[i].modified);
 			//Mojo.Log.info("Task %j", tasks[i]);
 			//dao.updateTask(tasks[i], function () { });
@@ -307,15 +319,9 @@ function Sync(){
 		//Mojo.Log.info("Web tasks is: %j", this.webEditedTasks);
 		if (totalTasks > end) {
 			// need to grab more tasks!
-			var options = {
-				modafter: this.lastSync * 1 - 60,
-				start: end * 1 + 1,
-				end: end * 1 + taskChunks
-			};
 			api.getTasks(
-				// options
 				{
-					modafter: this.lastSync * 1 - 60,
+					modafter: MyAPP.local.lastservertaskmod, //this.lastSync * 1 - 60,
 					start: end * 1 + 1,
 					end: end * 1 + taskChunks
 				}, 
@@ -343,7 +349,9 @@ function Sync(){
 		//Mojo.Log.info("Local tasks %j", this.localEditedTasks);
 		//Mojo.Log.info("Web tasks %j", this.webEditedTasks);
 		
+//<------------
 		//Check to see if tasks have been edited in both locations:
+/*
 		for (j = 0; j < this.webEditedTasks.length; j++) {
 			//Mojo.Log.info("J", j, this.webEditedTasks[j].id);
 			if (this.localEditedTasks[this.webEditedTasks[j].id]) {
@@ -353,6 +361,21 @@ function Sync(){
 				this.webEditedTasks[j].sync = false;
 			}
 		}
+*/
+		for (i = 0; i < this.localEditedTasks.length; i++) {
+			Mojo.Log.info("I", i, this.localEditedTasks[i].value);
+			for (j = 0; j < this.webEditedTasks.length; j++) {
+				Mojo.Log.info("J", j, this.webEditedTasks[j].value);
+				if (''+this.localEditedTasks[i].value === ''+this.webEditedTasks[j].value) {
+					// uh-oh!
+					Mojo.Log.info("UH OH! TASK EDITED IN BOTH PLACES!!!!", this.webEditedTasks[j].id, this.webEditedTasks[j].title);
+					this.localEditedTasks[i].sync = false;
+					this.webEditedTasks[j].sync = false;
+				}
+				
+			}
+		}
+//<------------
 		
 		this.syncLocalToWeb();
 	};
@@ -360,6 +383,8 @@ function Sync(){
 	this.syncLocalToWeb = function() {
 		//Sync local updates to web
 		var i, j, tasksToAddToWeb = [];
+//<----------
+/*
 		for (i in this.localEditedTasks) {
 			if (this.localEditedTasks.hasOwnProperty(i)) {
 				//Mojo.Log.info("Local Edited Task: %j", this.localEditedTasks[i].title);
@@ -375,11 +400,28 @@ function Sync(){
 				}
 			}		
 		}
-		
+
+*/		
+		for (i = 0; i < this.localEditedTasks.length; i++) {
+			if (this.localEditedTasks[i].sync || this.localWins) {
+				Mojo.Log.info("Sending local task edit to web", this.localEditedTasks[i].title);
+				if (this.localEditedTasks[i].id) {
+					api.editTask(this.localEditedTasks[i], this.timeDiff, function(){
+						Mojo.Log.info("Edited web task!", this.localEditedTasks[i].title);
+					});
+				}
+				else {
+					tasksToAddToWeb.push(this.localEditedTasks[i]);
+				}
+			}
+		}
+
+//<------------------
 		if (tasksToAddToWeb.length) {
 			//Mojo.Log.info("Sending new tasks to web: %s", tasksToAddToWeb.length);
 			for (j = 0; j < tasksToAddToWeb.length; j++) {
-				//Mojo.Log.info("This task:", tasksToAddToWeb[j].title);
+				Mojo.Log.info("Adding local task to web:", tasksToAddToWeb[j].title);
+				this.count.tasksadded += 1;
 				api.addTask(tasksToAddToWeb[j], this.timeDiff, this.taskAdded.bind(this, tasksToAddToWeb[j]));
 			}
 		}
@@ -391,7 +433,7 @@ function Sync(){
 		// Make sure we've retrieved any changes to tasks that we just sent
 		// to Toodledo - i.e. new "modified" timestamp, etc.	
 		if (this.localEditedTasks.length) {
-			this.webEditedTasks = [];
+			this.finalWebEditedTasks = [];
 			var options = {
 				modafter: MyAPP.account.lastaddedit,
 				//get the first 100 tasks...
@@ -415,7 +457,7 @@ function Sync(){
 		//Track number of database adds so we know when we've completed.
 		if (this.webEditedTasks.length) {
 			for (j = 0; j < this.webEditedTasks.length; j++) {
-				//Mojo.Log.info("Adding web task:", j, this.webEditedTasks[j].title);
+				Mojo.Log.info("Adding web task:", j, this.webEditedTasks[j].title);
 				this.count.tasks += 1;
 				if (this.webEditedTasks[j].sync || !this.localWins) {
 					dao.updateTask(this.webEditedTasks[j], this.finishTransactions.bind(this, 'tasks'));
@@ -447,8 +489,8 @@ function Sync(){
 	
 	this.taskAdded = function(task, response){
 		//Mojo.Log.info("Task Added!?!?!");
-		//Mojo.Log.info("response: %j", response);
-		//Mojo.Log.info("task: %j", task);
+		Mojo.Log.info("response: %j", response);
+		//Mojo.Log.info("Task added: %j", task);
 		if (response.added) {
 			//delete original (local only) task
 			//Mojo.Log.info("Deleting task with value: ", task.value);
@@ -457,13 +499,12 @@ function Sync(){
 			//create new task with id from web
 			task.id = response.added;
 			task.value = task.id;
-			//Mojo.Log.info("Adding task: %j", task);
-			this.count.tasksadded += 1;
+			Mojo.Log.info("Adding task: %j", task);
 			dao.updateTask(task, this.finishTransactions.bind(this, 'tasksadded'));
 		}
 		else {
 			//Mojo.Log.info("Error adding task to Toodledo");
-			this.count.taskadded += 1;
+			//this.count.taskadded += 1;
 			this.finishTransactions('tasksadded');
 		}
 	};
@@ -522,6 +563,11 @@ function Sync(){
 			tasks[i].duetime = (tasks[i].duetime > 0) ? (tasks[i].duetime * 1 + this.timeDiff * 1) * 1000 : "";
 			tasks[i].starttime = (tasks[i].starttime > 0) ? (tasks[i].starttime * 1 + this.timeDiff * 1) * 1000 : "";
 			
+			// update last server task modification for next sync
+			if (tasks[i].modified > MyAPP.local.lastservertaskmod) {
+				MyAPP.local.lastservertaskmod = tasks[i].modified;
+			}
+			
 			//tasks[i].added = (tasks[i].added) * 1000;
 			tasks[i].modified = (tasks[i].modified) * 1000;
 			//tasks[i].completed = (tasks[i].completed > 0) ? (tasks[i].completed) * 1000 : "";
@@ -553,7 +599,7 @@ function Sync(){
 			//Mojo.Log.info("Task:", i, tasks[i].title, tasks[i].modified);
 			//Mojo.Log.info("Task %j", tasks[i]);
 			//dao.updateTask(tasks[i], function () { });
-			this.webEditedTasks.push(tasks[i]);
+			this.finalWebEditedTasks.push(tasks[i]);
 		}
 		//this.webEditedTasks.concat(this.webEditedTasks, tasks);
 		//Mojo.Log.info("Web tasks is: %j", tasks);
@@ -565,7 +611,7 @@ function Sync(){
 					modafter: MyAPP.account.lastaddedit,
 					start: end * 1 + 1,
 					end: end * 1 + taskChunks
-				}, this.gotEditedWebTasks.bind(this)
+				}, this.gotFinalWebTasks.bind(this)
 			);
 		}
 		else {
@@ -574,13 +620,13 @@ function Sync(){
 	};
 	
 	this.gotFinalTasks = function () {
-		Mojo.Log.info("Adding final web tasks:", this.webEditedTasks.length);
-		if (this.webEditedTasks.length) {
-			for (j = 0; j < this.webEditedTasks.length; j++) {
+		Mojo.Log.info("Adding final web tasks:", this.finalWebEditedTasks.length);
+		if (this.finalWebEditedTasks.length) {
+			for (j = 0; j < this.finalWebEditedTasks.length; j++) {
 				Mojo.Log.info("Adding final web task:", j);
 				this.count.tasksfinal += 1;
-				if (this.webEditedTasks[j].sync || !this.localWins) {
-					dao.updateTask(this.webEditedTasks[j], this.finishTransactions.bind(this, 'tasksfinal'));
+				if (this.finalWebEditedTasks[j].sync || !this.localWins) {
+					dao.updateTask(this.finalWebEditedTasks[j], this.finishTransactions.bind(this, 'tasksfinal'));
 				}
 				else {
 					this.finishTransactions('tasksfinal');
@@ -662,6 +708,7 @@ function Sync(){
 	};
 	
 	this.getFolders = function(){
+//FOLDERS
 		//Mojo.Log.info("Entering Get Folders");
 		
 		this.syncLog += "<br />" + $L("Syncing folders") + "...";

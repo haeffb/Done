@@ -37,7 +37,8 @@ MyAPP.local = {
 	lastfolderedit: 0, 
 	lastcontextedit: 0, 
 	lastgoaledit: 0, 
-	lastnotebookedit: 0
+	lastnotebookedit: 0,
+	lastservertaskmod: 0
 };
 
 MyAPP.prefs = {
@@ -166,7 +167,7 @@ AppAssistant.prototype.handleLaunch = function (launchParams) {
 		}
 	}
 	else {
-		//Mojo.Log.info(" Launch Parameters: %j", launchParams);
+		Mojo.Log.info(" Launch Parameters: %j", launchParams);
 		switch (launchParams.action) {
 		case "sync":
 
@@ -221,6 +222,7 @@ AppAssistant.prototype.handleLaunch = function (launchParams) {
 			notify.getNextDate();
 			break;
 		case 'openTask':
+			//Mojo.Log.info("app assitant openTask with value: ", launchParams.taskValue);
 			if (cardStageController) {
 				// Application already running
 				//Mojo.Log.info("Relaunch!");

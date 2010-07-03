@@ -651,7 +651,7 @@ IntroAssistant.prototype.finishSync = function (response) {
 
 */
 IntroAssistant.prototype.editTask = function (taskValue) {
-	//Mojo.Log.info("Task value:", taskValue);
+	Mojo.Log.info("Task value:", taskValue);
 	this.controller.stageController.pushScene('addtask', taskValue);
 };
 

@@ -1,10 +1,10 @@
-function AddtaskAssistant(task){
+function AddtaskAssistant(taskValue){
     /* this is the creator function for your scene assistant object. It will be passed all the 
      additional parameters (after the scene name) that were passed to pushScene. The reference
      to the scene controller (this.controller) has not be established yet, so any initialization
      that needs the scene controller should be done in the setup function below. */
-    //Mojo.Log.info("Entering AddTaskAssitant Constructor");
-    this.taskValue = task;
+    Mojo.Log.info("Entering AddTaskAssitant Constructor with", taskValue);
+    this.taskValue = taskValue;
 }
 
 AddtaskAssistant.prototype.setup = function(){
@@ -824,11 +824,12 @@ AddtaskAssistant.prototype.gotGoalsDb = function(response){
     
     // Retrieve task by value;
     sqlString = "SELECT * FROM tasks WHERE value=" + this.taskValue + ";GO;";
+	Mojo.Log.info("SQL String is: ", sqlString);
     dao.retrieveTasksByString(sqlString, this.gotTasks.bind(this));
 };
 
 AddtaskAssistant.prototype.gotTasks = function(responseText){
-    //Mojo.Log.info("Task: %j", responseText);
+    Mojo.Log.info("Task: %j", responseText);
     this.task = responseText[0];
     
     var startTimeString = $L("No Start Time");

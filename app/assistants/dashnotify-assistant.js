@@ -66,7 +66,7 @@ DashnotifyAssistant.prototype.gotTasksDB = function (response) {
 		//response.reverse();
 		response.sort(this.sortDates);
 		for (i = 0; i < response.length; i++) {
-			//Mojo.Log.info("Task: %j", response[i]);
+			//Mojo.Log.info("Task in dashnotify: %j", response[i]);
 			myDateString = (response[i].duedate) ? Mojo.Format.formatDate(new Date(response[i].duedate), {
 				date: 'medium'
 			}) : $L("no due date");
@@ -81,6 +81,7 @@ DashnotifyAssistant.prototype.gotTasksDB = function (response) {
 				value: response[i].value
 			});
 		}
+		Mojo.Log.info("dashInfos:%j", this.dashInfos[0]);
 		//this.display = response.length;
 		this.display = 1;
 		this.displayDashboard();
@@ -153,6 +154,7 @@ DashnotifyAssistant.prototype.nextNotify = function () {
 DashnotifyAssistant.prototype.launchMainEdit = function (event) {
 	//Mojo.Log.info("Tap on DashAlarm!!! %j", event.target.className);
 	//Mojo.Log.logProperties(event.target, "event");
+	//Mojo.Log.info("launch app with ", this.display-1, this.dashInfos[this.display - 1].value);
 	this.controller.serviceRequest('palm://com.palm.applicationManager', 
 		{
 			method: 'launch',
@@ -160,7 +162,7 @@ DashnotifyAssistant.prototype.launchMainEdit = function (event) {
 				id: Mojo.appInfo.id,
 				params: {
 					action: 'openTask',
-					taskValue: this.dashInfos[this.display - 1].value
+					taskValue: '' + this.dashInfos[this.display - 1].value
 				}
 			}
 		}
