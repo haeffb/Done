@@ -181,6 +181,8 @@ AccountsAssistant.prototype.clearUser = function (value) {
 				MyAPP.local.lastdelete = 0;
 				MyAPP.local.lastfolderedit = 0;
 				MyAPP.local.lastgoaledit = 0;
+				MyAPP.local.lastservertaskmod = 0;
+
 				
 				//update sync key
 				api.init();

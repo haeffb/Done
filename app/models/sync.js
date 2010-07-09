@@ -203,6 +203,8 @@ function Sync(){
 		// "Advanced Repeat" tasks created during last sync.
 		// This may not be necessary - need to test!
 		if ((MyAPP.account.lastaddedit) > MyAPP.local.lastservertaskmod) { //this.lastSync * 1) {
+			// save last server tasks modification date for use in getting tasks
+			this.lastservertaskmod = MyAPP.local.lastservertaskmod;
 			//Mojo.Log.info("New or edited tasks on web!");
 			var options = {
 				modafter: MyAPP.local.lastservertaskmod, //this.lastSync,
@@ -229,7 +231,7 @@ function Sync(){
 		var totalTasks = tasksXML[0].getAttribute('total') * 1;
 		var start = tasksXML[0].getAttribute('start') * 1;
 		var end = tasksXML[0].getAttribute('end') * 1;
-		//Mojo.Log.info("Total:", totalTasks, "Start:", start, "End:", end);
+		Mojo.Log.info("Total:", totalTasks, "Start:", start, "End:", end);
 				
 		var taskXML = responseXML.getElementsByTagName('task');
 		//Mojo.Log.info("New or edited Tasks from Web %s", taskXML.length);
@@ -276,8 +278,9 @@ function Sync(){
 			tasks[i].starttime = (tasks[i].starttime > 0) ? (tasks[i].starttime * 1 + this.timeDiff * 1) * 1000 : "";
 
 			// update last server task modification for next sync
-			if (tasks[i].modified > MyAPP.local.lastservertaskmod) {
-				MyAPP.local.lastservertaskmod = tasks[i].modified;
+			if (tasks[i].modified > this.lastservertaskmod) {
+				Mojo.Log.info("Last server task modified:", tasks[i].modified);
+				this.lastservertaskmod = tasks[i].modified;
 			}
 			
 			//tasks[i].added = (tasks[i].added) * 1000;
@@ -336,6 +339,10 @@ function Sync(){
 	
 	this.gotWebTasks = function(){
 		//Mojo.Log.info("Entering gotWebTasks function to sync tasks");
+		
+		// Store last server task mod
+		MyAPP.local.lastservertaskmod = this.lastservertaskmod;
+
 		this.syncLog += "<br />" + $L("Syncing tasks") + "...";
 		if (this.outputDiv) {
 			this.outputDiv.innerHTML += "<br />" + $L("Syncing tasks") + "...";
@@ -473,7 +480,7 @@ function Sync(){
 		
 		//Check for deleted tasks on web:
 		if (MyAPP.account.lastdelete > this.lastSync) {
-			//Mojo.Log.info("Deleted tasks on web since ", this.lastSync);
+			Mojo.Log.info("Deleted tasks on web since ", this.lastSync);
 			api.getDeletedTasks(this.lastSync, this.gotDeletedTasks.bind(this));
 			
 		}
@@ -564,8 +571,8 @@ function Sync(){
 			tasks[i].starttime = (tasks[i].starttime > 0) ? (tasks[i].starttime * 1 + this.timeDiff * 1) * 1000 : "";
 			
 			// update last server task modification for next sync
-			if (tasks[i].modified > MyAPP.local.lastservertaskmod) {
-				MyAPP.local.lastservertaskmod = tasks[i].modified;
+			if (tasks[i].modified > this.lastservertaskmod) {
+				this.lastservertaskmod = tasks[i].modified;
 			}
 			
 			//tasks[i].added = (tasks[i].added) * 1000;
@@ -621,6 +628,10 @@ function Sync(){
 	
 	this.gotFinalTasks = function () {
 		Mojo.Log.info("Adding final web tasks:", this.finalWebEditedTasks.length);
+		
+		// Store last server task mod
+		MyAPP.local.lastservertaskmod = this.lastservertaskmod;
+		
 		if (this.finalWebEditedTasks.length) {
 			for (j = 0; j < this.finalWebEditedTasks.length; j++) {
 				Mojo.Log.info("Adding final web task:", j);
