@@ -1,14 +1,14 @@
 function Sync(){
-	// arrays of tasks that need to sync
-	this.localEditedTasks = [];
-	this.webEditedTasks = [];
 	
-	var taskChunks = 100;
+	var taskChunks = 100; // how many tasks to grab from Toodledo at a time
 	
+	// initialize variables.
 	this.initSync = function(syncCallback, outputDiv){
 		// function to call when sync finishes
 		this.syncCallback = syncCallback;
-		this.tasksNotStarted = true;  // have to sync folder/context changes before tasks
+		this.tasksNotStarted = true;  // have to complete sync folder/context changes before tasks
+		
+		// write sync log to screen
 		if (outputDiv) {
 			this.outputDiv = outputDiv;
 		}
@@ -71,13 +71,12 @@ function Sync(){
 				this.outputDiv.innerHTML += "<br />" + $L("Retrieved Server Info");
 			}
 			//Compare our time to server time & determine adjustment
-			ourTime = Math.floor(new Date().getTime() / 1000);
+			this.ourTime = Math.floor(new Date().getTime() / 1000);
 			//Mojo.Log.info("Our time is ", ourTime);
-			this.servDiff = response.server.unixtime - ourTime;
+			this.servDiff = response.server.unixtime - this.ourTime;
 			
 			//Convert last sync date/time to seconds so we can compare to server
 			this.lastSync = Math.floor(MyAPP.prefs.lastSync / 1000);
-			this.ourTime = Math.floor(new Date().getTime() / 1000);
 			//Mojo.Log.info("Last sync in seconds:", this.lastSync, this.ourTime);
 			
 			//Local time of last sync
@@ -86,7 +85,7 @@ function Sync(){
 			this.lastSync += this.servDiff;
 			
 			//Mojo.Log.info("Time Difference is ", this.servDiff, "seconds");
-			//Mojo.Log.info("Last sync corrected:", this.lastSync, this.lastSyncLocal);
+			//Mojo.Log.info("Last sync corrected-server:", this.lastSync, "local:", this.lastSyncLocal);
 			
 			// determine adjustment for unix timestamps from Toodledo
 			// based on timezone offsets
@@ -108,8 +107,9 @@ function Sync(){
 				this.outputDiv.innerHTML += "<br />" + $L("No response from server!");
 			}
 		}
-		//var myWindow = Mojo.Controller.getAppController().getActiveStage().activeScene().window;
-		//Mojo.Controller.errorDialog("Popup an Error!", myWindow);
+		var myWindow = Mojo.Controller.getAppController().getActiveStage().activeScene().window;
+		Mojo.Controller.errorDialog("Popup an Error!", myWindow);
+		//Mojo.Log.info("Didn't happen!");
 		
 	};
 	
@@ -125,13 +125,19 @@ function Sync(){
 					" <br />" + $L("Last web add/edit:") + " " + 
 					Mojo.Format.formatDate(new Date(response.account.lastaddedit * 1000), "short");
 			}
-			// store account info from server, just in case we need it elsewhere
+			// store account info from server
 			MyAPP.account = response.account;
-			MyAPP.accountCookie = new Mojo.Model.Cookie(MyAPP.appName + "account");
-			MyAPP.accountCookie.put(MyAPP.account);
+			//MyAPP.accountCookie = new Mojo.Model.Cookie(MyAPP.appName + "account");
+			//MyAPP.accountCookie.put(MyAPP.account);
+			MyAPP.prefsDb.add('account', MyAPP.account, 
+				function () {},
+				function (event) {
+					Mojo.Log.info("Prefs DB failure %j", event);
+				}
+			);
 			
-			Mojo.Log.info("Last sync server:", this.lastSync, "local:", this.lastSyncLocal);
-			Mojo.Log.info("Last add/edit:", MyAPP.account.lastaddedit, MyAPP.local.lastaddedit);
+			//Mojo.Log.info("Last sync server:", this.lastSync, "local:", this.lastSyncLocal);
+			//Mojo.Log.info("Last add/edit server:", MyAPP.account.lastaddedit, "local", MyAPP.local.lastaddedit);
 			
 			
 			// begin by syncing folders...
@@ -152,17 +158,25 @@ function Sync(){
 	this.beginTaskSync = function () {
 		
 		//Mojo.Log.info("Beginning Task Sync");
+		
+		//store arrays of tasks for syncing
+		this.localEditedTasks = [];
+		this.webEditedTasks = [];
+		this.lastservertaskmod = MyAPP.local.lastservertaskmod;
+		
 		//Check for new/edited tasks on device:
+		dao.retrieveTasksFromDate(this.lastSyncLocal * 1000, this.gotLocalTasks.bind(this));
+/*
 		if (MyAPP.local.lastaddedit > this.lastSyncLocal) {
 			//retrieve local tasks
-			dao.retrieveTasksFromDate(this.lastSyncLocal * 1000, this.gotLocalTasks.bind(this));
 		}
 		else {
 			//Mojo.Log.info("No edits on device!");
 			var notasks = [];
 			this.gotLocalTasks(notasks);
 		}
-		
+
+*/		
 		//Check for deleted tasks on device:
 		if (MyAPP.local.lastdelete > this.lastSyncLocal) {
 			//Mojo.Log.info("Deleted tasks on device!");
@@ -172,7 +186,7 @@ function Sync(){
 	};
 	
 	this.gotLocalTasks = function(tasks){
-		Mojo.Log.info("New or edited tasks on device: %s", tasks.length);
+		//Mojo.Log.info("New or edited tasks on device: %s", tasks.length);
 		this.syncLog += "<br />" + $L("New/edited tasks on device:") + 
 				" " + tasks.length;
 		if (this.outputDiv) {
@@ -181,33 +195,20 @@ function Sync(){
 		}
 		//Mojo.Log.info("Local tasks is: %j", tasks);
 		var i; 
-//<--------------------
 		this.localEditedTasks = [];
 		for (i = 0; i < tasks.length; i++) {
 			//Set sync to true - will change to false later if
 			//task was also edited on web
-			Mojo.Log.info("Local task:", tasks[i].title);
+			//Mojo.Log.info("Local task:", i, tasks[i].title);
 			tasks[i].sync = true;
-			//this.localEditedTasks[tasks[i].value] = tasks[i];
-		}
-/*
-		for (i in this.localEditedTasks) {
-			if (this.localEditedTasks.hasOwnProperty(i)) {
-				//Mojo.Log.info("Local Edited Task: %j", this.localEditedTasks[i].title, this.localEditedTasks[i].modified);
-			}
 		}
 
-*/
 		this.localEditedTasks = tasks;
-		Mojo.Log.info("Local edited tasks %j", this.localEditedTasks);
-// <----------------
-		//create new array for web tasks
-		this.webEditedTasks = [];
+		//Mojo.Log.info("Local edited tasks %j", this.localEditedTasks);
 		
 		//Check for new/edited tasks on web:
-		// Adjust modafter by 1 minute to be sure to retrieve any 
-		// "Advanced Repeat" tasks created during last sync.
-		// This may not be necessary - need to test!
+		//Mojo.Log.info("MyAPP.local %j", MyAPP.local);
+		//Mojo.Log.info("Last web add/edit:", MyAPP.account.lastaddedit, "prev sync:", MyAPP.local.lastservertaskmod);
 		if ((MyAPP.account.lastaddedit) > MyAPP.local.lastservertaskmod) { //this.lastSync * 1) {
 			// save last server tasks modification date for use in getting tasks
 			this.lastservertaskmod = MyAPP.local.lastservertaskmod;
@@ -218,6 +219,8 @@ function Sync(){
 				start: 0,
 				end: taskChunks
 			};
+			// don't get completed tasks on first sync.
+			options.notcomp = MyAPP.local.firstsync ? 1 : 0;
 			api.getTasks(options, this.gotEditedWebTasks.bind(this));
 		}
 		else {
@@ -237,7 +240,7 @@ function Sync(){
 		var totalTasks = tasksXML[0].getAttribute('total') * 1;
 		var start = tasksXML[0].getAttribute('start') * 1;
 		var end = tasksXML[0].getAttribute('end') * 1;
-		Mojo.Log.info("Total:", totalTasks, "Start:", start, "End:", end);
+		//Mojo.Log.info("Total:", totalTasks, "Start:", start, "End:", end);
 				
 		var taskXML = responseXML.getElementsByTagName('task');
 		//Mojo.Log.info("New or edited Tasks from Web %s", taskXML.length);
@@ -247,94 +250,23 @@ function Sync(){
 			this.outputDiv.innerHTML += "<br />" + $L("New/edited tasks from web:") + 
 				" "  + taskXML.length;
 		}
-		
-		var tasks = [], id, temp, temp2, key;
-		var mykeys = ['parent', 'children', 'title', 'tag', 'folder', 'context', 'goal', 
-			'added', 'modified', 'duedate', 'startdate', 'duetime', 'started', 
-			'starttime', 'reminder', 'repeat', 'completed', 'completedon', 
-			'rep_advanced', 'status', 'star', 'priority', 'length', 'timer', 'note'];
+		var i;
 		for (i = 0; i < taskXML.length; i++) {
-			id = taskXML[i].getElementsByTagName('id').item(0).textContent;
-			//Mojo.Log.info("Task ID:", id);
-			tasks[i] = {};
-			tasks[i].id = id;
-			
-			for (key = 0; key < mykeys.length; key++) {
-				//Mojo.Log.info("Key:", mykeys[key]);
-				temp = taskXML[i].getElementsByTagName(mykeys[key]);
-				//Mojo.Log.info("Keys %j", temp, key, mykeys[key]);
-				if (temp.length > 0) {
-					tasks[i][mykeys[key]] = temp.item(0).textContent;
-				}
-				else {
-					tasks[i][mykeys[key]] = 0;
-				}
-			}
-			//Mojo.Log.info("Get context", taskXML[i].getElementsByTagName('context'));
-			tasks[i].context = taskXML[i].getElementsByTagName('context').item(0).getAttribute('id');
-			tasks[i].goal = taskXML[i].getElementsByTagName('goal').item(0).getAttribute('id');
-
-			// add milliseconds to be consistent with Javascript date object
-			// convert duedate/time & startdate/time from server
-			// because server stores them as plain strings (2010-04-08)
-			// and they are sent in server timezone.
-			tasks[i].duedate = tasks[i].duedate ? (tasks[i].duedate * 1 + this.timeDiff * 1) * 1000 : "";
-			tasks[i].startdate = tasks[i].startdate ? (tasks[i].startdate * 1 + this.timeDiff * 1) * 1000 : "";
-			tasks[i].duetime = (tasks[i].duetime > 0) ? (tasks[i].duetime * 1 + this.timeDiff * 1) * 1000 : "";
-			tasks[i].starttime = (tasks[i].starttime > 0) ? (tasks[i].starttime * 1 + this.timeDiff * 1) * 1000 : "";
-
-			// update last server task modification for next sync
-			if (tasks[i].modified > this.lastservertaskmod) {
-				Mojo.Log.info("Last server task modified:", tasks[i].modified);
-				this.lastservertaskmod = tasks[i].modified;
-			}
-			
-			//tasks[i].added = (tasks[i].added) * 1000;
-			tasks[i].modified = (tasks[i].modified) * 1000;
-			//tasks[i].completed = (tasks[i].completed > 0) ? (tasks[i].completed) * 1000 : "";
-			tasks[i].added = (tasks[i].added * 1 + this.timeDiff * 1) * 1000;
-			//tasks[i].modified = (tasks[i].modified * 1 + this.timeDiff * 1) * 1000;
-			tasks[i].completed = (tasks[i].completed > 0) ? (tasks[i].completed * 1 + this.timeDiff * 1) * 1000 : "";
-			
-			tasks[i].value = id;
-			
-			// Make sure duetime is set to same date as duedate
-			// Not sure if Toodledo duetime date can be trusted		
-			if (tasks[i].startdate && tasks[i].starttime) {
-				temp = new Date(tasks[i].starttime);
-				temp2 = new Date(tasks[i].startdate);
-				temp2.setHours(temp.getHours(), temp.getMinutes(), temp.getSeconds(), 0);
-				tasks[i].starttime =  temp2.getTime();
-			}
-			if (tasks[i].duedate && tasks[i].duetime) {
-				temp = new Date(tasks[i].duetime);
-				temp2 = new Date(tasks[i].duedate);
-				temp2.setHours(temp.getHours(), temp.getMinutes(), temp.getSeconds(), 0);
-				tasks[i].duetime =  temp2.getTime();
-			}
-
-			//Set sync to true - will change to false later if
-			//task was also edited on device
-			tasks[i].sync = true;
-			
-			
-			//Mojo.Log.info("Task:", i, tasks[i].title, tasks[i].modified);
-			//Mojo.Log.info("Task %j", tasks[i]);
-			//dao.updateTask(tasks[i], function () { });
-			this.webEditedTasks.push(tasks[i]);
+			this.webEditedTasks.push(this.parseWebTask (taskXML[i]));
 		}
 		//this.webEditedTasks.concat(this.webEditedTasks, tasks);
 		//Mojo.Log.info("Web tasks is: %j", tasks);
 		//Mojo.Log.info("Web tasks is: %j", this.webEditedTasks);
 		if (totalTasks > end) {
 			// need to grab more tasks!
-			api.getTasks(
-				{
+			var options = {
 					modafter: MyAPP.local.lastservertaskmod, //this.lastSync * 1 - 60,
 					start: end * 1 + 1,
 					end: end * 1 + taskChunks
-				}, 
-				this.gotEditedWebTasks.bind(this)
+			};
+			//don't get completed tasks on first sync
+			options.notcomp = MyAPP.local.firstsync ? 1 : 0;
+			api.getTasks(options, this.gotEditedWebTasks.bind(this)
 			);
 		}
 		else {
@@ -343,12 +275,90 @@ function Sync(){
 		
 	};
 	
+	this.parseWebTask = function (taskXML) {
+		try {
+			var task, id, temp, temp2, key;
+			var mykeys = ['parent', 'children', 'title', 'tag', 'folder', 'context', 'goal', 'added', 'modified', 'duedate', 'startdate', 'duetime', 'started', 'starttime', 'reminder', 'repeat', 'completed', 'completedon', 'rep_advanced', 'status', 'star', 'priority', 'length', 'timer', 'note'];
+			
+			id = taskXML.getElementsByTagName('id').item(0).textContent;
+			//Mojo.Log.info("Task ID:", id);
+			task = {};
+			task.id = id;
+			
+			for (key = 0; key < mykeys.length; key++) {
+				//Mojo.Log.info("Key:", mykeys[key]);
+				temp = taskXML.getElementsByTagName(mykeys[key]);
+				//Mojo.Log.info("Keys %j", temp, key, mykeys[key]);
+				if (temp.length > 0) {
+					task[mykeys[key]] = temp.item(0).textContent;
+				}
+				else {
+					task[mykeys[key]] = 0;
+				}
+			}
+			task.context = taskXML.getElementsByTagName('context').item(0).getAttribute('id');
+			task.goal = taskXML.getElementsByTagName('goal').item(0).getAttribute('id');
+			
+			// add milliseconds to be consistent with Javascript date object
+			// convert duedate/time & startdate/time from server
+			// because server stores them as plain strings (2010-04-08)
+			// and they are sent in server timezone.
+			task.duedate = task.duedate ? (task.duedate * 1 + this.timeDiff * 1) * 1000 : "";
+			task.startdate = task.startdate ? (task.startdate * 1 + this.timeDiff * 1) * 1000 : "";
+			task.duetime = (task.duetime > 0) ? (task.duetime * 1 + this.timeDiff * 1) * 1000 : "";
+			task.starttime = (task.starttime > 0) ? (task.starttime * 1 + this.timeDiff * 1) * 1000 : "";
+			
+			// update last server task modification for next sync
+			if (task.modified > this.lastservertaskmod) {
+				//Mojo.Log.info("Last server task modified:", task.modified);
+				this.lastservertaskmod = task.modified;
+			}
+			
+			task.modified = (task.modified) * 1000;
+			task.added = (task.added * 1 + this.timeDiff * 1) * 1000;
+			task.completed = (task.completed > 0) ? (task.completed * 1 + this.timeDiff * 1) * 1000 : "";
+			
+			task.value = id;
+			
+			// Make sure duetime is set to same date as duedate
+			// Not sure if Toodledo duetime date can be trusted		
+			if (task.startdate && task.starttime) {
+				temp = new Date(task.starttime);
+				temp2 = new Date(task.startdate);
+				temp2.setHours(temp.getHours(), temp.getMinutes(), temp.getSeconds(), 0);
+				task.starttime = temp2.getTime();
+			}
+			if (task.duedate && task.duetime) {
+				temp = new Date(task.duetime);
+				temp2 = new Date(task.duedate);
+				temp2.setHours(temp.getHours(), temp.getMinutes(), temp.getSeconds(), 0);
+				task.duetime = temp2.getTime();
+			}
+			
+			//Set sync to true - will change to false later if
+			//task was also edited on device
+			task.sync = true;
+			
+			//Mojo.Log.info("Task:", i, task.title, task.modified);
+			//Mojo.Log.info("Task %j", task);
+			//dao.updateTask(task, function () { });
+		}
+		catch (e) {
+			this.syncLog += "<br />" + $L("Error parsing task: ") + id + "...";
+			if (this.outputDiv) {
+				this.outputDiv.innerHTML += "<br />" + $L("Error parsing task: <br />")
+					 + id + " " + task.title + "";
+			}	
+		}
+		return task;
+	};
 	
 	this.gotWebTasks = function(){
 		//Mojo.Log.info("Entering gotWebTasks function to sync tasks");
 		
 		// Store last server task mod
-		MyAPP.local.lastservertaskmod = this.lastservertaskmod;
+		//MyAPP.local.lastservertaskmod = this.lastservertaskmod;
+		//Mojo.Log.info("MyAPP.local in gotWebTasks %j", MyAPP.local);
 
 		this.syncLog += "<br />" + $L("Syncing tasks") + "...";
 		if (this.outputDiv) {
@@ -363,19 +373,8 @@ function Sync(){
 		//Mojo.Log.info("Local tasks %j", this.localEditedTasks);
 		//Mojo.Log.info("Web tasks %j", this.webEditedTasks);
 		
-//<------------
 		//Check to see if tasks have been edited in both locations:
-/*
-		for (j = 0; j < this.webEditedTasks.length; j++) {
-			//Mojo.Log.info("J", j, this.webEditedTasks[j].id);
-			if (this.localEditedTasks[this.webEditedTasks[j].id]) {
-				// uh-oh!
-				//Mojo.Log.info("UH OH! TASK EDITED IN BOTH PLACES!!!!", this.webEditedTasks[j].id, this.webEditedTasks[j].title);
-				this.localEditedTasks[this.webEditedTasks[j].id].sync = false;
-				this.webEditedTasks[j].sync = false;
-			}
-		}
-*/
+
 		for (i = 0; i < this.localEditedTasks.length; i++) {
 			//Mojo.Log.info("I", i, this.localEditedTasks[i].value);
 			for (j = 0; j < this.webEditedTasks.length; j++) {
@@ -389,39 +388,21 @@ function Sync(){
 				
 			}
 		}
-//<------------
-		
+
 		this.syncLocalToWeb();
 	};
 			
 	this.syncLocalToWeb = function() {
+		//Mojo.Log.info("Syncing Local to Web");
 		//Sync local updates to web
 		var i, j, tasksToAddToWeb = [];
-//<----------
-/*
-		for (i in this.localEditedTasks) {
-			if (this.localEditedTasks.hasOwnProperty(i)) {
-				//Mojo.Log.info("Local Edited Task: %j", this.localEditedTasks[i].title);
-				if (this.localEditedTasks[i].sync || this.localWins) {
-					if (this.localEditedTasks[i].id) {
-						api.editTask(this.localEditedTasks[i], this.timeDiff, function(){
-							//Mojo.Log.info("Edited web task!");
-						});
-					}
-					else {
-						tasksToAddToWeb.push(this.localEditedTasks[i]);
-					}
-				}
-			}		
-		}
 
-*/		
 		for (i = 0; i < this.localEditedTasks.length; i++) {
 			if (this.localEditedTasks[i].sync || this.localWins) {
-				Mojo.Log.info("Sending local task edit to web", this.localEditedTasks[i].title);
+				//Mojo.Log.info("Sending local task edit to web", this.localEditedTasks[i].title);
 				if (this.localEditedTasks[i].id) {
 					api.editTask(this.localEditedTasks[i], this.timeDiff, function(){
-						Mojo.Log.info("Edited web task!", this.localEditedTasks[i].title);
+						//Mojo.Log.info("Edited web task!", this.localEditedTasks[i].title);
 					});
 				}
 				else {
@@ -430,13 +411,12 @@ function Sync(){
 			}
 		}
 
-//<------------------
 		if (tasksToAddToWeb.length) {
 			//Mojo.Log.info("Sending new tasks to web: %s", tasksToAddToWeb.length);
 			for (j = 0; j < tasksToAddToWeb.length; j++) {
-				Mojo.Log.info("Adding local task to web:", tasksToAddToWeb[j].title);
+				//Mojo.Log.info("Adding local task to web:", tasksToAddToWeb[j].title);
 				this.count.tasksadded += 1;
-				api.addTask(tasksToAddToWeb[j], this.timeDiff, this.taskAdded.bind(this, tasksToAddToWeb[j]));
+				api.addTask(tasksToAddToWeb[j], this.taskAdded.bind(this, tasksToAddToWeb[j]));
 			}
 		}
 		else {
@@ -446,6 +426,7 @@ function Sync(){
 		
 		// Make sure we've retrieved any changes to tasks that we just sent
 		// to Toodledo - i.e. new "modified" timestamp, etc.	
+		//Mojo.Log.info("Trying to retrieve updated tasks", this.localEditedTasks.length);
 		if (this.localEditedTasks.length) {
 			this.finalWebEditedTasks = [];
 			var options = {
@@ -471,7 +452,7 @@ function Sync(){
 		//Track number of database adds so we know when we've completed.
 		if (this.webEditedTasks.length) {
 			for (j = 0; j < this.webEditedTasks.length; j++) {
-				Mojo.Log.info("Adding web task:", j, this.webEditedTasks[j].title);
+				//Mojo.Log.info("Adding web task:", j, this.webEditedTasks[j].title);
 				this.count.tasks += 1;
 				if (this.webEditedTasks[j].sync || !this.localWins) {
 					dao.updateTask(this.webEditedTasks[j], this.finishTransactions.bind(this, 'tasks'));
@@ -487,7 +468,7 @@ function Sync(){
 		
 		//Check for deleted tasks on web:
 		if (MyAPP.account.lastdelete > this.lastSync) {
-			Mojo.Log.info("Deleted tasks on web since ", this.lastSync);
+			//Mojo.Log.info("Deleted tasks on web since ", this.lastSync);
 			api.getDeletedTasks(this.lastSync, this.gotDeletedTasks.bind(this));
 			
 		}
@@ -503,7 +484,7 @@ function Sync(){
 	
 	this.taskAdded = function(task, response){
 		//Mojo.Log.info("Task Added!?!?!");
-		Mojo.Log.info("response: %j", response);
+		//Mojo.Log.info("response: %j", response);
 		//Mojo.Log.info("Task added: %j", task);
 		if (response.added) {
 			//delete original (local only) task
@@ -513,7 +494,7 @@ function Sync(){
 			//create new task with id from web
 			task.id = response.added;
 			task.value = task.id;
-			Mojo.Log.info("Adding task: %j", task);
+			//Mojo.Log.info("Adding task: %j", task);
 			dao.updateTask(task, this.finishTransactions.bind(this, 'tasksadded'));
 		}
 		else {
@@ -536,88 +517,11 @@ function Sync(){
 				
 		var taskXML = responseXML.getElementsByTagName('task');
 		//Mojo.Log.info("New or edited Tasks from Web %s", taskXML.length);
-/*
-		if (this.outputDiv) {
-			this.outputDiv.innerHTML += "<br />" + $L("New/edited tasks from web:") + 
-				" "  + taskXML.length;
-		}
 
-*/		
-		var tasks = [], id, temp, key;
-		var mykeys = ['parent', 'children', 'title', 'tag', 'folder', 'context', 'goal', 
-			'added', 'modified', 'duedate', 'startdate', 'duetime', 'started', 
-			'starttime', 'reminder', 'repeat', 'completed', 'completedon', 
-			'rep_advanced', 'status', 'star', 'priority', 'length', 'timer', 'note'];
 		for (i = 0; i < taskXML.length; i++) {
-			id = taskXML[i].getElementsByTagName('id').item(0).textContent;
-			//Mojo.Log.info("Task ID:", id);
-			tasks[i] = {};
-			tasks[i].id = id;
-			
-			for (key = 0; key < mykeys.length; key++) {
-				//Mojo.Log.info("Key:", mykeys[key]);
-				temp = taskXML[i].getElementsByTagName(mykeys[key]);
-				//Mojo.Log.info("Keys %j", temp, key, mykeys[key]);
-				if (temp.length > 0) {
-					tasks[i][mykeys[key]] = temp.item(0).textContent;
-				}
-				else {
-					tasks[i][mykeys[key]] = 0;
-				}
-			}
-			//Mojo.Log.info("Get context", taskXML[i].getElementsByTagName('context'));
-			tasks[i].context = taskXML[i].getElementsByTagName('context').item(0).getAttribute('id');
-
-			// add milliseconds to be consistent with Javascript date object
-			// convert duedate/time & startdate/time from server
-			// because server stores them as plain strings (2010-04-08)
-			// and they are sent in server timezone.
-			tasks[i].duedate = tasks[i].duedate ? (tasks[i].duedate * 1 + this.timeDiff * 1) * 1000 : "";
-			tasks[i].startdate = tasks[i].startdate ? (tasks[i].startdate * 1 + this.timeDiff * 1) * 1000 : "";
-			tasks[i].duetime = (tasks[i].duetime > 0) ? (tasks[i].duetime * 1 + this.timeDiff * 1) * 1000 : "";
-			tasks[i].starttime = (tasks[i].starttime > 0) ? (tasks[i].starttime * 1 + this.timeDiff * 1) * 1000 : "";
-			
-			// update last server task modification for next sync
-			if (tasks[i].modified > this.lastservertaskmod) {
-				this.lastservertaskmod = tasks[i].modified;
-			}
-			
-			//tasks[i].added = (tasks[i].added) * 1000;
-			tasks[i].modified = (tasks[i].modified) * 1000;
-			//tasks[i].completed = (tasks[i].completed > 0) ? (tasks[i].completed) * 1000 : "";
-			tasks[i].added = (tasks[i].added * 1 + this.timeDiff * 1) * 1000;
-			//tasks[i].modified = (tasks[i].modified * 1 + this.timeDiff * 1) * 1000;
-			tasks[i].completed = (tasks[i].completed > 0) ? (tasks[i].completed * 1 + this.timeDiff * 1) * 1000 : "";
-			
-			tasks[i].value = id;
-			
-			// Make sure duetime is set to same date as duedate
-			// Not sure if Toodledo duetime date can be trusted		
-			if (tasks[i].startdate && tasks[i].starttime) {
-				temp = new Date(tasks[i].starttime);
-				temp2 = new Date(tasks[i].startdate);
-				temp2.setHours(temp.getHours(), temp.getMinutes(), temp.getSeconds(), 0);
-				tasks[i].starttime =  temp2.getTime();
-			}
-			if (tasks[i].duedate && tasks[i].duetime) {
-				temp = new Date(tasks[i].duetime);
-				temp2 = new Date(tasks[i].duedate);
-				temp2.setHours(temp.getHours(), temp.getMinutes(), temp.getSeconds(), 0);
-				tasks[i].duetime =  temp2.getTime();
-			}
-			
-			//Set sync to true - will change to false later if
-			//task was also edited on device
-			tasks[i].sync = true;
-			
-			//Mojo.Log.info("Task:", i, tasks[i].title, tasks[i].modified);
-			//Mojo.Log.info("Task %j", tasks[i]);
-			//dao.updateTask(tasks[i], function () { });
-			this.finalWebEditedTasks.push(tasks[i]);
+			this.finalWebEditedTasks.push(this.parseWebTask(taskXML[i]));
 		}
-		//this.webEditedTasks.concat(this.webEditedTasks, tasks);
-		//Mojo.Log.info("Web tasks is: %j", tasks);
-		//Mojo.Log.info("Web tasks is: %j", this.webEditedTasks);
+		
 		if (totalTasks > end) {
 			// need to grab more tasks!
 			api.getTasks(
@@ -634,14 +538,16 @@ function Sync(){
 	};
 	
 	this.gotFinalTasks = function () {
-		Mojo.Log.info("Adding final web tasks:", this.finalWebEditedTasks.length);
+		// Tasks that were updated on Toodledo during this sync
+		//Mojo.Log.info("Adding final web tasks:", this.finalWebEditedTasks.length);
 		
 		// Store last server task mod
-		MyAPP.local.lastservertaskmod = this.lastservertaskmod;
+		//MyAPP.local.lastservertaskmod = this.lastservertaskmod;
+		//Mojo.Log.info("MyAPP.local in gotFinalTasks %j", MyAPP.local);
 		
 		if (this.finalWebEditedTasks.length) {
 			for (j = 0; j < this.finalWebEditedTasks.length; j++) {
-				Mojo.Log.info("Adding final web task:", j);
+				//Mojo.Log.info("Adding final web task:", j, this.finalWebEditedTasks[j].title);
 				this.count.tasksfinal += 1;
 				if (this.finalWebEditedTasks[j].sync || !this.localWins) {
 					dao.updateTask(this.finalWebEditedTasks[j], this.finishTransactions.bind(this, 'tasksfinal'));
@@ -654,8 +560,7 @@ function Sync(){
 		else {
 			//Mojo.Log.info("No final web tasks");
 			this.finishTransactions('tasksfinal');
-		}
-		
+		}	
 	};
 	
 	
@@ -725,8 +630,8 @@ function Sync(){
 		
 	};
 	
+	//FOLDERS
 	this.getFolders = function(){
-//FOLDERS
 		//Mojo.Log.info("Entering Get Folders");
 		
 		this.syncLog += "<br />" + $L("Syncing folders") + "...";
@@ -753,7 +658,7 @@ function Sync(){
 			this.finishTransactions('folders');
 		}
 		
-//CONTEXTS		
+	//CONTEXTS		
 		this.syncLog += "<br />" + $L("Syncing contexts") + "...";
 		if (this.outputDiv) {
 			this.outputDiv.innerHTML += "<br />" + $L("Syncing contexts") + "...";
@@ -778,7 +683,7 @@ function Sync(){
 			this.finishTransactions('contexts');
 		}
 
-// GOALS		
+	// GOALS		
 		this.syncLog += "<br />" + $L("Syncing goals") + "...";
 		if (this.outputDiv) {
 			this.outputDiv.innerHTML += "<br />" + $L("Syncing goals") + "...";
@@ -839,16 +744,7 @@ function Sync(){
 		//Mojo.Log.info("Deleting from deleted FCG table", id, type);
 		this.count.deletedFCG += 1;
 		dao.deleteDeletedFCG(id, type, this.finishTransactions.bind(this, 'deletedFCG'));
-	//	Mojo.Log.info("response %j", response);
-/*
-		if (response.success) {
-			dao.deleteDeletedFCG(id);
-		}
-		else {
-			//Mojo.Log.info("Error deleting FCG from Toodledo!");
-		}
-
-*/	};
+	};
 	
 	//Retrieved folders from Database
 	this.gotLocalFolders = function (response) {
@@ -879,8 +775,7 @@ function Sync(){
 		if (response.added) {
 			//delete original (local only) folder
 			//Mojo.Log.info("Deleting folder with value: ", folder.value);
-			dao.deleteFolder(folder.value, function(){
-			});
+			dao.deleteFolder(folder.value, function(){});
 			
 			//update any tasks with the old folder value
 			dao.updateTasksWithFCG(folder.value, 'foldersList', response.added);
@@ -892,6 +787,12 @@ function Sync(){
 				MyAPP.prefs.showFilter = response.added;
 				//Mojo.Log.info("ShowFilter:", MyAPP.prefs.showFilter);
 				MyAPP.prefsCookie.put(MyAPP.prefs);
+				MyAPP.prefsDb.add('prefs', MyAPP.prefs, 
+					function () {},
+					function (event) {
+						Mojo.Log.info("Prefs DB failure %j", event);
+					}
+				);
 			}
 
 			//create new folder with id from web
@@ -922,7 +823,13 @@ function Sync(){
 
 			if (MyAPP.prefs.showList === 'context' && MyAPP.prefs.showFilter == context.value) {
 				MyAPP.prefs.showFilter = response.added;
-				MyAPP.prefsCookie.put(MyAPP.prefs);
+				//MyAPP.prefsCookie.put(MyAPP.prefs);
+				MyAPP.prefsDb.add('prefs', MyAPP.prefs, 
+					function () {},
+					function (event) {
+						Mojo.Log.info("Prefs DB failure %j", event);
+					}
+				);
 			}
 
 			//create new context with id from web
@@ -955,7 +862,13 @@ function Sync(){
 				//Mojo.Log.info("ShowFilter:", MyAPP.prefs.showFilter);
 				MyAPP.prefs.showFilter = response.added;
 				//Mojo.Log.info("ShowFilter:", MyAPP.prefs.showFilter);
-				MyAPP.prefsCookie.put(MyAPP.prefs);
+				//MyAPP.prefsCookie.put(MyAPP.prefs);
+				MyAPP.prefsDb.add('prefs', MyAPP.prefs, 
+					function () {},
+					function (event) {
+						Mojo.Log.info("Prefs DB failure %j", event);
+					}
+				);
 			}
 
 			//create new goal with id from web
@@ -1143,7 +1056,26 @@ function Sync(){
 			//Update last sync date/time - leave in milliseconds
 			MyAPP.prefs.lastSync = new Date().getTime();
 			//MyAPP.prefs.lastSync = this.ourTime * 1000;
-			MyAPP.prefsCookie.put(MyAPP.prefs);
+			//MyAPP.prefsCookie.put(MyAPP.prefs);
+			MyAPP.prefsDb.add('prefs', MyAPP.prefs, 
+				function () {},
+				function (event) {
+					Mojo.Log.info("Prefs DB failure %j", event);
+				}
+			);
+			
+			//Update last web add/edit 
+			MyAPP.local.firstsync = false;
+			//Mojo.Log.info("lastservertaskmod", this.lastservertaskmod);
+			MyAPP.local.lastservertaskmod = this.lastservertaskmod * 1;
+			//Mojo.Log.info("MyAPP.local in finishTransactions %j", MyAPP.local);
+			//MyAPP.localCookie.put(MyAPP.local);
+			MyAPP.prefsDb.add('local', MyAPP.local, 
+				function () {},
+				function (event) {
+					Mojo.Log.info("Prefs DB failure %j", event);
+				}
+			);
 		
 			//Mojo.Log.info("Finished Syncing", MyAPP.prefs.lastSync);
 			this.syncCallback($L("Finished Syncing!"));

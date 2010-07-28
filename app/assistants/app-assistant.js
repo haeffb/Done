@@ -16,7 +16,7 @@ MyAPP.appSlogan = $L("Get it Done!");
 MyAPP.account = {
 	userid: "", 
 	alias: "", 
-	pro: 1, 
+	pro: 0, 
 	dateformat: 0, 
 	timezone: -2, 
 	hidemonths: 6, 
@@ -38,13 +38,13 @@ MyAPP.local = {
 	lastcontextedit: 0, 
 	lastgoaledit: 0, 
 	lastnotebookedit: 0,
-	lastservertaskmod: 0
+	lastservertaskmod: 0,
+	firstsync: true
 };
 
 MyAPP.prefs = {
 	key: "",
 	email: "none",
-	password: "",
 	defaultStatus: 0,
 	defaultPriority: 0,
 	defaultFolder: 0,
@@ -78,7 +78,9 @@ MyAPP.prefs = {
 	localWins: false, // if tasks edited on web & device
 	notifications: false,
 	notifyTime: 0,
-	notifyAlarm: false
+	notifyAlarm: false,
+	indentSubtasks: false,
+	color: 4 // khaki yellow
 };
 
 MyAPP.fields = {
@@ -96,7 +98,8 @@ MyAPP.fields = {
 	repeat: true,
 	repeatfrom: true,
 	reminder: true,
-	star: true
+	star: true,
+	length: true
 };
 
 MyAPP.server = {
@@ -106,12 +109,50 @@ MyAPP.server = {
 	"tokenexpires": 0
 };
 
+/*
+MyAPP.colors = [
+	{value: 0, label: $L("White"), color: "#FFFFFF"},
+	{value: 1, label: $L("Yellow"), color: "#EDE79A"},
+	{value: 2, label: $L("Pink"), color: "#FFBAF6"},
+	{value: 3, label: $L("Green"), color: "#D2F7D4"},
+	{value: 4, label: $L("Blue"), color: "#D1E9FF"},
+	{value: 5, label: $L("Orange"), color: "#FFE1C1"},
+	{value: 6, label: $L("Purple"), color: "#FAC6FF"},
+	{value: 7, label: $L("Gray"), color: "#DDDDDD"}
+];
+
+*/
+
+// colors from: http://en.wikipedia.org/wiki/Web_colors
+MyAPP.colors = [
+	{value: 0, label: $L("White"), color: "#FFFFFF", secondaryIcon: "icon-color-white"},
+	{value: 1, label: $L("Light Yellow"), color: "#FFFFE0", secondaryIcon: "icon-color-lightyellow"},
+	{value: 2, label: $L("Cornsilk"), color: "#FFF8DC", secondaryIcon: "icon-color-cornsilk"},
+	{value: 3, label: $L("Beige"), color: "#F5F5DC", secondaryIcon: "icon-color-beige"},
+	{value: 4, label: $L("Khaki"), color: "#F0E68C", secondaryIcon: "icon-color-khaki"},
+	{value: 5, label: $L("Honeydew"), color: "#F0FFF0", secondaryIcon: "icon-color-honeydew"},
+	{value: 6, label: $L("Pale Green"), color: "#98FB98", secondaryIcon: "icon-color-palegreen"},
+	{value: 7, label: $L("Seashell"), color: "#FFF5EE", secondaryIcon: "icon-color-seashell"},
+	{value: 8, label: $L("Antique White"), color: "#FAEBD7", secondaryIcon: "icon-color-antiquewhite"},
+	{value: 9, label: $L("Pink"), color: "#FFC0CB", secondaryIcon: "icon-color-pink"},
+	{value: 10, label: $L("Wheat"), color: "#F5DEB3", secondaryIcon: "icon-color-wheat"},
+	{value: 11, label: $L("Tan"), color: "#D2B48C", secondaryIcon: "icon-color-tan"},
+	{value: 12, label: $L("Alice Blue"), color: "#F0F8FF", secondaryIcon: "icon-color-aliceblue"},
+	{value: 13, label: $L("Lavender"), color: "#E6E6FA", secondaryIcon: "icon-color-lavender"},
+	{value: 14, label: $L("Light Gray"), color: "#D3D3D3", secondaryIcon: "icon-color-lightgray"},
+	{value: 15, label: $L("Light Blue"), color: "#ADD8E6", secondaryIcon: "icon-color-lightblue"},
+	{value: 16, label: $L("Plum"), color: "#DDA0DD", secondaryIcon: "icon-color-plum"}
+	
+];
+
+
 MyAPP.appMenuModel = {
 	visible: true,
 	items: [
 		Mojo.Menu.editItem,
 		{label: $L('Preferences & Accounts') + "...", command: 'doPrefs', disabled: false},
 		{label: $L('Folders Contexts & Goals') + "...", command: 'doFolders', disabled: false},
+		{label: $L('Custom Lists') + "...", command: 'doCustom', disabled: false},
 		Mojo.Menu.helpItem
 	]
 };
@@ -126,7 +167,7 @@ function AppAssistant(appController) {
 AppAssistant.prototype.setup = function () {
 	//Mojo.Log.info("AppAssistant setup()");
 	
-	this.initDBandCookies();
+	//this.initDBandCookies();
 };
 
 // -------------------------------------------------------------------
@@ -136,8 +177,18 @@ AppAssistant.prototype.setup = function () {
 // 
 // -------------------------------------------------------------------
 
-AppAssistant.prototype.handleLaunch = function (launchParams) {
+AppAssistant.prototype.handleLaunch = function(launchParams){
 	//Mojo.Log.info(" ********** App handleLaunch ***********");
+	
+	this.launchParams = launchParams;
+	
+	// Note: need to load prefs & other settings prior to launching app...
+	this.initDBandCookies();
+};
+
+AppAssistant.prototype.handleLaunchAfter = function() {
+	
+	var launchParams = this.launchParams;
 	
 	var cardStageController, pushMainScene, stageArgs,
 		dashboardStage, pushDashboard;
@@ -167,7 +218,7 @@ AppAssistant.prototype.handleLaunch = function (launchParams) {
 		}
 	}
 	else {
-		Mojo.Log.info(" Launch Parameters: %j", launchParams);
+		//Mojo.Log.info(" Launch Parameters: %j", launchParams);
 		switch (launchParams.action) {
 		case "sync":
 
@@ -264,15 +315,127 @@ AppAssistant.prototype.initDBandCookies = function () {
 	// Initialize database
 	dao.init();
 	
-	// Initialize cookies
-	this.getPrefsCookie();
-	this.getAccountCookie();
-	this.getLocalCookie();
-	this.getSyncLogCookie();
-	this.getFieldsCookie();
-	
 	// Initialize toodledo api
 	api.init();
+	
+	this.getPrefs();
+	
+	// Initialize cookies
+	//this.getPrefsCookie();
+	//this.getAccountCookie();
+	//this.getLocalCookie();
+	this.getSyncLogCookie();
+	//this.getFieldsCookie();
+	
+	//Mojo.Log.info("MyAPP.local %j", MyAPP.local);
+	
+};
+
+AppAssistant.prototype.getPrefs = function () {
+	var options = {
+		name: Mojo.appInfo.id + ".prefs",
+		version: 0.4,
+		displayName: Mojo.appInfo.title + " prefs DB"
+	};
+	
+	MyAPP.prefsDb = new Mojo.Depot(options, this.gotPrefsDb.bind(this), this.dbFailure.bind(this));
+};
+
+AppAssistant.prototype.gotPrefsDb = function (event) {
+	//Mojo.Log.info("DB Event: %j", event);
+	MyAPP.prefsDb.get('prefs', this.gotPrefs.bind(this), this.dbFailure.bind(this));
+};
+
+AppAssistant.prototype.gotPrefs = function (args) {
+	if (args) {
+		//MyAPP.prefs = args;
+		for (value in args) {
+				MyAPP.prefs[value] = args[value];
+				//Mojo.Log.info("Pref: ", value, args[value], MyAPP.prefs[value]);
+		}
+	}
+	else {
+		Mojo.Log.info("PREFS LOAD FAILURE!!!");
+		this.getPrefsCookie();
+		MyAPP.prefsCookie.remove();
+		MyAPP.prefsDb.add('prefs', MyAPP.prefs, 
+			function () {},
+			function (event) {
+				Mojo.Log.info("Prefs DB failure %j", event);
+		});
+	}
+	//Mojo.Log.info("Prefs: %j", MyAPP.prefs);
+	MyAPP.prefsDb.get('account', this.gotAccount.bind(this), this.dbFailure.bind(this));
+};
+
+AppAssistant.prototype.gotAccount = function (args) {
+	if (args) {
+		//MyAPP.account = args;
+		for (value in args) {
+				MyAPP.account[value] = args[value];
+				//Mojo.Log.info("Account: ", value, args[value], MyAPP.account[value]);
+		}
+	}
+	else {
+		Mojo.Log.info("ACCOUNT LOAD FAILURE!!!");
+		this.getAccountCookie();
+		MyAPP.accountCookie.remove();
+		MyAPP.prefsDb.add('account', MyAPP.account, 
+			function () {},
+			function (event) {
+				Mojo.Log.info("Prefs DB failure %j", event);
+		});
+	}
+	//Mojo.Log.info("Account: %j", MyAPP.account);
+	MyAPP.prefsDb.get('local', this.gotLocal.bind(this), this.dbFailure.bind(this));
+};
+
+AppAssistant.prototype.gotLocal = function (args) {
+	if (args) {
+		//MyAPP.local = args;
+		for (value in args) {
+				MyAPP.local[value] = args[value];
+				//Mojo.Log.info("Local: ", value, args[value], MyAPP.local[value]);
+		}
+	}
+	else {
+		Mojo.Log.info("LOCAL LOAD FAILURE!!!");
+		this.getLocalCookie();
+		MyAPP.localCookie.remove();
+		MyAPP.prefsDb.add('local', MyAPP.local, 
+			function () {},
+			function (event) {
+				Mojo.Log.info("Prefs DB failure %j", event);
+		});
+	}
+	//Mojo.Log.info("Local: %j", MyAPP.local);
+	MyAPP.prefsDb.get('fields', this.gotFields.bind(this), this.dbFailure.bind(this));
+};
+
+AppAssistant.prototype.gotFields = function (args) {
+	if (args) {
+		//MyAPP.fields = args;
+		for (value in args) {
+				MyAPP.fields[value] = args[value];
+				//Mojo.Log.info("Pref: ", value, args[value], MyAPP.fields[value]);
+		}
+	}
+	else {
+		Mojo.Log.info("FIELDS LOAD FAILURE!!!");
+		this.getFieldsCookie();
+		MyAPP.fieldsCookie.remove();
+		MyAPP.prefsDb.add('fields', MyAPP.fields, 
+			function () {},
+			function (event) {
+				Mojo.Log.info("Prefs DB failure %j", event);
+		});
+	}
+	//Mojo.Log.info("Fields: %j", MyAPP.fields);
+	this.handleLaunchAfter();
+};
+
+AppAssistant.prototype.dbFailure = function (event) {
+	Mojo.Log.info("Prefs DB failure %j", event);
 };
 
 AppAssistant.prototype.launchDashSync = function (launchParams) {
@@ -329,13 +492,29 @@ AppAssistant.prototype.deactivate = function (event) {
 AppAssistant.prototype.getPrefsCookie = function () {
 	//Mojo.Log.info("Get Cookie!");
 	MyAPP.prefsCookie = new Mojo.Model.Cookie(MyAPP.appName + "prefs");
-	var args = MyAPP.prefsCookie.get();
+	var args = MyAPP.prefsCookie.get(), clearCookie = false;
 	if (args) {
 		//MyAPP.prefs = args;
 		for (value in args) {
-			MyAPP.prefs[value] = args[value];
-			//Mojo.Log.info("Pref: ", value, args[value], MyAPP.prefs[value]);
+			//fix for stored password
+			if (value === 'password') {
+				//Mojo.Log.info("clearing password!");
+				MyAPP.prefs.MD5password = MD5(args[value]);
+				clearCookie = true;
+			}
+			else {
+				MyAPP.prefs[value] = args[value];
+				//Mojo.Log.info("Pref: ", value, args[value], MyAPP.prefs[value]);
+
+			}
 		}
+	}
+	else {
+		//Mojo.Log.info("PREFS COOKIE LOAD FAILURE!!!");
+	}
+	if (clearCookie) {
+		MyAPP.prefsCookie.remove();
+		this.putPrefsCookie();
 	}
 	//Mojo.Log.info("Preferences: %j", MyAPP.prefs);
 };
@@ -357,6 +536,9 @@ AppAssistant.prototype.getAccountCookie = function () {
 			//Mojo.Log.info("Account: ", value, args[value], MyAPP.account[value]);
 		}
 	}
+	else {
+		//Mojo.Log.info("ACCOUNT COOKIE LOAD FAILURE!!!");
+	}
 	//Mojo.Log.info("Account info: %j", MyAPP.account);
 };
 
@@ -370,6 +552,9 @@ AppAssistant.prototype.getLocalCookie = function () {
 			//Mojo.Log.info("Pref: ", value, args[value], MyAPP.local[value]);
 		}
 	}
+	else {
+		//Mojo.Log.info("LOCAL COOKIE LOAD FAILURE!!!");
+	}
 	//Mojo.Log.info("Local info: %j", MyAPP.local);
 };
 
@@ -382,6 +567,9 @@ AppAssistant.prototype.getFieldsCookie = function () {
 			MyAPP.fields[value] = args[value];
 			//Mojo.Log.info("Pref: ", value, args[value], MyAPP.local[value]);
 		}
+	}
+	else {
+		//Mojo.Log.info("FIELDS COOKIE LOAD FAILURE!!!");
 	}
 	//Mojo.Log.info("Local info: %j", MyAPP.local);
 };

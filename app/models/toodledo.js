@@ -91,11 +91,17 @@ function API () {
 	this.gotToken = function(response, inCallback){
 		//Mojo.Log.info("Response from getToken %j", response);
 		if (response.token) {
-			this.key = MD5(MD5(MyAPP.prefs.password) + response.token + MyAPP.account.userid);
+			//this.key = MD5(MD5(MyAPP.prefs.password) + response.token + MyAPP.account.userid);
+			this.key = MD5(MyAPP.prefs.MD5password + response.token + MyAPP.account.userid);
 			//Mojo.Log.info("Key is", this.key, "for", response.token, MyAPP.account.userid, MyAPP.prefs.password);
 
 			MyAPP.prefs.key = this.key;
-			MyAPP.prefsCookie.put(MyAPP.prefs);
+			//MyAPP.prefsCookie.put(MyAPP.prefs);
+			MyAPP.prefsDb.add('prefs', MyAPP.prefs, 
+				function () {},
+				function (event) {
+					Mojo.Log.info("Prefs DB failure %j", event);
+			});
 
 			inCallback();
 		}
@@ -162,7 +168,7 @@ function API () {
 		this.doAPI(apiString, inCallback);
 	};
 	
-	this.addTask = function (task, timeDiff, inCallback) {
+	this.addTask = function (task, inCallback) {
 		//Mojo.Log.info("---Entering addTask in Toodledo---");
 		var method = "addTask";
 		var apiString = this.url + method;
@@ -185,11 +191,12 @@ function API () {
 				if (prop === 'added' || prop === 'modified') {
 					apiString += ";" + prop + "=" + this.formatDate(task[prop], true);
 				}
-				else if (prop === 'duedate' || prop === 'startdate' ||
-					prop === 'completed') {
+				else if (prop === 'duedate' || prop === 'startdate') {
 					apiString += ";" + prop + "=" + this.formatDate(task[prop], false);
 				}
-				
+				else if (prop === 'completed') {
+					apiString += ";completed=1;completedon=" + this.formatDate(task[prop], false);
+				}
 				else if (prop === 'duetime' || prop === 'starttime') {
 					apiString += ";" + prop + "=" + this.formatTime(task[prop]);
 				}
@@ -213,7 +220,7 @@ function API () {
 			ampm = 'am';
 		//Mojo.Log.info("Date:", d);
 		hrs =  d.getHours();
-		if (hrs > 12) {
+		if (hrs > 11) {
 			hrs -= 12;
 			ampm = 'pm';
 		}
@@ -278,9 +285,11 @@ function API () {
 				if (prop === 'added' || prop === 'modified') {
 					apiString += ";" + prop + "=" + this.formatDate(task[prop], true);
 				}
-				else if (prop === 'duedate' || prop === 'startdate' ||
-					prop === 'completed') {
+				else if (prop === 'duedate' || prop === 'startdate') {
 					apiString += ";" + prop + "=" + this.formatDate(task[prop], false);
+				}
+				else if (prop === 'completed') {
+					apiString += ";completed=1;completedon=" + this.formatDate(task[prop], false);
 				}
 				else if (prop === 'duetime' || prop === 'starttime') {
 					apiString += ";" + prop + "=" + this.formatTime(task[prop]);

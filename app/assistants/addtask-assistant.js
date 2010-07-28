@@ -3,7 +3,7 @@ function AddtaskAssistant(taskValue){
      additional parameters (after the scene name) that were passed to pushScene. The reference
      to the scene controller (this.controller) has not be established yet, so any initialization
      that needs the scene controller should be done in the setup function below. */
-    Mojo.Log.info("Entering AddTaskAssitant Constructor with", taskValue);
+    //Mojo.Log.info("Entering AddTaskAssitant Constructor with", taskValue);
     this.taskValue = taskValue;
 }
 
@@ -17,6 +17,7 @@ AddtaskAssistant.prototype.setup = function(){
     this.controller.get('tagsLabel').innerHTML = $L("Tags");
     
     
+	this.controller.get("yellowpad").style.backgroundColor = MyAPP.colors[MyAPP.prefs.color].color; //"#D2F7D4";
     /* use Mojo.View.render to render view templates and add them to the scene, if needed */
     
     /* setup widgets here */
@@ -207,9 +208,10 @@ AddtaskAssistant.prototype.setup = function(){
     });
     
     // Add Reminder selector button
-    this.controller.setupWidget("ReminderSelectorId", this.reminderAttributes = {
-        label: $L("Reminder"),
-        choices: [{
+	
+	var reminderChoices = [];
+	if (MyAPP.account.pro === 1) {
+		reminderChoices = [{
             label: $L("No Reminder"),
             value: "0"
         }, {
@@ -263,7 +265,20 @@ AddtaskAssistant.prototype.setup = function(){
         }, {
             label: "2 " + $L("years"),
             value: "40320"
-        }]
+        }];
+	}
+	else {
+		reminderChoices =  [{
+            label: $L("No Reminder"),
+            value: "0"
+        }, {
+            label: "1 " + $L("hour"),
+            value: "60"
+        }];
+	}
+    this.controller.setupWidget("ReminderSelectorId", this.reminderAttributes = {
+        label: $L("Reminder"),
+		choices: reminderChoices
     }, this.reminderModel = {
         value: this.reminder,
         disabled: false
@@ -279,6 +294,19 @@ AddtaskAssistant.prototype.setup = function(){
         autoReplace: true,
         focusMode: Mojo.Widget.focusInsertMode
     }, this.noteModel = {
+        value: ""
+    });
+	
+    // Add Length text input field
+    this.controller.setupWidget("LengthId", this.lengthAttributes = {
+        hintText: $L('Length (min)') + '...',
+        multiline: true,
+        enterSubmits: false,
+        autoFocus: false,
+        changeOnKeyPress: true,
+        autoReplace: true,
+        focusMode: Mojo.Widget.focusInsertMode
+    }, this.lengthModel = {
         value: ""
     });
     
@@ -342,6 +370,7 @@ AddtaskAssistant.prototype.setup = function(){
     this.controller.listen('RepeatFromToggleId', Mojo.Event.propertyChanged, this.dirtyHandler);
     this.controller.listen('ReminderSelectorId', Mojo.Event.propertyChanged, this.dirtyHandler);
     this.controller.listen('NoteId', Mojo.Event.propertyChanged, this.dirtyHandler);
+    this.controller.listen('LengthId', Mojo.Event.propertyChanged, this.dirtyHandler);
     this.controller.listen('TagsId', Mojo.Event.propertyChanged, this.dirtyHandler);
     
     this.checkChangeHandler = this.checkChange.bindAsEventListener(this);
@@ -766,6 +795,10 @@ AddtaskAssistant.prototype.loadData = function(){
         field: "star",
         row: "StarRow",
         value: MyAPP.fields.star
+    }, {
+        field: "length",
+        row: "LengthRow",
+        value: MyAPP.fields.length
     }];
     
     for (i = 0; i < fields.length; i++) {
@@ -776,7 +809,6 @@ AddtaskAssistant.prototype.loadData = function(){
             this.controller.get(fields[i].row).hide();
         }
     }
-    
     
     //can't remember why this is here...!
     MyAPP.saveCookie.remove();
@@ -824,12 +856,12 @@ AddtaskAssistant.prototype.gotGoalsDb = function(response){
     
     // Retrieve task by value;
     sqlString = "SELECT * FROM tasks WHERE value=" + this.taskValue + ";GO;";
-	Mojo.Log.info("SQL String is: ", sqlString);
+	//Mojo.Log.info("SQL String is: ", sqlString);
     dao.retrieveTasksByString(sqlString, this.gotTasks.bind(this));
 };
 
 AddtaskAssistant.prototype.gotTasks = function(responseText){
-    Mojo.Log.info("Task: %j", responseText);
+    //Mojo.Log.info("Task: %j", responseText);
     this.task = responseText[0];
     
     var startTimeString = $L("No Start Time");
@@ -1020,6 +1052,9 @@ AddtaskAssistant.prototype.gotTasks = function(responseText){
     
     this.noteModel.value = this.task.note;
     this.controller.modelChanged(this.noteModel);
+
+    this.lengthModel.value = this.task.length + "";
+    this.controller.modelChanged(this.lengthModel);
     
     this.tagModel.value = this.task.tag;
     this.controller.modelChanged(this.tagModel);
@@ -1082,13 +1117,19 @@ AddtaskAssistant.prototype.saveTask = function(){
     }
     
     this.task.note = this.noteModel.value;
+	this.task.length = this.lengthModel.value * 1;
     //Mojo.Log.info("Duedate:", this.task.duedate, new Date(this.task.duedate));
     var nowTime = Math.floor(new Date().getTime() / 1000) * 1000;
     this.task.modified = nowTime;
     MyAPP.local.lastaddedit = nowTime / 1000;
     //Mojo.Log.info("Now", nowTime);
-    MyAPP.localCookie = new Mojo.Model.Cookie(MyAPP.appName + "local");
-    MyAPP.localCookie.put(MyAPP.local);
+   // MyAPP.localCookie = new Mojo.Model.Cookie(MyAPP.appName + "local");
+   // MyAPP.localCookie.put(MyAPP.local);
+	MyAPP.prefsDb.add('local', MyAPP.local, 
+		function () {},
+		function (event) {
+			Mojo.Log.info("Prefs DB failure %j", event);
+		});
     
     // Save data to a cookie in the event the user closes app before DB commit
     // Will check for this cookie on app load and resave to DB if needed.
@@ -1133,6 +1174,7 @@ AddtaskAssistant.prototype.cleanup = function(event){
     this.controller.stopListening('RepeatFromToggleId', Mojo.Event.propertyChanged, this.dirtyHandler);
     this.controller.stopListening('ReminderSelectorId', Mojo.Event.propertyChanged, this.dirtyHandler);
     this.controller.stopListening('NoteId', Mojo.Event.propertyChanged, this.dirtyHandler);
+    this.controller.stopListening('LengthId', Mojo.Event.propertyChanged, this.dirtyHandler);
     this.controller.stopListening('TagsId', Mojo.Event.propertyChanged, this.dirtyHandler);
     
 };

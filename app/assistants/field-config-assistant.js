@@ -8,6 +8,7 @@ function FieldConfigAssistant() {
 FieldConfigAssistant.prototype.setup = function() {
 	/* this function is for setup tasks that have to happen when the scene is first created */
 		
+	this.controller.get("yellowpad").style.backgroundColor = MyAPP.colors[MyAPP.prefs.color].color; //"#D2F7D4";
 	/* use Mojo.View.render to render view templates and add them to the scene, if needed */
 	
 	/* setup widgets here */
@@ -30,6 +31,7 @@ FieldConfigAssistant.prototype.setup = function() {
 			{label: $L("Repeat"), field: "RepeatRow", value: MyAPP.fields.repeat},
 			{label: $L("Repeat From"), field: "RepeatFromRow", value: MyAPP.fields.repeatfrom},
 			{label: $L("Reminder"), field: "ReminderRow", value: MyAPP.fields.reminder},
+			{label: $L("Length"), field: "LengthRow", value: MyAPP.fields.length},
 			{label: $L("Star"), field: "StarRow", value: MyAPP.fields.star}
 		]
 	};
@@ -74,9 +76,15 @@ FieldConfigAssistant.prototype.deactivate = function(event) {
 	MyAPP.fields.repeat = this.fieldConfigModel.items[11].value;
 	MyAPP.fields.repeatfrom = this.fieldConfigModel.items[12].value;
 	MyAPP.fields.reminder = this.fieldConfigModel.items[13].value;
-	MyAPP.fields.star = this.fieldConfigModel.items[14].value;
+	MyAPP.fields.length = this.fieldConfigModel.items[14].value;
+	MyAPP.fields.star = this.fieldConfigModel.items[15].value;
 	
-	MyAPP.fieldsCookie.put(MyAPP.fields);
+	//MyAPP.fieldsCookie.put(MyAPP.fields);
+	MyAPP.prefsDb.add('fields', MyAPP.fields, 
+		function () {},
+		function (event) {
+			Mojo.Log.info("Prefs DB failure %j", event);
+		});
 	//Mojo.Log.info("Fields: %j", MyAPP.fields);
 	//Mojo.Log.info("Field Config Saved");
 	

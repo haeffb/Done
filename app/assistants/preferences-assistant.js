@@ -231,6 +231,18 @@ PreferencesAssistant.prototype.setup = function() {
 		falseLabel: $L('No')
 	};
 
+	// Add Background Color Selector List
+	this.controller.setupWidget("BGColorSelectorId",
+        this.bgColorAttributes = {
+			label: $L("Color")
+		},
+		this.bgColorModel = {
+			choices: MyAPP.colors,
+			value: MyAPP.prefs.color
+		}
+    );
+
+
 	// Add Wrap title toggle
 	this.controller.setupWidget('wrapTitleToggleId',
 		this.toggleAttributes,
@@ -257,6 +269,15 @@ PreferencesAssistant.prototype.setup = function() {
 			disabled: false			
 		});
 	this.controller.get('showFolderLabel').innerHTML = $L("Show Folder/Context");
+	
+	// Add Indent Subtasks toggle
+	this.controller.setupWidget('indentSubtasksToggleId',
+		this.toggleAttributes,
+		this.indentSubtasksModel = {
+			value: MyAPP.prefs.indentSubtasks,
+			disabled: false			
+		});
+	this.controller.get('indentSubtasksLabel').innerHTML = $L("Indent Subtasks");
 	
 	// Add Show Notes toggle
 	this.controller.setupWidget('showNotesToggleId',
@@ -467,6 +488,11 @@ PreferencesAssistant.prototype.activate = function(event) {
 	// update email in case returning from Account settings
 	this.controller.get('AccountId').innerHTML = $L("Email:") + " " + MyAPP.prefs.email;
 	
+	// hide "indent subtasks" toggle for non-Pro accounts
+	if (MyAPP.account.pro !== 1) {
+		this.controller.get('indentSubtasksRow').hide();
+	}
+	
 	// get folders & contexts & goals for defaults
 	dao.retrieveFolders(this.gotFoldersDb.bind(this));
 };
@@ -537,10 +563,17 @@ PreferencesAssistant.prototype.deactivate = function(event) {
 	MyAPP.prefs.notifyAlarm = this.notifyAlarmModel.value;
 	MyAPP.prefs.showNotes = this.showNotesModel.value;
 	MyAPP.prefs.showPriority = this.showPriorityModel.value;
+	MyAPP.prefs.indentSubtasks = this.indentSubtasksModel.value;
+	MyAPP.prefs.color = this.bgColorModel.value;
 	
 	//Mojo.Log.info("Leaving Prefs Scene with %j", MyAPP.prefs);
-	MyAPP.prefsCookie = new Mojo.Model.Cookie(MyAPP.appName + "prefs");
-	MyAPP.prefsCookie.put(MyAPP.prefs);
+	//MyAPP.prefsCookie = new Mojo.Model.Cookie(MyAPP.appName + "prefs");
+	//MyAPP.prefsCookie.put(MyAPP.prefs);
+	MyAPP.prefsDb.add('prefs', MyAPP.prefs, 
+		function () {},
+		function (event) {
+			Mojo.Log.info("Prefs DB failure %j", event);
+	});
 	
 	// Set auto-syncing if selected
 	if (MyAPP.prefs.syncOnInterval) {

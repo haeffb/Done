@@ -107,7 +107,12 @@ EditItemAssistant.prototype.updateItem = function () {
 			break;
 	}
 	
-	MyAPP.localCookie.put(MyAPP.local);
+	//MyAPP.localCookie.put(MyAPP.local);
+	MyAPP.prefsDb.add('local', MyAPP.local,
+		function () {},
+		function (event) {
+			Mojo.Log.info("Prefs DB failure %j", event);
+		});
 
 	this.callBackFunc(this.type, this.object);  // just in case, does nothing for now
 	this.widget.mojo.close();

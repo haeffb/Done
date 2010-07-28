@@ -1,0 +1,140 @@
+<div>
+	<div class='yellowpad' id='yellowpad'> </div>
+	<div id="testOutput"></div>
+	
+	<div class='palm-group'>
+		<div class='palm-group-title' id='CustomListTitle'>Custom List</div>
+		<div class="palm-list">
+			<div class="palm-row single" x-mojo-focus-highlight="true">
+					<div class="palm-row-wrapper textfield-group" x-mojo-focus-highlight="true">
+					<div class="title">
+						<div x-mojo-element="TextField" id="CustomListNameId" class=""></div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<div class='palm-group' id="filters">
+		<div class='palm-group-title' id='FiltersTitle'>Filters</div>
+		<div class="palm-list">
+			<div class="palm-row first">
+				<div class='label right' id='foldersListCount'>(2 of 2)</div>
+				<div class="title" id='foldersListLabel'>Folders</div>
+				<div id='foldersDrawer' x-mojo-element='Drawer'>
+					<div id='foldersList' x-mojo-element='List'></div>
+				</div>
+			</div>
+			<div class="palm-row">
+				<div class='label right' id='contextsListCount'>(2 of 2)</div>
+				<div class="title" id='contextsListLabel'>Contexts</div>
+				<div id='contextsDrawer' x-mojo-element='Drawer'>
+					<div id='contextsList' x-mojo-element='List'></div>
+				</div>
+			</div>
+			<div class="palm-row">
+				<div class='label right' id='goalsListCount'>(2 of 2)</div>
+				<div class="title" id='goalsListLabel'>Goals</div>
+				<div id='goalsDrawer' x-mojo-element='Drawer'>
+					<div id='goalsList' x-mojo-element='List'></div>
+				</div>
+			</div>
+<!--
+			<div class="palm-row">
+				<div class='label right' id='tagsListCount'>(2 of 2)</div>
+				<div class="title" id='tagsListLabel'>Tags</div>
+				<div id='tagsDrawer' x-mojo-element='Drawer'>
+					<div id='tagsList' x-mojo-element='List'></div>
+				</div>
+			</div>
+-->
+			<div class="palm-row">
+				<div class='label right' id='priorityListCount'>(2 of 2)</div>
+				<div class="title" id='priorityListLabel'>Priority</div>
+				<div id='priorityDrawer' x-mojo-element='Drawer'>
+					<div id='priorityList' x-mojo-element='List'></div>
+				</div>
+			</div>
+			<div class="palm-row">
+				<div class='label right' id='starredListCount'>(2 of 2)</div>
+				<div class="title" id='starredListLabel'>Starred</div>
+				<div id='starredDrawer' x-mojo-element='Drawer'>
+					<div id='starredList' x-mojo-element='List'></div>
+				</div>
+			</div>
+			<div class="palm-row last">
+				<div class='label right' id='statusListCount'>(2 of 2)</div>
+				<div class="title" id='statusListLabel'>Status</div>
+				<div id='statusDrawer' x-mojo-element='Drawer'>
+					<div id='statusList' x-mojo-element='List'></div>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<div class='palm-group'>
+		<div class='palm-group-title' id='DatesTitle'>Dates</div>
+		<div class="palm-list">
+			<div class="palm-row first">
+				<div class='label right' id='dueDateListCount'>(All Dates)</div>
+				<div class="title" id='dueDateListLabel'>Due Date</div>
+				<div id='dueDateDrawer' x-mojo-element='Drawer'>
+					<div class='palm-row first'>
+						<div id='DueDateSelector' x-mojo-element='ListSelector'></div>
+					</div
+					<div class='palm-row last'>
+						<div class="palm-row-wrapper">
+						<table class="palm-list-section-label">
+							<tr>
+								<td>
+									<span x-mojo-loc="" class="repeatfromtitle" id="DueDateToggleLabel">Include Older</span>		
+								</td>
+								<td>
+									<div x-mojo-element="ToggleButton" id="DueDateOlderToggle" class="thirty"></div>
+									</div>
+								</td>	
+							</tr>
+						</table>
+						</div>
+					</div>
+
+				</div>
+			</div>
+			<div class="palm-row last">
+				<div class='label right' id='startDateListCount'>(All Dates)</div>
+				<div class="title" id='startDateListLabel'>Start Date</div>
+				<div id='startDateDrawer' x-mojo-element='Drawer'>
+					<div class='palm-row first'>
+						<div id='StartDateSelector' x-mojo-element='ListSelector'></div>
+					</div
+					<div class='palm-row last'>
+						<div class="palm-row-wrapper">
+						<table class="palm-list-section-label">
+							<tr>
+								<td>
+									<span x-mojo-loc="" class="repeatfromtitle" id="StartDateToggleLabel">Include Older</span>		
+								</td>
+								<td>
+									<div x-mojo-element="ToggleButton" id="StartDateOlderToggle" class="thirty"></div>
+									</div>
+								</td>	
+							</tr>
+						</table>
+						</div>
+					</div>
+
+				</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class='palm-group'>
+		<div class='palm-group-title' id='SortTitle'>Sort</div>
+		<div class="palm-list">
+					<div id='sortList' x-mojo-element='List'></div>
+		</div>
+	</div>
+
+</div>
+

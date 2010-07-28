@@ -19,7 +19,11 @@ IntroAssistant.prototype.setup = function() {
 	this.controller.get("syncOutput").innerHTML = $L("Last Sync: ") + 
 		(MyAPP.prefs.lastSync > 0) ? Mojo.Format.formatDate(new Date(MyAPP.prefs.lastSync), "medium") : "Not Synced!";
 
-*/	this.controller.get("syncTaskOutput").innerHTML = MyAPP.syncLogCookie.get();
+*/
+	this.controller.get("syncTaskOutput").innerHTML = MyAPP.syncLogCookie.get();
+
+	this.controller.get("yellowpad").style.backgroundColor = MyAPP.colors[MyAPP.prefs.color].color; //"#D2F7D4";
+	
 	/* use Mojo.View.render to render view templates and add them to the scene, if needed. */
 	
 	/* setup widgets here */
@@ -118,6 +122,12 @@ IntroAssistant.prototype.setup = function() {
 				label: $L('Completed'),
 				value: 'completed'
 			}
+,
+			{
+				secondaryIcon: 'done-icon-people',
+				label: $L('Custom'),
+				value: 'custom'
+			}
 		]
 		}, this.showListModel = {
 			value: MyAPP.prefs.showList
@@ -173,6 +183,9 @@ IntroAssistant.prototype.setup = function() {
 	
 	// Set default filterString for title of added task
 	this.filterString = '';
+	
+	//debugObject(this.controller.document.styleSheets[19], "noFuncs");
+	//debugObject(this.controller.document, "noFuncs");
 };
 
 
@@ -315,6 +328,9 @@ IntroAssistant.prototype.getFilterChoices = function(list) {
 			choices.push({value: 5, label: $L("Reference")});
 			choices.push({value: 6, label: $L("No Status")});
 			break;
+		case 'custom':
+			choices = this.customLists;
+			break;
 		default:
 			break;
 	}
@@ -326,7 +342,12 @@ IntroAssistant.prototype.doFilter = function (event) {
 	//Mojo.Log.info("Filter: ", event.value);
 	this.getTasks(this.showListModel.value, event.value);
 	MyAPP.prefs.showFilter = event.value;
-	MyAPP.prefsCookie.put(MyAPP.prefs);
+	//MyAPP.prefsCookie.put(MyAPP.prefs);
+	MyAPP.prefsDb.add('prefs', MyAPP.prefs, 
+		function () {},
+		function (event) {
+			Mojo.Log.info("Prefs DB failure %j", event);
+		});
 	this.goTop = true;
 };
 
@@ -364,6 +385,10 @@ IntroAssistant.prototype.doList = function (event) {
 		this.sortSpec = event.value;
 		this.getTasks(event.value, 'all');
 		break;
+	case 'custom':
+		this.sortSpec = event.value;
+		this.getTasks(event.value, 'all');
+		break;
 	default:
 		this.sortSpec = 'folder';
 		this.getTasks(event.value, 'all');
@@ -371,13 +396,18 @@ IntroAssistant.prototype.doList = function (event) {
 	}
 	MyAPP.prefs.showList = event.value;
 	MyAPP.prefs.showFilter = 'all';
-	MyAPP.prefsCookie.put(MyAPP.prefs);
+	//MyAPP.prefsCookie.put(MyAPP.prefs);
+	MyAPP.prefsDb.add('prefs', MyAPP.prefs, 
+		function () {},
+		function (event) {
+			//Mojo.Log.info("Prefs DB failure %j", event);
+		});
 
 };
 
 IntroAssistant.prototype.checkChange = function (event) {
 	var repeatFromCompleted, newDueDate, newStartDate, repeat, newTask, diff;
-	Mojo.Log.info("Event id:", event.target.id);
+	//Mojo.Log.info("Event id:", event.target.id);
 	if (event.target.id === 'taskCheck') {
 		// Changed the "Completed" checkbox
 		//Mojo.Log.info("Check Change: %j", event.model.id);
@@ -389,7 +419,7 @@ IntroAssistant.prototype.checkChange = function (event) {
 			event.model.completed = nowTime;
 			if (event.model.repeat && (event.model.duedate || event.model.startdate)) {
 				//diff = event.model.duedate *1 - event.model.startdate *1;
-				Mojo.Log.info("Repeat Task!", event.model.repeat);
+				//Mojo.Log.info("Repeat Task!", event.model.repeat);
 				repeatFromCompleted = false;
 				repeat = event.model.repeat;
 				if (repeat > 99) {
@@ -397,7 +427,7 @@ IntroAssistant.prototype.checkChange = function (event) {
 					repeat = repeat - 100;
 				}
 				if (repeat > 49) {
-					Mojo.Log.info("Can't handle advanced repeats!!");
+					//Mojo.Log.info("Can't handle advanced repeats!!");
 				}
 				else {
 					newDueDate = (repeatFromCompleted) ? 
@@ -472,8 +502,14 @@ IntroAssistant.prototype.checkChange = function (event) {
 			event.model.completed = '';
 		}
 		MyAPP.local.lastaddedit = Math.floor(event.model.modified / 1000);
-		MyAPP.localCookie.put(MyAPP.local);
-		Mojo.Log.info("Updating Task %j", event.model);
+		//MyAPP.localCookie.put(MyAPP.local);
+		MyAPP.prefsDb.add('local', MyAPP.local, 
+			function () {},
+			function (event) {
+				//Mojo.Log.info("Prefs DB failure %j", event);
+		});
+
+		//Mojo.Log.info("Updating Task %j", event.model);
 		dao.updateTask(event.model, this.activate.bind(this));	
 		//event.stop();
 	}
@@ -539,6 +575,9 @@ IntroAssistant.prototype.handleCommand = function (event) {
 		break;
 	case 'doFolders':
 		this.controller.stageController.pushScene('folders');
+		break;
+	case 'doCustom':
+		this.controller.stageController.pushScene('custom-lists');
 		break;
 	}
 };
@@ -651,7 +690,7 @@ IntroAssistant.prototype.finishSync = function (response) {
 
 */
 IntroAssistant.prototype.editTask = function (taskValue) {
-	Mojo.Log.info("Task value:", taskValue);
+	//Mojo.Log.info("Task value:", taskValue);
 	this.controller.stageController.pushScene('addtask', taskValue);
 };
 
@@ -662,14 +701,14 @@ IntroAssistant.prototype.listTap = function (event) {
 	var id = event.originalEvent.target.id,
 		className = event.originalEvent.target.className,
 		curDrawer, curDrawerNode;
-	Mojo.Log.info("Classname:", className, "Id:", id);
+	//Mojo.Log.info("Classname:", className, "Id:", id);
 	if (id === 'taskCheck') {
 		this.checkChange (event);
 		event.stop();
 		return;
 	}
 	if (className === 'done-icon-note' || className === 'mynote') {
-		Mojo.Log.info("Note Icon or drawer tapped!", id, className);
+		//Mojo.Log.info("Note Icon or drawer tapped!", id, className);
 
 /*
 		drawers = this.controller.document.getElementsByName('notesDrawer');
@@ -682,7 +721,7 @@ IntroAssistant.prototype.listTap = function (event) {
 */		
 		//debugObject(event.originalEvent.target.up(), 'noFuncs');
 		
-		Mojo.Log.info("list", this.controller.get('taskListing').mojo.getList().mojo.getNodeByIndex(event.index));
+		//Mojo.Log.info("list", this.controller.get('taskListing').mojo.getList().mojo.getNodeByIndex(event.index));
 		switch (className) {
 			case 'done-icon-note':
 				//Mojo.Log.info("icon!");
@@ -727,8 +766,14 @@ IntroAssistant.prototype.listDelete = function (event) {
 		//save lastdelete in seconds
 		var nowTime = Math.floor(new Date().getTime() / 1000);
 		MyAPP.local.lastdelete = nowTime;
-		MyAPP.localCookie = new Mojo.Model.Cookie(MyAPP.appName + "local");
-		MyAPP.localCookie.put(MyAPP.local);
+		//MyAPP.localCookie = new Mojo.Model.Cookie(MyAPP.appName + "local");
+		//MyAPP.localCookie.put(MyAPP.local);
+		MyAPP.prefsDb.add('local', MyAPP.local, 
+			function () {},
+			function (event) {
+				//Mojo.Log.info("Prefs DB failure %j", event);
+		});
+
 	}
 };
 
@@ -767,7 +812,7 @@ IntroAssistant.prototype.listAdd = function (title) {
 		added: nowTime,
 		modified:nowTime,
 		duedate: utils.makeDueDate(MyAPP.prefs.defaultDueDate, ""),
-		startdate: "",
+		startdate: utils.makeDueDate(MyAPP.prefs.defaultStartDate, ""),
 		duetime: "",
 		starttime: "",
 		reminder: 0,
@@ -794,14 +839,6 @@ IntroAssistant.prototype.syncFinished = function (response) {
 	//bannerParams = {messageText: MyAPP.appName + " " + response};
 	//Mojo.Controller.getAppController().showBanner(bannerParams, {});
 
-/*
-	// Save list/filter prefs
-	MyAPP.prefs.showList = this.showListModel.value;
-	MyAPP.prefs.showFilter = this.showFilterModel.value;
-	MyAPP.prefsCookie = new Mojo.Model.Cookie(MyAPP.appName + "prefs");
-	MyAPP.prefsCookie.put(MyAPP.prefs);
-
-*/	
 	this.activate();
 	
 	this.controller.get("Scrim").hide();	
@@ -819,10 +856,24 @@ IntroAssistant.prototype.syncFinished = function (response) {
 };
 
 IntroAssistant.prototype.taskDivider = function(itemModel) {
-	var today, tomorrow, nextDay, nextWeek, yesterday, lastWeek, lastMonth;
-	switch (this.showListModel.value) {
+	var today, tomorrow, nextDay, nextWeek, yesterday, lastWeek, lastMonth,
+		listType;
+	listType = (this.showListModel.value === 'custom' && MyAPP.prefs.showFilter > 0) ?
+		this.customLists[MyAPP.prefs.showFilter].sort[0].type : this.showListModel.value;
+	//listType = this.showListModel.value;
+	
+	if (itemModel.parent && MyAPP.prefs.indentSubtasks) {
+		return;
+	}
+	switch (listType) {
 		case 'all':
-			//return $L("Importance") + ": " + itemModel.importance;
+			return $L("Importance") + ": " + itemModel.importance;
+		case 'custom':
+			return $L("Importance") + ": " + itemModel.importance;
+		case 'tag':
+			return (itemModel.tag) ? itemModel.tag: $L("No tag");
+		case 'importance':
+			return $L("Importance") + ": " + itemModel.importance;		
 		case 'folder':
 			return (this.foldersModel.items[itemModel.folder]) ? 
 				this.foldersModel.items[itemModel.folder].label : $L("No Folder");
@@ -941,6 +992,8 @@ IntroAssistant.prototype.taskDivider = function(itemModel) {
 					return $L("Deferred Task");
 			}
 			break;
+		default:
+			return;
 	}
 };
 
@@ -949,6 +1002,9 @@ IntroAssistant.prototype.activate = function(event){
 	 example, key handlers that are observing the document */
 
 	//Mojo.Controller.errorDialog('IT WORKS', this.controller.window);
+
+	this.controller.get("yellowpad").style.backgroundColor = MyAPP.colors[MyAPP.prefs.color].color; //"#D2F7D4";
+
 	// Check for valid Toodledo userid:
 	if (MyAPP.account.userid) {
 		// Call the getAuth function to get sync authorization info
@@ -1049,6 +1105,21 @@ IntroAssistant.prototype.gotGoalsDb = function (response) {
 	//this.goalsModel.items = response;
 	//Mojo.Log.info("Goals model items %j", this.goalsModel.items);
 	
+	dao.retrieveCustomLists(this.gotCustomListsDb.bind(this));
+};
+
+IntroAssistant.prototype.gotCustomListsDb = function (response) {
+	var i;
+	this.customLists =[{value: 'all', label: $L("All Tasks"), secondaryIcon: 'done-icon-tasklist'}]; 
+
+	for (i = 0; i < response.length; i++) {
+		response[i].listobject = response[i].listobject.evalJSON();
+		response[i].listobject.value = i+1;
+		this.customLists.push(response[i].listobject);
+	}
+	
+	//Mojo.Log.info("Custom Lists in tasks scene %j", this.customLists);
+	
 	// Retrieve tasks using saved list, filter & sortSpec;
 	this.showListModel.value = MyAPP.prefs.showList;
 	this.controller.modelChanged(this.showListModel);
@@ -1058,11 +1129,10 @@ IntroAssistant.prototype.gotGoalsDb = function (response) {
 	this.sortSpec = (this.showListModel.value === 'all') ? 
 		'folder' : this.showListModel.value;
 	this.getTasks(this.showListModel.value, this.showFilterModel.value);
-
 };
 
 IntroAssistant.prototype.gotTasksDb = function (response) {
-	//Mojo.Log.info("Tasks response is %j", response);
+	////Mojo.Log.info("Tasks response is %j", response);
 	//Mojo.Log.info("List in gotTasksDb: ", this.showListModel.value);
 	var i, j, doneTime = new Date(), myWrap, tags = [], thisTags = [], index;
 	
@@ -1070,7 +1140,7 @@ IntroAssistant.prototype.gotTasksDb = function (response) {
 	this.childTasks = [];
 		
 	if (response.length > 0) {
-		
+				
 		//doneTime.setDate(doneTime.getDate() -  1);
 		doneTime.setHours(0, 0, 0, 0);
 		
@@ -1122,7 +1192,7 @@ IntroAssistant.prototype.gotTasksDb = function (response) {
 					response[i].wrap = myWrap;
 					
 					// check for parent/child tasks
-					if (!response[i].parent) {
+					if (!response[i].parent || !MyAPP.prefs.indentSubtasks) {
 						//Mojo.Log.info("regular task", response[i].title, response[i].id);
 						this.tasks.push(response[i]);
 					}
@@ -1133,6 +1203,12 @@ IntroAssistant.prototype.gotTasksDb = function (response) {
 				}
 			}
 		}
+		
+		if (MyAPP.prefs.showList === 'all' || 
+			(MyAPP.prefs.showList === 'custom' && MyAPP.prefs.showFilter === 'all'))
+		{
+			this.tasks.sort(this.sortImportance.bind(this));
+		}		
 	}
 	else {
 		this.tasks = [
@@ -1212,7 +1288,7 @@ IntroAssistant.prototype.calcImportance = function (task) {
 
 IntroAssistant.prototype.getTasks = function (listType, filter) {
 	//Mojo.Log.info("List: %s, filter: %s, sort %s",listType, filter, this.sortSpec);
-	var sqlString, date1, date2, val1;
+	var sqlString, date1, date2, val1, i;
 	//sqlString = "SELECT * FROM tasks WHERE (VALUE>0)";
 	sqlString = "SELECT t.id as id, t.parent, t.children, t.title, t.tag, " +
 		"t.folder, t.context, t.goal, t.added, t.modified as modified, " +
@@ -1236,7 +1312,9 @@ IntroAssistant.prototype.getTasks = function (listType, filter) {
 		date2.setHours(0,0,0,0);
 		date1.setDate(date1.getDate()+1);
 		date2.setMonth(date1.getMonth() + MyAPP.account.hidemonths);
-		sqlString += " AND (t.startdate<" + date1.getTime() + " OR t.startdate = '') AND (duedate<" + date2.getTime() + " OR duedate ='')";
+		sqlString += " AND (t.startdate<" + date1.getTime() + 
+			" OR t.startdate = '') AND (duedate<" + date2.getTime() + 
+			" OR duedate ='')";
 	}
 	if (!MyAPP.prefs.showNegPriority) {
 		sqlString += " AND (t.priority>-1)";
@@ -1358,12 +1436,126 @@ IntroAssistant.prototype.getTasks = function (listType, filter) {
 				sqlString += " AND (t.completed > " + date1.getTime() + ")";
 			}
 			break;
+		case 'custom':
+			sort1 = 'sortorder';
+			if (filter === "all") {
+				break;
+			}
+			this.customLists[filter].folders.each(function (folder) {
+				sqlString += " AND t.folder != " + folder;
+			});
+			this.customLists[filter].contexts.each(function (context) {
+				sqlString += " AND t.context != " + context;
+			});
+			this.customLists[filter].goals.each(function (goal) {
+				sqlString += " AND t.goal != " + goal;
+			});
+			this.customLists[filter].priority.each(function (priority) {
+				if (!priority.selected) {
+					sqlString += " AND t.priority != " + priority.value;
+				}
+			});
+			this.customLists[filter].status.each(function (status) {
+				if (!status.selected) {
+					sqlString += " AND t.status != " + status.value;
+				}
+			});
+			this.customLists[filter].starred.each(function (starred) {
+				if (!starred.selected) {
+					sqlString += " AND t.star != " + starred.value;
+				}
+			});
+			
+			// Select by due date
+			date1 = new Date();
+			date1.setHours(0, 0, 0, 0);
+			date2 = new Date();
+			date2.setHours(0, 0, 0, 0);
+			//Mojo.Log.info("Duedate filter", this.customLists[filter].duedate);
+			switch (this.customLists[filter].duedate *1) {
+					case 0: //overdue
+						break;
+					case 1: // today
+						date1.setDate(date1.getDate() + 1);
+						break;
+					case 2: // tomorrow
+						date1.setDate(date1.getDate() + 2);
+						date2.setDate(date2.getDate() + 1);
+						break;
+					case 3: // next week
+						date1.setDate(date1.getDate() + 7);
+						date2.setDate(date2.getDate() + 1);
+						break;
+					case 4: // next month
+						date1.setMonth(date1.getMonth() + 1);
+						date2.setDate(date2.getDate() + 1);
+						break;
+			}
+			//Mojo.Log.info("Dates: ", date1, date2);
+			if (this.customLists[filter].duedate * 1 === 5) { // no due date
+				sqlString += " AND (t.duedate = '')";
+			}
+			else if (this.customLists[filter].duedate < 5) {
+				sqlString += " AND (t.duedate < " + date1.getTime() + ")";
+				if (!this.customLists[filter].duedatebefore) {
+					sqlString += " AND (t.duedate >= " + date2.getTime() + ")";
+				}
+			}
+			
+			// Select by start dates
+			date1 = new Date();
+			date1.setHours(0, 0, 0, 0);
+			date2 = new Date();
+			date2.setHours(0, 0, 0, 0);
+			switch (this.customLists[filter].startdate *1) {
+					case 0: //overdue
+						break;
+					case 1: // today
+						date1.setDate(date1.getDate() + 1);
+						break;
+					case 2: // tomorrow
+						date1.setDate(date1.getDate() + 2);
+						date2.setDate(date2.getDate() + 1);
+						break;
+					case 3: // next week
+						date1.setDate(date1.getDate() + 7);
+						date2.setDate(date2.getDate() + 1);
+						break;
+					case 4: // next month
+						date1.setMonth(date1.getMonth() + 1);
+						date2.setDate(date2.getDate() + 1);
+						break;
+			}
+			if (this.customLists[filter].startdate * 1 === 5) { // no due date
+				sqlString += " AND (t.startdate = '')";
+			}
+			else if (this.customLists[filter].startdate < 5) {
+				sqlString += " AND (t.startdate < " + date1.getTime() + ")";
+				if (!this.customLists[filter].startdatebefore) {
+					sqlString += " AND (t.startdate >= " + date2.getTime() + ")";
+				}
+			}
+			
+			break;
 	}
-	if (sort1 === 'duedate' || sort1 === 'status' || sort1 === 'sortorder') {
-		sqlString += " ORDER BY " + sort1 + " DESC, t.duedate DESC, t.duetime DESC, t.priority ASC, t.star ASC, sortorder ASC, t.context ASC, t.modified ASC";
+	if (listType === 'custom' && filter > 0) {
+		sqlString += " ORDER BY ";
+		sqlString += (this.customLists[filter].sort[0].type === 'folder') ?
+			"sortorder" : "t." +this.customLists[filter].sort[0].type;
+		sqlString += " " + this.customLists[filter].sort[0].oppdir;
+		for (i = 1; i < this.customLists[filter].sort.length; i ++) {
+			sqlString += (this.customLists[filter].sort[i].type === 'folder') ?
+				", sortorder" : ", t." + this.customLists[filter].sort[i].type;
+			sqlString += " " + this.customLists[filter].sort[i].oppdir;
+		}
 	}
 	else {
-		sqlString += " ORDER BY " + sort1 + " ASC, t.duedate DESC, t.duetime DESC, t.priority ASC, t.star ASC, t.context ASC, t.modified ASC";		
+		if (sort1 === 'duedate' || sort1 === 'status' || sort1 === 'sortorder') {
+			sqlString += " ORDER BY " + sort1 + " DESC, t.duedate DESC, t.duetime DESC, t.priority ASC, t.star ASC, sortorder ASC, t.context ASC, t.modified ASC";
+		}
+		else {
+			sqlString += " ORDER BY " + sort1 + " ASC, t.duedate DESC, t.duetime DESC, t.priority ASC, t.star ASC, t.context ASC, t.modified ASC";
+		}
 	}
 	sqlString += ";GO;";
 	//Mojo.Log.info("SQL String: ", sqlString);
@@ -1377,13 +1569,6 @@ IntroAssistant.prototype.deactivate = function(event) {
 	// Do not allow rotate on other scenes
 	this.controller.stageController.setWindowOrientation("up");
 	//Mojo.Log.info("Rotate UP!");
-	
-	// Save list/filter prefs
-	MyAPP.prefs.showList = this.showListModel.value;
-	MyAPP.prefs.showFilter = this.showFilterModel.value;
-	//MyAPP.prefsCookie = new Mojo.Model.Cookie(MyAPP.appName + "prefs");
-	MyAPP.prefsCookie.put(MyAPP.prefs);
-
 };
 
 IntroAssistant.prototype.cleanup = function(event) {
@@ -1412,9 +1597,31 @@ IntroAssistant.prototype.sortImportance = function (a, b) {
 		return -1;
 	}
 	else {
-		return 0;
+		if (a.duedate < b.duedate) {
+			return 1;
+		}
+		else if (a.duedate > b.duedate) {
+			return -1;
+		}
+		else {
+			if (a.duetime > b.duetime) {
+				return 1;
+			}
+			else if (a.duetime < b.duetime) {
+				return -1;
+			}
+			else {
+				if (a.priority > b.priority) {
+					return 1;
+				}
+				else if (a.priority < b.priority) {
+					return -1;
+				}
+			}
+			
+		}
 	}
-	
+	return 0;	
 };
 
 IntroAssistant.prototype.sortFolder = function (a, b) {
@@ -1596,7 +1803,7 @@ IntroAssistant.prototype.formatPriority = function (value, model) {
 IntroAssistant.prototype.formatParent = function (value, model) {
 	//Mojo.Log.info("Model Duedate", value, model.duedate);
 	//return (value) ? "taskbox priority" + value : "";
-	if (value) {
+	if (value && MyAPP.prefs.indentSubtasks) {
 		return "subtask";
 	}
 	else {

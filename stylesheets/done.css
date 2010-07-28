@@ -65,11 +65,22 @@ body.palm-default {
 	height: 100%;
 	width: 100%;
 	z-index: -2;
-	background: url(../images/yellowbackground.png) top left repeat;	
-/*
-	background-color: #fff;
 
-*/}
+	background-color: #ece79a; /* yellow */
+	background-color: #FFBAF6; /* pink */
+	background-color: #D2F7D4; /* green */
+	background-color: #D1E9FF; /* blue */
+	background-color: #FFE1C1; /* orange */
+	background-color: #FAC6FF; /* violet */
+	background-color: #dddddd; /* gray */
+}
+
+.palm-menu.command-menu.palm-default > .palm-menu-fade,
+.command-menu .palm-menu-fade {
+	background:url(../images/list-scroll-fade-bottom-done-gray.png) top left repeat-x;
+	background:url(../images/none.png) top left repeat-x;
+}
+
 .redstripe {
 	position: fixed;
 	top: 0px;
@@ -151,11 +162,6 @@ body.palm-default {
 	position:fixed;
 	height:100%; 
 	width:100%;
-}
-.palm-menu.command-menu.palm-default > .palm-menu-fade,
-.command-menu .palm-menu-fade {
-	background:url(../images/list-scroll-fade-bottom.png) top left repeat-x;
-	
 }
 
 .tasks-list-scroller {
@@ -362,6 +368,9 @@ body.palm-default {
  .done-icon-status {
  	background: url(../images/icon-status-32x32.png) center no-repeat;
  }
+ .done-icon-people {
+ 	background: url(../images/icon-people-32x32.png) center no-repeat;
+ }
  .done-icon-recur {
  	position: relative;
 	left: 5px;
@@ -378,6 +387,59 @@ body.palm-default {
  	background: url(../images/sticky-note-32x32.png) center no-repeat;
  }
  
+ /* color sample icons */
+ .icon-color-white {
+ 	background: url(../images/icon-color-white.png) center no-repeat;
+ }
+ .icon-color-khaki {
+ 	background: url(../images/icon-color-khaki.png) center no-repeat;
+ }
+ .icon-color-palegreen {
+ 	background: url(../images/icon-color-palegreen.png) center no-repeat;
+ }
+ .icon-color-honeydew {
+ 	background: url(../images/icon-color-honeydew.png) center no-repeat;
+ }
+ .icon-color-aliceblue {
+ 	background: url(../images/icon-color-aliceblue.png) center no-repeat;
+ }
+ .icon-color-tan {
+ 	background: url(../images/icon-color-tan.png) center no-repeat;
+ }
+ .icon-color-seashell {
+ 	background: url(../images/icon-color-seashell.png) center no-repeat;
+ }
+ .icon-color-lightgray {
+ 	background: url(../images/icon-color-lightgray.png) center no-repeat;
+ }
+ .icon-color-beige {
+ 	background: url(../images/icon-color-beige.png) center no-repeat;
+ }
+ .icon-color-antiquewhite {
+ 	background: url(../images/icon-color-antiquewhite.png) center no-repeat;
+ }
+ .icon-color-lavender {
+ 	background: url(../images/icon-color-lavender.png) center no-repeat;
+ }
+ .icon-color-lightyellow {
+ 	background: url(../images/icon-color-lightyellow.png) center no-repeat;
+ }
+ .icon-color-cornsilk {
+ 	background: url(../images/icon-color-cornsilk.png) center no-repeat;
+ }
+ .icon-color-wheat {
+ 	background: url(../images/icon-color-wheat.png) center no-repeat;
+ }
+ .icon-color-pink {
+ 	background: url(../images/icon-color-pink.png) center no-repeat;
+ }
+ .icon-color-lightblue {
+ 	background: url(../images/icon-color-lightblue.png) center no-repeat;
+ }
+ .icon-color-plum {
+ 	background: url(../images/icon-color-plum.png) center no-repeat;
+ }
+
  .mynote {
  	color: #000;
 	font-size: 18px;

@@ -11,6 +11,8 @@ FoldersAssistant.prototype.setup = function() {
 	this.controller.get('contextsListLabel').innerHTML = $L('Contexts');
 	this.controller.get('goalsListLabel').innerHTML = $L('Goals');
 		
+	this.controller.get("yellowpad").style.backgroundColor = MyAPP.colors[MyAPP.prefs.color].color; //"#D2F7D4";
+
 	/* use Mojo.View.render to render view templates and add them to the scene, if needed */
 	
 	/* setup widgets here */
@@ -88,7 +90,13 @@ FoldersAssistant.prototype.reorderItem = function (event) {
 	this.activate();
 
 	MyAPP.local.lastfolderedit = Math.floor(nowTime / 1000);
-	MyAPP.localCookie.put(MyAPP.local);
+	//MyAPP.localCookie.put(MyAPP.local);
+	MyAPP.prefsDb.add('local', MyAPP.local, 
+		function () {},
+		function (event) {
+			Mojo.Log.info("Prefs DB failure %j", event);
+		}
+	);
 
 };
 
@@ -131,7 +139,13 @@ FoldersAssistant.prototype.addItem = function (event) {
 			MyAPP.local.lastgoaledit = Math.floor(nowTime / 1000);
 			break;
 	}
-	MyAPP.localCookie.put(MyAPP.local);
+	//MyAPP.localCookie.put(MyAPP.local);
+	MyAPP.prefsDb.add('local', MyAPP.local, 
+		function () {},
+		function (event) {
+			Mojo.Log.info("Prefs DB failure %j", event);
+		}
+	);
 	this.controller.showDialog({
 		template: 'folders/edit-item',
 		assistant: new EditItemAssistant(this, event.target.id, object, this.updateItem.bind(this))
@@ -157,7 +171,13 @@ FoldersAssistant.prototype.deleteItem = function (event) {
 			if (MyAPP.prefs.showList === 'folder' && 
 					MyAPP.prefs.showFilter == event.model.items[event.index].value) {
 				MyAPP.prefs.showFilter = 'all';
-				MyAPP.prefsCookie.put(MyAPP.prefs);
+				//MyAPP.prefsCookie.put(MyAPP.prefs);
+				MyAPP.prefsDb.add('local', MyAPP.local, 
+					function () {},
+					function (event) {
+						Mojo.Log.info("Prefs DB failure %j", event);
+					}
+				);
 			}
 			break;
 		case 'contextsList':
@@ -166,7 +186,13 @@ FoldersAssistant.prototype.deleteItem = function (event) {
 			if (MyAPP.prefs.showList === 'context' && 
 					MyAPP.prefs.showFilter == event.model.items[event.index].value) {
 				MyAPP.prefs.showFilter = 'all';
-				MyAPP.prefsCookie.put(MyAPP.prefs);
+				//MyAPP.prefsCookie.put(MyAPP.prefs);
+				MyAPP.prefsDb.add('local', MyAPP.local, 
+					function () {},
+					function (event) {
+						Mojo.Log.info("Prefs DB failure %j", event);
+					}
+				);
 			}
 			break;
 		case 'goalsList':
@@ -175,7 +201,13 @@ FoldersAssistant.prototype.deleteItem = function (event) {
 			if (MyAPP.prefs.showList === 'goal' && 
 					MyAPP.prefs.showFilter == event.model.items[event.index].value) {
 				MyAPP.prefs.showFilter = 'all';
-				MyAPP.prefsCookie.put(MyAPP.prefs);
+				//MyAPP.prefsCookie.put(MyAPP.prefs);
+				MyAPP.prefsDb.add('local', MyAPP.local, 
+					function () {},
+					function (event) {
+						Mojo.Log.info("Prefs DB failure %j", event);
+					}
+				);
 			}
 			break;
 	}
@@ -188,7 +220,13 @@ FoldersAssistant.prototype.deleteItem = function (event) {
 	if (event.model.items[event.index].id) {
 		dao.createDeletedFCG(event.model.items[event.index].id, event.target.id);
 	}
-	MyAPP.localCookie.put(MyAPP.local);	
+	//MyAPP.localCookie.put(MyAPP.local);	
+	MyAPP.prefsDb.add('local', MyAPP.local, 
+		function () {},
+		function (event) {
+			Mojo.Log.info("Prefs DB failure %j", event);
+		}
+	);
 	
 	// refresh models & display
 	this.activate();

@@ -81,12 +81,12 @@ DashnotifyAssistant.prototype.gotTasksDB = function (response) {
 				value: response[i].value
 			});
 		}
-		Mojo.Log.info("dashInfos:%j", this.dashInfos[0]);
+		//Mojo.Log.info("dashInfos:%j", this.dashInfos[0]);
 		//this.display = response.length;
 		this.display = 1;
 		this.displayDashboard();
 		if (MyAPP.prefs.notifyAlarm) {
-			Mojo.Controller.getAppController().playSoundNotification("alerts", "");
+			Mojo.Controller.getAppController().playSoundNotification("notifications", "");
 		}
 	}
 	else {

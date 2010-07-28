@@ -17,6 +17,7 @@ function DAO () {
 			this.deleteAllGoals();
 			this.deleteAllTasks();
 			this.deleteAllDeletedFCGs();
+			this.deleteAllCustomLists();
 		};
 
 /*  ********* SAVING FOR GETITDONEAPP ***************
@@ -88,6 +89,12 @@ function DAO () {
 	    	inTransaction.executeSql(sqlCreateDeletedFCGTable, [], 
 				function () {
 					//Mojo.Log.info("Created Deleted FCG Table"); 
+				}, 
+				this.errorHandler
+			);
+	    	inTransaction.executeSql(sqlCreateCustomListTable, [], 
+				function () {
+					//Mojo.Log.info("Created Custom List Table"); 
 				}, 
 				this.errorHandler
 			);
@@ -599,7 +606,7 @@ function DAO () {
 						results.push(Object.clone(inResultSet.rows.item(i)));
 					}
 				}
-				//Mojo.Log.info("DeletedTasks Results in db: %j", results);
+				//Mojo.Log.info("DeletedFCGs Results in db: %j", results);
 				inCallBack(results);
 			},
 			this.errorHandler);
@@ -627,6 +634,110 @@ function DAO () {
 				[], 
 				function(){
 					//Mojo.Log.info("Deleted DeletedFCGs");
+				},
+				this.errorHandler);
+	    }).bind(this));
+	};
+		
+// **********************************************
+// CSTOM LISTS functions
+// Save confinguration of custom lists for viewing tasks
+// **********************************************
+	
+	// Custom List SQL queries
+	var sqlCreateCustomListTable = "CREATE TABLE IF NOT EXISTS 'customlists' " + 
+		"(id INTEGER PRIMARY KEY, label TEXT, listobject TEXT); GO;";
+	var sqlUpdateCustomList = "REPLACE INTO 'customlists' (id, label, listobject) " +
+		"VALUES (?, ?, ?); GO;";
+	var sqlRetrieveCustomLists = "SELECT id, label, listobject FROM customlists; GO;";
+	var sqlRetrieveCustomList = "SELECT listobject from customlists WHERE id=?; GO;";
+	var sqlDeleteCustomList = "DELETE FROM customlists WHERE (id=?); GO;";
+	var sqlDeleteAllCustomLists = "DELETE FROM customlists; GO;";
+
+	// ***** Custom List methods *****
+	this.updateCustomList = function (id, label, listobject, inCallback) {
+		//Mojo.Log.info("Entering db updateCustomList()");
+		
+		//Mojo.Log.info("Updating CustomList: %j", id, label);
+
+	    this.db.transaction((function (inTransaction) { 
+			inTransaction.executeSql(sqlUpdateCustomList, [ id, label, listobject ], 
+			function(inTransaction, inResultSet){
+				//Mojo.Log.info("DB results: %j", inResultSet);
+				var results = inResultSet.insertId;
+				inCallback(results);
+			},
+			this.errorHandler);
+	    }).bind(this));
+
+  	}; // End createDeletedTask().
+  	
+	this.retrieveCustomList = function (inId, inCallback) {
+		//Mojo.Log.info("Entering db retrieveCustomList()");
+		// Retrieve Custom List with id inId
+		this.db.transaction((function (inTransaction) {
+			inTransaction.executeSql(sqlRetrieveCustomList,
+			[inId], 
+			function(inTransaction, inResultSet){
+				var results = [], i;
+				if (inResultSet.rows) {
+					for (i = 0; i < inResultSet.rows.length; i++) {
+						//Mojo.Log.info("Result in Custom List: %j", inResultSet.rows.item(i));
+						// Use clone of object to avoid problems with immutability
+						results.push(Object.clone(inResultSet.rows.item(i)));
+					}
+				}
+				//Mojo.Log.info("CustomList Results in db: %j", results);
+				inCallback(results);
+			},
+			this.errorHandler);
+	    }).bind(this));
+	};
+	
+	this.retrieveCustomLists = function (inCallBack) {
+		//Mojo.Log.info("Entering db retrieveCustomLists()");
+		
+		this.db.transaction((function (inTransaction) {
+			inTransaction.executeSql(sqlRetrieveCustomLists,
+			[ ],
+			function (inTransaction, inResultSet) {
+				//Mojo.Log.info("Retrieve Custom Lists Success");
+				var results = [], i;
+				if (inResultSet.rows) {
+					for (i = 0; i < inResultSet.rows.length; i++) {
+						//Mojo.Log.info("Result 1: %j", inResultSet.rows.item(i));
+						// Use clone of object to avoid problems with immutability
+						results.push(Object.clone(inResultSet.rows.item(i)));
+					}
+				}
+				//Mojo.Log.info("CustomList Results in db: %j", results);
+				inCallBack(results);
+			},
+			this.errorHandler);
+	    }).bind(this));
+	};
+
+	this.deleteCustomList = function (inId, inCallback) {
+		//Mojo.Log.info("Entering db deleteCustomList()");
+		// Delete Custom List with id inId
+		this.db.transaction((function (inTransaction) {
+			inTransaction.executeSql(sqlDeleteCustomList,
+				[inId], 
+				function(inTransaction, inResultSet){
+					//Mojo.Log.info("Deleted Custom List ", inId);
+					inCallback();
+				},
+				this.errorHandler);
+	    }).bind(this));
+	};
+	
+	this.deleteAllCustomLists = function () {
+		// Delete Custom Lists
+		this.db.transaction((function (inTransaction) {
+			inTransaction.executeSql(sqlDeleteAllCustomLists,
+				[], 
+				function(){
+					//Mojo.Log.info("Deleted Custom Lists");
 				},
 				this.errorHandler);
 	    }).bind(this));
@@ -757,9 +868,11 @@ function DAO () {
 			[ inDate ],
 			function (inTransaction, inResultSet) {
 				var results = [], i;
+				//Mojo.Log.info("Rows", inResultSet.rows.length);
 				if (inResultSet.rows) {
 					for (i = 0; i < inResultSet.rows.length; i++) {
 						// Use clone of object to avoid problems with immutability
+						//Mojo.Log.info("Task: %j", inResultSet.rows.item(i), i);
 						results.push(Object.clone(inResultSet.rows.item(i)));
 					}
 				}

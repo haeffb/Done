@@ -46,7 +46,7 @@ AccountsAssistant.prototype.setup = function() {
             hintText: $L('Enter Password')
          },
          this.passwordModel = {
-             value: MyAPP.prefs.password
+             value: "" //MyAPP.prefs.password
     });
 	
 	// Add Update button
@@ -172,8 +172,13 @@ AccountsAssistant.prototype.clearUser = function (value) {
 				MyAPP.prefs.defaultGoal = 0;
 				MyAPP.prefs.showList = 'all';
 				MyAPP.prefs.showFilter = 'all';
-				MyAPP.prefsCookie = new Mojo.Model.Cookie(MyAPP.appName + "prefs");
-				MyAPP.prefsCookie.put(MyAPP.prefs);
+				//MyAPP.prefsCookie = new Mojo.Model.Cookie(MyAPP.appName + "prefs");
+				//MyAPP.prefsCookie.put(MyAPP.prefs);
+				MyAPP.prefsDb.add('prefs', MyAPP.prefs, 
+					function () {},
+					function (event) {
+						Mojo.Log.info("Prefs DB failure %j", event);
+					});
 				
 				//reset local lastedit timestamps
 				MyAPP.local.lastaddedit = 0;
@@ -182,7 +187,14 @@ AccountsAssistant.prototype.clearUser = function (value) {
 				MyAPP.local.lastfolderedit = 0;
 				MyAPP.local.lastgoaledit = 0;
 				MyAPP.local.lastservertaskmod = 0;
-
+				MyAPP.local.firstsync = true;
+				//MyAPP.localCookie = new Mojo.Model.Cookie(MyAPP.appName + "local");
+				//MyAPP.localCookie.put(MyAPP.local);
+				MyAPP.prefsDb.add('local', MyAPP.local, 
+					function () {},
+					function (event) {
+						Mojo.Log.info("Prefs DB failure %j", event);
+				});
 				
 				//update sync key
 				api.init();
@@ -215,11 +227,23 @@ AccountsAssistant.prototype.gotUserid = function (response) {
 	else if (response.userid){
 		MyAPP.account.userid = response.userid;
 		//Mojo.Log.info("Put Cookie!");
-		MyAPP.accountCookie.put(MyAPP.account);
+		//MyAPP.accountCookie.put(MyAPP.account);
+		MyAPP.prefsDb.add('account', MyAPP.account, 
+			function () {},
+			function (event) {
+				Mojo.Log.info("Prefs DB failure %j", event);
+		});
 		
 		MyAPP.prefs.email = this.emailModel.value;
-		MyAPP.prefs.password = this.passwordModel.value;
-		MyAPP.prefsCookie.put(MyAPP.prefs);
+		//MyAPP.prefs.password = this.passwordModel.value;
+		MyAPP.prefs.MD5password = MD5(this.passwordModel.value);
+
+		//MyAPP.prefsCookie.put(MyAPP.prefs);
+		MyAPP.prefsDb.add('prefs', MyAPP.prefs, 
+			function () {},
+			function (event) {
+				Mojo.Log.info("Prefs DB failure %j", event);
+			});
 		
 		this.controller.stageController.popScene();
 	}	
