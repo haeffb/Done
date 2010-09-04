@@ -1,0 +1,10 @@
+<div class='palm-scene'>
+	<div class="palm-header" id="field-configHeader">Field Configuration</div>
+	<div class='header-ico' id='header-icon'></div>
+	<div class="palm-header-spacer"></div>
+	
+	<div class='yellowpad' id='yellowpad'></div>
+	<div class='redstripe'></div>
+	<div x-mojo-element="List" id="field-config-list"></div>
+	
+</div>

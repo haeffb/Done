@@ -1,0 +1,17 @@
+<div class='palm-row' x-mojo-touch-feedback='momentary'>
+	<div class='palm-row-wrapper'>
+		<div class="taskcheck left" name='taskcheck' x-mojo-element='CheckBox'></div>
+		<div id='priorityIcon' class='tasklist taskbox priority#{priority}'></div>
+		<div id='taskDue' class='tasklist taskdue'>	
+			#{duedateFormatted} #{duetimeFormatted}
+		</div>
+		<div id='taskTitle' class='tasktitle truncating-text'>
+			#{title}
+		</div>
+<!--		<div id='taskPriority' class='tasklist taskpriority'>
+			Priority: #{priority} </div>
+		
+		<div id='taskFolder' class='tasklist taskfolder truncating-text'>#{folderFormatted}</div>
+		<div id='taskContext' class='tasklist taskcontext'>#{contextFormatted}</div> </div> -->
+	</div>
+</div>

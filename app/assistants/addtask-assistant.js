@@ -334,13 +334,30 @@ AddtaskAssistant.prototype.setup = function(){
     // Setup command menu
     
     this.controller.setupWidget(Mojo.Menu.commandMenu, {}, {
-        items: [{
-            label: $L("Duplicate Task"),
+        items: [
+
+			{
+			icon: 'new',
+			command: 'add-task'
+			},
+
+	
+		{
+            //label: $L("Duplicate Task"),
+			icon: "copytask",
             command: "copy-task"
-        }, {
+        }
+/*		,{
+			icon: "savetask",
+			command: "save-task"
+		}
+
+		, {
             label: $L("Config"),
             command: "field-config"
-        }]
+        }
+
+*/		]
     });
     
     /* add event handlers to listen to events from widgets */
@@ -380,13 +397,91 @@ AddtaskAssistant.prototype.setup = function(){
 
 AddtaskAssistant.prototype.handleCommand = function(event){
     switch (event.command) {
+		case "add-task":
+			this.addTask();
+			break;
         case "copy-task":
             this.copyTask();
             break;
         case "field-config":
             this.controller.stageController.pushScene('field-config');
             break;
+		case "save-task":
+			this.controller.stageController.popScene();
+			break;
     }
+};
+
+AddtaskAssistant.prototype.addTask = function () {
+/* THIS FUNCTION IS NOT WORKING PROPERLY!!!!! */
+	var nowTime = Math.floor(new Date().getTime() / 1000) * 1000,
+		folder, context, repeat;
+		
+	folder = MyAPP.prefs.defaultFolder;
+	context = MyAPP.prefs.defaultContext;
+	
+	if (MyAPP.prefs.useCurrent) {
+		//Mojo.Log.info("List & Filter", MyAPP.prefs.showList, MyAPP.prefs.showFilter);
+		if (MyAPP.prefs.showList === 'folder') {
+			if (MyAPP.prefs.showFilter !== 'all') {
+				folder = MyAPP.prefs.showFilter;
+				//Mojo.Log.info("Folder:", folder);
+			}
+		}	
+		if (MyAPP.prefs.showList === 'context') {
+			if (MyAPP.prefs.showFilter !== 'all') {
+				context = MyAPP.prefs.showFilter;
+			}
+		}	
+	}
+
+	repeat = MyAPP.prefs.defaultRepeat;
+	repeat = (MyAPP.prefs.repeatFromCompleted) ? repeat + 100 : repeat;
+	
+    // save original task
+    this.saveTask();
+    
+    this.task = {
+		id: 0,
+		parent: "",
+		children: "",
+		title: "", // uses FilterList to add a new task...
+		tag: "",
+		folder: folder,
+		context: context,
+		goal: MyAPP.prefs.defaultGoal,
+		added: nowTime,
+		modified:nowTime,
+		duedate: utils.makeDueDate(MyAPP.prefs.defaultDueDate, ""),
+		startdate: utils.makeDueDate(MyAPP.prefs.defaultStartDate, ""),
+		duetime: "",
+		starttime: "",
+		reminder: 0,
+		repeat: repeat,
+		completed: "",
+		completedon: "",
+		rep_advanced: "",
+		status: MyAPP.prefs.defaultStatus,
+		star: 0,
+		priority: MyAPP.prefs.defaultPriority,
+		length: 0,
+		timer: 0,
+		note: "",
+		value: nowTime
+	};
+    
+    // need to do something about saveCookie, etc.
+    dao.updateTask(this.task, function(){
+    });
+	
+	this.taskValue = this.task.value;
+	this.loadData();
+	
+	Mojo.Controller.getAppController().showBanner(
+		{messageText: MyAPP.appName + " " + $L("task saved")},
+		{}
+	);
+	
 };
 
 AddtaskAssistant.prototype.copyTask = function(){
@@ -405,6 +500,12 @@ AddtaskAssistant.prototype.copyTask = function(){
     // need to do something about saveCookie, etc.
     dao.updateTask(this.task, function(){
     });
+	
+	Mojo.Controller.getAppController().showBanner(
+		{messageText: MyAPP.appName + " " + $L("task duplicated")},
+		{}
+	);
+	
     
 };
 
@@ -502,6 +603,7 @@ AddtaskAssistant.prototype.checkChange = function(event){
     }
     else {
         this.task.completed = '';
+		this.task.completedon = '';
     }
     
     this.saveTask();
@@ -724,6 +826,10 @@ AddtaskAssistant.prototype.gotStartDate = function(date){
     
 };
 
+AddtaskAssistant.prototype.aboutToActivate = function (callback) {
+	callback.defer();
+};
+
 AddtaskAssistant.prototype.activate = function(event){
     /* put in event handlers here that should only be in effect when this scene is active. For
      example, key handlers that are observing the document */
@@ -861,7 +967,7 @@ AddtaskAssistant.prototype.gotGoalsDb = function(response){
 };
 
 AddtaskAssistant.prototype.gotTasks = function(responseText){
-    //Mojo.Log.info("Task: %j", responseText);
+    Mojo.Log.info("Task: %j", responseText);
     this.task = responseText[0];
     
     var startTimeString = $L("No Start Time");

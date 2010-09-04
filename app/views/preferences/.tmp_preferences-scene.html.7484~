@@ -1,0 +1,428 @@
+<div class='palm-scene'>
+	<div class="palm-header" id="prefsHeader">Preferences</div>
+	<div class='header-ico' id='header-icon'></div>
+	<div class="palm-header-spacer"></div>
+		
+<!-- **** Application prefs **** -->
+		<div class="palm-group">
+			<div class="palm-group-title" x-mojo-loc='' id="appOptionsTitle">Application Settings</div>
+			<div class="palm-list">
+				<div class="palm-row first">
+					<div class="palm-row-wrapper">
+					<table class="palm-list-section-label">
+						<tr>
+							<td>
+								<span x-mojo-loc="" class='thirty' id='wrapTitleLabel'>Wrap Title</span>		
+							</td>
+							<td>
+								<div x-mojo-element="ToggleButton" id="wrapTitleToggleId" class="togglebuttonClass"></div>
+							</td>	
+						</tr>
+					</table>
+					</div>
+				</div>
+<!--
+				<div class="palm-row ">
+					<div class="palm-row-wrapper">
+					<table class="palm-list-section-label">
+						<tr>
+							<td>
+								<span x-mojo-loc="" class='thirty' id='showDueDateLabel'></span>		
+							</td>
+							<td>
+								<div x-mojo-element="ToggleButton" id="showDueDateToggleId" class="togglebuttonClass"></div>
+							</td>	
+						</tr>
+					</table>
+					</div>
+				</div>
+-->
+				<div class="palm-row ">
+					<div class="palm-row-wrapper">
+					<table class="palm-list-section-label">
+						<tr>
+							<td>
+								<span x-mojo-loc="" class='thirty' id='showStarLabel'></span>		
+							</td>
+							<td>
+								<div x-mojo-element="ToggleButton" id="showStarToggleId" class="togglebuttonClass"></div>
+							</td>	
+						</tr>
+					</table>
+					</div>
+				</div>
+				<div class="palm-row">
+					<div class="palm-row-wrapper">
+					<table class="palm-list-section-label">
+						<tr>
+							<td>
+								<span x-mojo-loc="" class='thirty' id='showPriorityLabel'></span>		
+							</td>
+							<td>
+								<div x-mojo-element="ToggleButton" id="showPriorityToggleId" class="togglebuttonClass"></div>
+							</td>	
+						</tr>
+					</table>
+					</div>
+				</div>
+				<div class="palm-row">
+					<div class="palm-row-wrapper">
+					<table class="palm-list-section-label">
+						<tr>
+							<td>
+								<span x-mojo-loc="" class='thirty' id='showNotesLabel'></span>		
+							</td>
+							<td>
+								<div x-mojo-element="ToggleButton" id="showNotesToggleId" class="togglebuttonClass"></div>
+							</td>	
+						</tr>
+					</table>
+					</div>
+				</div>
+				<div class="palm-row" id="indentSubtasksRow">
+					<div class="palm-row-wrapper">
+					<table class="palm-list-section-label">
+						<tr>
+							<td>
+								<span x-mojo-loc="" class='thirty' id='indentSubtasksLabel'></span>		
+							</td>
+							<td>
+								<div x-mojo-element="ToggleButton" id="indentSubtasksToggleId" class="togglebuttonClass"></div>
+							</td>	
+						</tr>
+					</table>
+					</div>
+				</div>
+				<div class="palm-row">
+					<div class="palm-row-wrapper">
+					<table class="palm-list-section-label">
+						<tr>
+							<td>
+								<span x-mojo-loc="" class='thirty' id='showFolderLabel'></span>		
+							</td>
+							<td>
+								<div x-mojo-element="ToggleButton" id="showFolderToggleId" class="togglebuttonClass"></div>
+							</td>	
+						</tr>
+					</table>
+					</div>
+				</div>
+				<div class="palm-row last">
+					<div class="palm-row-wrapper">
+						<div x-mojo-element="ListSelector" id="BGColorSelectorId" class="thirty"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="palm-group">
+			<div class="palm-group-title" x-mojo-loc='' id="filterOptionsTitle">Filter Settings</div>
+			<div class="palm-list">
+				<div class="palm-row first">
+					<div class="palm-row-wrapper">
+					<table class="palm-list-section-label">
+						<tr>
+							<td>
+								<span x-mojo-loc="" class='thirty' id='showFutureTasksLabel'></span>		
+							</td>
+							<td>
+								<div x-mojo-element="ToggleButton" id="showFutureTasksToggleId" class="togglebuttonClass"></div>
+							</td>	
+						</tr>
+					</table>
+					</div>
+				</div>
+				<div class="palm-row">
+					<div class="palm-row-wrapper">
+					<table class="palm-list-section-label">
+						<tr>
+							<td>
+								<span x-mojo-loc="" class='thirty' id='showNegPriorityLabel'></span>		
+							</td>
+							<td>
+								<div x-mojo-element="ToggleButton" id="showNegPriorityToggleId" class="togglebuttonClass"></div>
+							</td>	
+						</tr>
+					</table>
+					</div>
+				</div>
+				<div class="palm-row">
+					<div class="palm-row-wrapper">
+					<table class="palm-list-section-label">
+						<tr>
+							<td>
+								<span x-mojo-loc="" class='thirty' id='showDeferredLabel'></span>		
+							</td>
+							<td>
+								<div x-mojo-element="ToggleButton" id="showDeferredToggleId" class="togglebuttonClass"></div>
+							</td>	
+						</tr>
+					</table>
+					</div>
+				</div>
+				<div class="palm-row last">
+					<div class="palm-row-wrapper">
+					<table class="palm-list-section-label">
+						<tr>
+							<td>
+								<span x-mojo-loc="" class='thirty' id='showCompletedLabel'></span>		
+							</td>
+							<td>
+								<div x-mojo-element="ToggleButton" id="showCompletedToggleId" class="togglebuttonClass"></div>
+							</td>	
+						</tr>
+					</table>
+					</div>
+				</div>
+<!--
+				<div class="palm-row last">
+					<div class="palm-row-wrapper">
+					<table class="palm-list-section-label">
+						<tr>
+							<td>
+								<span x-mojo-loc="" class='thirty' id='allowRotateLabel'>Allow Landscape</span>		
+							</td>
+							<td>
+								<div x-mojo-element="ToggleButton" id="allowRotateToggleId" class="togglebuttonClass"></div>
+							</td>	
+						</tr>
+					</table>
+					</div>
+				</div>
+ -->
+			</div>
+		</div>
+		
+		<div class="palm-group">
+			<div class="palm-group-title" x-mojo-loc='' id="notificationsOptionsTitle">Notification Settings</div>
+			<div class="palm-list">
+				<div class="palm-row first">
+					<div class="palm-row-wrapper">
+					<table class="palm-list-section-label">
+						<tr>
+							<td>
+								<span x-mojo-loc="" class='thirty' id='notificationsLabel'></span>		
+							</td>
+							<td>
+								<div x-mojo-element="ToggleButton" id="notificationsToggleId" class="togglebuttonClass"></div>
+							</td>	
+						</tr>
+					</table>
+					</div>
+				</div>
+				<div class="palm-row">
+					<div id="notificationTime" x-mojo-element="TimePicker"></div>
+				</div>
+				<div class="palm-row last">
+					<div class="palm-row-wrapper">
+					<table class="palm-list-section-label">
+						<tr>
+							<td>
+								<span x-mojo-loc="" class='thirty' id='notifyAlarmLabel'></span>		
+							</td>
+							<td>
+								<div x-mojo-element="ToggleButton" id="notifyAlarmToggleId" class="togglebuttonClass"></div>
+							</td>	
+						</tr>
+					</table>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="palm-group">
+			<div class="palm-group-title" x-mojo-loc='' id="syncOptionsTitle">Sync Settings</div>
+			<div class="palm-list">
+				<div class="palm-row first">
+					<div class="palm-row-wrapper">
+					<table class="palm-list-section-label">
+						<tr>
+							<td>
+								<span x-mojo-loc="" class='thirty' id='localWinsLabel'></span>		
+							</td>
+							<td>
+								<div x-mojo-element="ToggleButton" id="localWinsToggleId" class="togglebuttonClass"></div>
+							</td>	
+						</tr>
+					</table>
+					</div>
+				</div>
+				<div class="palm-row">
+					<div class="palm-row-wrapper">
+					<table class="palm-list-section-label">
+						<tr>
+							<td>
+								<span x-mojo-loc="" class='thirty' id='syncOnStartLabel'></span>		
+							</td>
+							<td>
+								<div x-mojo-element="ToggleButton" id="syncOnStartToggleId" class="togglebuttonClass"></div>
+							</td>	
+						</tr>
+					</table>
+					</div>
+				</div>
+				<div class="palm-row">
+					<div class="palm-row-wrapper">
+					<table class="palm-list-section-label">
+						<tr>
+							<td>
+								<span x-mojo-loc="" class='thirty' id='syncOnQuitLabel'></span>		
+							</td>
+							<td>
+								<div x-mojo-element="ToggleButton" id="syncOnQuitToggleId" class="togglebuttonClass"></div>
+							</td>	
+						</tr>
+					</table>
+					</div>
+				</div>
+				<div class="palm-row">
+					<div class="palm-row-wrapper">
+					<table class="palm-list-section-label">
+						<tr>
+							<td>
+								<span x-mojo-loc="" class='thirty' id='syncOnIntervalLabel'></span>		
+							</td>
+							<td>
+								<div x-mojo-element="ToggleButton" id="syncOnIntervalToggleId" class="togglebuttonClass"></div>
+							</td>	
+						</tr>
+					</table>
+					</div>
+				</div>
+				<div class="palm-row last">
+					<div class="palm-row-wrapper">
+					<table class="palm-list-section-label">
+						<tr>
+							<td>
+								<span x-mojo-loc="" class='thirty' id='syncWifiOnlyLabel'></span>		
+							</td>
+							<td>
+								<div x-mojo-element="ToggleButton" id="syncWifiOnlyToggleId" class="togglebuttonClass"></div>
+							</td>	
+						</tr>
+					</table>
+					</div>
+				</div>
+			</div>
+	
+		</div>
+
+
+		<div class="palm-group">
+			<div class="palm-group-title" x-mojo-loc='' id="accountOptionsTitle">Account Settings</div>
+			<div class="palm-list">
+				<div class="palm-row first">
+					<div class="palm-row-wrapper">
+						<div id="AccountId" class="repeatfrom palm-body-text truncating-text "></div>
+					</div>
+				</div>
+				<div class="palm-row last">
+					<div class="palm-row-wrapper">
+						<div id="EditAccountButtonId" name="EditAccountButton" x-mojo-element="Button"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="palm-group">
+
+			<div class="palm-group-title" x-mojo-loc='' id="folderOptionsTitle">Folders/Contexts/Goals</div>
+			<div class="palm-list">
+				<div class="palm-row single">
+					<div class="palm-row-wrapper">
+						<div id="EditFoldersButtonId" x-mojo-element="Button"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+	
+		
+<!--		<div class="palm-group">
+			<div class="palm-group-title" x-mojo-loc=''>Hotlist Settings</div>
+			<div class="palm-list">
+				<div x-mojo-element="IntegerPicker" id="HotlistDueDaysId" class="lab-right daysdue"></div>
+			</div>
+			
+			<div class="palm-list">
+				<div class="palm-row last">
+					<div class="palm-row-wrapper">
+						<div x-mojo-element="ListSelector" id="HotlistPriorityId" class="listselectorClass"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+		-->
+	
+		<div class="palm-group">
+			<div class="palm-group-title" x-mojo-loc='' id="taskOptionsTitle">Default Options</div>
+			<div class="palm-list">
+				<div class="palm-row first">
+					<div class="palm-row-wrapper">
+					<table class="palm-list-section-label">
+						<tr>
+							<td>
+								<span x-mojo-loc=""  class='repeatfrom' id='useCurrentLabel'></span>		
+							</td>
+							<td>
+								<div x-mojo-element="ToggleButton" id="useCurrentToggleId" class="togglebuttonClass"></div>
+							</td>	
+						</tr>
+					</table>
+					</div>
+				</div>
+				<div class="palm-row">
+					<div class="palm-row-wrapper">
+							<div x-mojo-element="ListSelector" id="FolderSelectorId" class="" name="FolderSelector"></div>
+					</div>
+				</div>
+				<div class="palm-row">
+					<div class="palm-row-wrapper">
+						<div x-mojo-element="ListSelector" id="ContextSelectorId" class="" name="ContextSelector"></div>
+					</div>
+				</div>
+				<div class="palm-row">
+					<div class="palm-row-wrapper">
+						<div x-mojo-element="ListSelector" id="GoalSelectorId" class="" name="ContextSelector"></div>
+					</div>
+				</div>
+				<div class="palm-row">
+					<div class="palm-row-wrapper">
+					 	<div x-mojo-element="ListSelector" id="PrioritySelectorId" class="" name="PrioritySelector"></div>
+					</div>
+				</div>
+				<div class="palm-row">
+					<div class="palm-row-wrapper">
+						<div x-mojo-element="ListSelector" id="DueDateSelectorId" class="" name="DueDateSelector"></div>
+					</div>
+				</div>
+				<div class="palm-row">
+					<div class="palm-row-wrapper">
+						<div x-mojo-element="ListSelector" id="StartDateSelectorId" class="" name="DueDateSelector"></div>
+					</div>
+				</div>
+				<div class="palm-row">
+					<div class="palm-row-wrapper">
+						<div x-mojo-element="ListSelector" id="StatusSelectorId" class="" name="StatusSelector"></div>
+					</div>
+				</div>
+				<div class="palm-row">
+					<div class="palm-row-wrapper">
+						<div x-mojo-element="ListSelector" id="RepeatSelectorId" class="" name="RepeatSelector"></div>
+					</div>
+				</div>
+				<div class="palm-row last">
+					<div class="palm-row-wrapper">
+					<table class="palm-list-section-label ">
+						<tr>
+							<td>
+								<span x-mojo-loc="" class="repeatfrom" id="repeatFromLabel">Repeat from</span>		
+							</td>
+							<td>
+										<div x-mojo-element="ToggleButton" id="RepeatFromToggleId" class="thirty" name="RepeatFromToggle"></div>
+								</div>
+							</td>	
+						</tr>
+					</table>
+					</div>
+				</div>
+			</div>
+		</div>
+</div>

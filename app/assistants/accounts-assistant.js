@@ -273,4 +273,5 @@ AccountsAssistant.prototype.cleanup = function(event) {
 	/* this function should do any cleanup needed before the scene is destroyed as 
 	   a result of being popped off the scene stack */
 	Mojo.Event.stopListening(this.controller.get('UpdateButtonId'), Mojo.Event.tap, this.updateInfoHandler);
+	Mojo.Event.stopListening(this.controller.get('CreateButtonId'), Mojo.Event.tap, this.createAccountHandler);
 };

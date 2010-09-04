@@ -1,0 +1,54 @@
+	<div id="testing"></div>
+	<!-- <div class="palm-header">Add a Task!</div> -->
+	<div id ='Scrim' class='palm-scrim'>
+		<div id='Spinner' x-mojo-element='Spinner' class='palm-activity-indicator-large'></div>
+	</div>
+
+	<div class="palm-group">
+		<div class="palm-group-title" x-mojo-loc=''>Enter Task Name</div>
+		<div class="palm-list">
+   			<div class="palm-row single">
+				<div class="palm-row-wrapper textfield-group" x-mojo-focus-highlight="true">
+					<div class="title">
+ 						<div x-mojo-element="TextField" id="TaskInputId" class="listClass" name="TaskInput"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="palm-group">
+		<div class="palm-group-title" x-mojo-loc=''>Options</div>
+		<div class="palm-list">
+			<div class="palm-row first">
+				<div class="palm-row-wrapper">
+						<div x-mojo-element="ListSelector" id="FolderSelectorId" class="listselectorClass" name="FolderSelector"></div>
+				</div>
+			</div>
+			<div class="palm-row">
+				<div class="palm-row-wrapper">
+				 	<div x-mojo-element="ListSelector" id="PrioritySelectorId" class="listselectorClass" name="PrioritySelector"></div>
+				</div>
+			</div>
+			<div class="palm-row">
+				<div class="palm-row-wrapper">
+					<div x-mojo-element="ListSelector" id="DueDateSelectorId" class="listselectorClass" name="DueDateSelector"></div>
+				</div>
+			</div>
+			<div class="palm-row">
+				<div class="palm-row-wrapper">
+					<div x-mojo-element="ListSelector" id="ContextSelectorId" class="listselectorClass" name="ContextSelector"></div>
+				</div>
+			</div>
+			<div class="palm-row">
+				<div class="palm-row-wrapper">
+					<div x-mojo-element="ListSelector" id="StatusSelectorId" class="listselectorClass" name="StatusSelector"></div>
+				</div>
+			</div>
+			<div class="palm-row last">
+				<div class="palm-row-wrapper">
+					<div x-mojo-element="ListSelector" id="RepeatSelectorId" class="listselectorClass" name="RepeatSelector"></div>
+				</div>
+			</div>
+		</div>
+	</div>

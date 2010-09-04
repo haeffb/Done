@@ -107,6 +107,10 @@ CustomListsAssistant.prototype.addItem = function (event) {
 				{label: $L("Canceled"), selected: true, value: "9"}, 
 				{label: $L("Reference"), selected: true, value: "10"}
 				],
+		completed: [
+			{label: $L("Completed"), selected: false, value: 0},
+			{label: $L("Not Completed"), selected: true, value: 1}			
+		],
 		sort: [
 				{label: $L('Folder'), type: 'folder', dir: 'ASC', oppdir: 'DESC'},
 				{label: $L('Context'), type: 'context', dir: 'ASC', oppdir: 'DESC'},

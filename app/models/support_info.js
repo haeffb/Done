@@ -33,7 +33,7 @@ _APP_Support_Email = {
 };        // label = “Send Email”
 
 // Optional
-_APP_Publisher_URL = 'http://www.tigercountrysoftware.com'; // label = _APP_PublisherName + “Website”
+_APP_Publisher_URL = 'http://www.tigercountrysoftware.com/done'; // label = _APP_PublisherName + “Website”
 _APP_Help_Resource = [
 						{ type : 'scene', label: $L('Help Topics'), sceneName: 'faq' } //Sample to include an FAQ scene
 					 ];

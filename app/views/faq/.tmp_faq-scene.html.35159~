@@ -1,0 +1,56 @@
+<div class="palm-scene palm-dark">
+	<div class='header-ico' id='header-icon'></div>
+	<div class="palm-header left" id="main-hdr">
+	  Help Topics
+	</div>
+	<div class="palm-header-spacer"></div>
+</div>
+<div>
+<div class='helptopic'>1. Entering Trip Data</div>
+<div class='helptext'>
+Tap the Add a New Trip list item or command button to begin entry of a new trip. Enter 
+beginning mileage and any other information you wish (vehicle, category, purpose, 
+destination, notes). If you do not enter an ending mileage, a reminder will be set to
+pop up after the selected time interval. You can return to the trip entry scene later to 
+enter ending mileage and/or edit any of the data.<br>
+If you have selecte the AutoFill mileage option in Preferences, the last entered ending
+for the selected vehicle will be set as the beginning mileage of the new trip. The ending
+mileage will be filled with all but the last three digits of the previous ending mileage.
+Selecting a new vehicle will automatically change the beginning/ending mileage entries if
+the AutoFill mileage option is turned on.
+The begining date/time and ending date/time will be set to the time you created the trip
+entry. If you later change or enter the ending mileage, the ending date/time will be
+automatically changed if the AutoFill ending time option is turned on. You can edit the 
+begining/ending date/time by tapping on the 
+displayed date/time. You can also set either time to NOW by tapping on the clock icon.
+
+</div>
+
+<div class='helptopic'>2. Setting Reminders</div>
+<div class='helptext'>
+Reminders can be set by checking the box in the Reminder field and selecting a Reminder
+time other than None. The reminder will pop up a Dashboard notice to enter ending mileage.
+Only one reminder can be active at a time - setting a new reminder will overwrite any
+previously set reminders. You can set a default Reminder Time in Preferences. Tapping on the 
+Dashboard notice will take you back to the application.
+</div>
+
+<div class='helptopic'>3. Adding/Editing Vehicles and Categories</div>
+<div class='helptext'>
+Vehicles and Categories can be added/edited/deleted from Preferences. You cannot delete the
+Default Vehicle; however, you can change its name. When you delete any other vehicle, all its
+trips will be reassigned to the Default Vehicle.<br>
+You cannot edit or delete the Unfiled Category. When you delete any other Categeory, all its
+trips will be reassigned to Unfiled.
+</div>
+
+<div class='helptopic'>4. Exporting and Purging Data</div>
+<div class='helptext'>
+Data can be exported by sending an email containing your data in CSV format. A default 
+email address can be saved in Preferences. The CSV data from the email can be copied and
+either pasted into a spreadsheet or saved as a CSV file and imported into a spreadsheet
+for futher manipulation/printing/etc.
+</div>
+
+</div>
+</div>

@@ -1,0 +1,11 @@
+<div class='palm-row' x-mojo-touch-feedback='momentary'>
+	<div class='palm-row-wrapper'>
+				<div class='editFoldersTitles title truncating-text'>#{label} 
+				<div class='' style='float: right;' name='customCheck' x-mojo-element='CheckBox'></div>
+<!--
+					<span class='right'>#{sortorder}</span>
+ -->
+				</div>	
+				
+	</div>
+</div>

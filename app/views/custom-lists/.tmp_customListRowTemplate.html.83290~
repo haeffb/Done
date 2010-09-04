@@ -1,0 +1,11 @@
+<div class='palm-row' x-mojo-touch-feedback='momentary'>
+	<div class='palm-row-wrapper'>
+				<div class='done-icon-folder'></div>
+				<div class='editFoldersTitles title truncating-text'>#{label} 
+<!--
+					<span class='rightlabel right'>#{sortorder}</span>
+ -->
+				</div>	
+				
+	</div>
+</div>

@@ -199,7 +199,7 @@ function Sync(){
 		for (i = 0; i < tasks.length; i++) {
 			//Set sync to true - will change to false later if
 			//task was also edited on web
-			//Mojo.Log.info("Local task:", i, tasks[i].title);
+			Mojo.Log.info("Local task:", i, tasks[i].title);
 			tasks[i].sync = true;
 		}
 
@@ -208,7 +208,7 @@ function Sync(){
 		
 		//Check for new/edited tasks on web:
 		//Mojo.Log.info("MyAPP.local %j", MyAPP.local);
-		//Mojo.Log.info("Last web add/edit:", MyAPP.account.lastaddedit, "prev sync:", MyAPP.local.lastservertaskmod);
+		Mojo.Log.info("Last web add/edit:", MyAPP.account.lastaddedit, "prev sync:", MyAPP.local.lastservertaskmod);
 		if ((MyAPP.account.lastaddedit) > MyAPP.local.lastservertaskmod) { //this.lastSync * 1) {
 			// save last server tasks modification date for use in getting tasks
 			this.lastservertaskmod = MyAPP.local.lastservertaskmod;
@@ -278,7 +278,11 @@ function Sync(){
 	this.parseWebTask = function (taskXML) {
 		try {
 			var task, id, temp, temp2, key;
-			var mykeys = ['parent', 'children', 'title', 'tag', 'folder', 'context', 'goal', 'added', 'modified', 'duedate', 'startdate', 'duetime', 'started', 'starttime', 'reminder', 'repeat', 'completed', 'completedon', 'rep_advanced', 'status', 'star', 'priority', 'length', 'timer', 'note'];
+			var mykeys = ['parent', 'children', 'title', 'tag', 'folder', 
+				'context', 'goal', 'added', 'modified', 'duedate', 
+				'startdate', 'duetime', 'started', 'starttime', 'reminder', 
+				'repeat', 'completed', 'completedon', 'rep_advanced', 
+				'status', 'star', 'priority', 'length', 'timer', 'note'];
 			
 			id = taskXML.getElementsByTagName('id').item(0).textContent;
 			//Mojo.Log.info("Task ID:", id);
@@ -350,6 +354,7 @@ function Sync(){
 					 + id + " " + task.title + "";
 			}	
 		}
+		//Mojo.Log.info("Task", task.title, task.modified);
 		return task;
 	};
 	
@@ -401,8 +406,8 @@ function Sync(){
 			if (this.localEditedTasks[i].sync || this.localWins) {
 				//Mojo.Log.info("Sending local task edit to web", this.localEditedTasks[i].title);
 				if (this.localEditedTasks[i].id) {
-					api.editTask(this.localEditedTasks[i], this.timeDiff, function(){
-						//Mojo.Log.info("Edited web task!", this.localEditedTasks[i].title);
+					api.editTask(this.localEditedTasks[i], function(){
+						Mojo.Log.info("Edited web task!", this.localEditedTasks[i].title);
 					});
 				}
 				else {
@@ -484,8 +489,8 @@ function Sync(){
 	
 	this.taskAdded = function(task, response){
 		//Mojo.Log.info("Task Added!?!?!");
-		//Mojo.Log.info("response: %j", response);
-		//Mojo.Log.info("Task added: %j", task);
+		Mojo.Log.info("response: %j", response);
+		Mojo.Log.info("Task added: %j", task);
 		if (response.added) {
 			//delete original (local only) task
 			//Mojo.Log.info("Deleting task with value: ", task.value);
@@ -640,8 +645,8 @@ function Sync(){
 		}
 		//check for folder added/edited on device:
 		if (MyAPP.local.lastfolderedit > this.lastSync) {
-			//Mojo.Log.info("last folder edit", MyAPP.local.lastfolderedit, this.lastSync);
-			//Mojo.Log.info("Folder added/edited on device!");
+			Mojo.Log.info("last folder edit", MyAPP.local.lastfolderedit, this.lastSync);
+			Mojo.Log.info("Folder added/edited on device!");
 			dao.retrieveFolders(this.gotLocalFolders.bind(this));
 		}
 		else {

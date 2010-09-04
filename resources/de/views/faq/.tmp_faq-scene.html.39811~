@@ -1,0 +1,35 @@
+<div id="main" class="palm-hasheader">
+	<div class="palm-header center" id="main-hdr">
+	  Help Topics
+	</div>
+</div>
+<div>
+<div class='helptopic'>1. On First Use</div>
+<div class='helptext'>
+In order to connect to Toodledo, you'll have to supply your <b>Toodledo login email and password</b>. This information
+is saved in a TaskAdder cookie and used only to authenticate your requests to Toodledo. After entering your login
+email and password, press the "Login to Toodledo" button. You'll only have to do this once.
+</div>
+
+<div class='helptopic'>2. Adding a Task</div>
+<div class='helptext'>
+Adding a task to Toodledo is a simple process. Enter the task name, and choose any of the other task
+options as appropriate. Tap on the Add Task to Toodledo button. An <b>internet connection</b> must be 
+available to connect to Toodledo.</div>
+
+<div class='helptopic'>3. Viewing the Hotlist</div>
+<div class='helptext'>
+You can toggle between the Add Task and Hotlist views. When you switch to the Hotlist view, TaskAdder will 
+show your Toodledo Hotlist. By default, any tasks with a due date within the next 7 days or earlier are
+shown, along with any tasks with a priority of 3-Top. The number of days and priority are user-configurable 
+in Preferences.</div>
+
+<div class='helptopic'>4. Preferences</div>
+<div class='helptext'>
+TaskAdder preferences will allow you to change your Toodledo login information as well as set several
+user-configurable options. Options are available for hotlist settings and for default values for the 
+various task options. An option is
+also available to set a task to repeat from the due date, or from the completion date. See Toodledo's help
+for more information on task options.</div>
+
+</div>

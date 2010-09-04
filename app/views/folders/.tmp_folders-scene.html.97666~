@@ -1,0 +1,34 @@
+<div>
+	<div id="testOutput"></div>
+	<div class="palm-group">
+		<div class="palm-group-title" x-mojo-loc='' id='foldersListLabel'>Folders</div>
+		<div class="palm-list">
+			<div class="palm-row single">
+				<div class="palm-row-wrapper">
+					<div x-mojo-element="List" id="foldersList"></div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="palm-group">
+		<div class="palm-group-title" x-mojo-loc='' id='contextsListLabel'>Contexts</div>
+		<div class="palm-list">
+			<div class="palm-row single">
+				<div class="palm-row-wrapper editFoldersTitles">
+					<div x-mojo-element="List" id="contextsList" ></div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="palm-group">
+		<div class="palm-group-title" x-mojo-loc='' id='goalsListLabel'>Goals</div>
+		<div class="palm-list">
+			<div class="palm-row single">
+				<div class="palm-row-wrapper editFoldersTitles">
+					<div x-mojo-element="List" id="goalsList" ></div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+</div>

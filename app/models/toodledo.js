@@ -195,7 +195,9 @@ function API () {
 					apiString += ";" + prop + "=" + this.formatDate(task[prop], false);
 				}
 				else if (prop === 'completed') {
-					apiString += ";completed=1;completedon=" + this.formatDate(task[prop], false);
+					if (task[prop]) {
+						apiString += ";completed=1;completedon=" + this.formatDate(task[prop], false);
+					}
 				}
 				else if (prop === 'duetime' || prop === 'starttime') {
 					apiString += ";" + prop + "=" + this.formatTime(task[prop]);
@@ -262,7 +264,7 @@ function API () {
 		return dateString;
 	};
 
-	this.editTask = function (task, timeDiff, inCallback) {
+	this.editTask = function (task, inCallback) {
 		// no longer useing timeDiff ???
 		//Mojo.Log.info("---Entering addTask in Toodledo---");
 		var method = "editTask", repeat;
@@ -289,7 +291,10 @@ function API () {
 					apiString += ";" + prop + "=" + this.formatDate(task[prop], false);
 				}
 				else if (prop === 'completed') {
-					apiString += ";completed=1;completedon=" + this.formatDate(task[prop], false);
+					Mojo.Log.info("Completed:", task[prop]);
+					if (task[prop]) {
+						apiString += ";completed=1;completedon=" + this.formatDate(task[prop], false);
+					}
 				}
 				else if (prop === 'duetime' || prop === 'starttime') {
 					apiString += ";" + prop + "=" + this.formatTime(task[prop]);
@@ -345,7 +350,8 @@ function API () {
 			folder.id + ";title=" +
 			folder.label + ";private=" +
 			folder.privy + ";archived=" + 
-			folder.archived;
+			folder.archived + ";order=" +
+			folder.sortorder;
 		this.doAPI(apiString, inCallback);
 	};
 	

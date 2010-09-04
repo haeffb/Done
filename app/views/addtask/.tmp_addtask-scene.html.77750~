@@ -1,0 +1,144 @@
+	<div class='yellowpad'></div>
+	<div class='redstripe shorter'></div>
+	
+	<div id="testing"></div>
+	
+	<div id ='Scrim' class='palm-scrim'>
+		<div id='Spinner' x-mojo-element='Spinner' class='palm-activity-indicator-large'></div>
+	</div>
+
+	
+<!--	<div class="palm-page-header multi-line add-tasks-header">
+		<div class="palm-page-header-wrapper">
+ 				<div id='taskCheck' class="left add-checkbox" name='taskcheck' x-mojo-element='CheckBox'></div>
+				<div id='star' class="star-add-container done-icon-star-1"></div>
+				<div id='notstar' class="star-add-container done-icon-star-0"></div>
+				<div x-mojo-element="TextField" id="TaskInputId" class="add-task-title"></div>
+		</div>
+	</div>
+-->
+	
+
+		<div class="palm-list">
+			<div class="palm-row single add-tasks-list-header" x-mojo-focus-highlight="true">
+ 				<div class="palm-row-wrapper textfield-group" x-mojo-focus-highlight="true">
+					<div class="title">
+						<div id='addTaskCheck' class="left" name='taskcheck' x-mojo-element='CheckBox'></div>
+						<div x-mojo-element="TextField" id="TaskInputId" class="add-task-title"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="palm-list">
+
+			<div class="palm-row" id="StarRow">
+				<div class="palm-row-wrapper">
+					<div class='thirty'>
+						<div id='star' class="star-add-container done-icon-star-1"></div>
+						<div id='notstar' class="star-add-container done-icon-star-0"></div>
+						<div class='title'>Starred</div>
+					</div>
+				</div>
+			</div>
+			<div class="palm-row" id="NotesRow">
+				<div class="palm-row-wrapper textfield-group" x-mojo-focus-highlight='true'>
+					<div class='title'>
+						<div class='label' id='notesLabel'>Note</div>
+				 		<div x-mojo-element="TextField" id="NoteId" class="thirty"></div>
+					</div>
+				</div>
+			</div>
+			<div class="palm-row" id="FolderRow">
+				<div class="palm-row-wrapper">
+						<div x-mojo-element="ListSelector" id="FolderSelectorId" class="thirty" name="FolderSelector"></div>
+				</div>
+			</div>
+			<div class="palm-row" id="ContextRow">
+				<div class="palm-row-wrapper">
+					<div x-mojo-element="ListSelector" id="ContextSelectorId" class="thirty" name="ContextSelector"></div>
+				</div>
+			</div>
+			<div class="palm-row" id="GoalRow">
+				<div class="palm-row-wrapper">
+					<div x-mojo-element="ListSelector" id="GoalSelectorId" class="thirty" name="ContextSelector"></div>
+				</div>
+			</div>
+			<div class="palm-row" id="TagsRow">
+				<div class="palm-row-wrapper textfield-group" x-mojo-focus-highlight='true'>
+					<div class='title'>
+						<div class='label' id='tagsLabel'>Tags</div>
+				 		<div x-mojo-element="TextField" id="TagsId" class="thirty"></div>
+					</div>
+				</div>
+			</div>
+		
+			<div class="palm-row" id="PriorityRow">
+				<div class="palm-row-wrapper">
+				 	<div x-mojo-element="ListSelector" id="PrioritySelectorId" class="thirty" name="PrioritySelector"></div>
+				</div>
+			</div>
+			<div class="palm-row" id="DueDateRow">
+				<div class="palm-row-wrapper">
+					<div x-mojo-element="ListSelector" id="DueDateSelectorId" class="thirty" name="DueDateSelector"></div>
+				</div>
+			</div>
+			<div class="palm-row" id='DueTimeRow'>
+				<div class="palm-row-wrapper">
+					<div class="thirty palm-list-selector">
+						<div class="title">
+							<span class="list-selector-triangle"></span>
+							<span x-mojo-loc="" class="list-selector-value truncating-text" id='dueTimeId'>No Due Time</span>		
+							<span x-mojo-loc="" class="label truncating-text" id='dueTimeLabelId'>Due Time</span>		
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="palm-row" id="StartDateRow">
+				<div class="palm-row-wrapper">
+					<div x-mojo-element="ListSelector" id="StartDateSelectorId" class="thirty"></div>
+				</div>
+			</div>
+			<div class="palm-row" id='StartTimeRow'>
+				<div class="palm-row-wrapper">
+					<div class="thirty palm-list-selector">
+						<div class="title">
+							<span class="list-selector-triangle"></span>
+							<span x-mojo-loc="" class="list-selector-value truncating-text" id='startTimeId'>No Start Time</span>		
+							<span x-mojo-loc="" class="label truncating-text" id='startTimeLabelId'>Start Time</span>		
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="palm-row" id="StatusRow">
+				<div class="palm-row-wrapper">
+					<div x-mojo-element="ListSelector" id="StatusSelectorId" class="thirty" name="StatusSelector"></div>
+				</div>
+			</div>
+			<div class="palm-row" id="RepeatRow">
+				<div class="palm-row-wrapper">
+					<div x-mojo-element="ListSelector" id="RepeatSelectorId" class="thirty" name="RepeatSelector"></div>
+				</div>
+			</div>
+			<div class="palm-row" id="RepeatFromRow">
+				<div class="palm-row-wrapper">
+				<table class="palm-list-section-label ">
+					<tr>
+						<td>
+							<span x-mojo-loc="" class="repeatfromtitle" id="repeatFromLabel">Repeat from</span>		
+						</td>
+						<td>
+									<div x-mojo-element="ToggleButton" id="RepeatFromToggleId" class="thirty"></div>
+							</div>
+						</td>	
+					</tr>
+				</table>
+				</div>
+			</div>
+			<div class="palm-row" id="ReminderRow">
+				<div class="palm-row-wrapper">
+						<div x-mojo-element="ListSelector" id="ReminderSelectorId" class="thirty" name="FolderSelector"></div>
+				</div>
+			</div>
+		</div>
+</div>

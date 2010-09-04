@@ -347,30 +347,17 @@ body.palm-default {
  .done-icon-edit {
  	background: url(../images/icon-edit-20x20.png) center no-repeat;
  }
- .done-icon-home {
- 	background: url(../images/icon-home-32x32.png) center no-repeat;
- }
- .done-icon-folder {
- 	background: url(../images/icon-folder-32x32.png) center no-repeat;
- }
- .done-icon-schedule {
- 	background: url(../images/icon-schedule-32x32.png) center no-repeat;
- }
- .done-icon-priority {
- 	background: url(../images/icon-priority-32x32.png) center no-repeat;
- }
- .done-icon-checkmark {
- 	background: url(../images/icon-checkmark-32x32.png) center no-repeat;
- }
- .done-icon-tasklist {
- 	background: url(../images/icon-tasklist-32x32.png) center no-repeat;
- }
- .done-icon-status {
- 	background: url(../images/icon-status-32x32.png) center no-repeat;
- }
- .done-icon-people {
- 	background: url(../images/icon-people-32x32.png) center no-repeat;
- }
+ .done-icon-home 		{ background: url(../images/icon-home-32x32.png) center no-repeat; }
+ .done-icon-context 	{ background: url(../images/icon-home-32x32.png) center no-repeat; }
+ .done-icon-folder 		{ background: url(../images/icon-folder-32x32.png) center no-repeat; }
+ .done-icon-schedule 	{ background: url(../images/icon-schedule-32x32.png) center no-repeat; }
+ .done-icon-priority 	{ background: url(../images/icon-priority-32x32.png) center no-repeat; }
+ .done-icon-checkmark	{ background: url(../images/icon-checkmark-32x32.png) center no-repeat; }
+ .done-icon-tasklist 	{ background: url(../images/icon-tasklist-32x32.png) center no-repeat; }
+ .done-icon-status 		{ background: url(../images/icon-status-32x32.png) center no-repeat; }
+ .done-icon-people 		{ background: url(../images/icon-people-32x32.png) center no-repeat; }
+ .done-icon-custom 		{ background: url(../images/icon-custom-32x32.png) center no-repeat; }
+ .done-icon-hotfire 	{ background: url(../images/icon-hotfire-32x32.png) center no-repeat; }
  .done-icon-recur {
  	position: relative;
 	left: 5px;
@@ -378,6 +365,9 @@ body.palm-default {
 	z-index: 999999;
   	background: url(../images/icon-recurr-25x25.png) center no-repeat;
  }
+.palm-menu-icon.copytask 	{ background-image: url(../images/icon-copytasks-32x32.png); }
+.palm-menu-icon.savetask 	{ background-image: url(../images/icon-savetask-32x32.png); }
+.palm-menu-icon.sync 		{ 	background: url(../images/menu-icon-sync.png) }
  
  .done-icon-note {
  	height: 32px;

@@ -61,9 +61,9 @@ MyAPP.prefs = {
 	showNote: false,
 	showPriority: false,
 	showCompleted: false,
-	showDeferred: false,
-	showFutureTasks: false,
-	showNegPriority: false,
+	showDeferred: true,
+	showFutureTasks: true,
+	showNegPriority: true,
 	showList: 'all',
 	showFilter: 'all',
 	wrapTitle: true,
@@ -79,6 +79,7 @@ MyAPP.prefs = {
 	notifications: false,
 	notifyTime: 0,
 	notifyAlarm: false,
+	notifyDaily: false,
 	indentSubtasks: false,
 	color: 4 // khaki yellow
 };
@@ -159,13 +160,13 @@ MyAPP.appMenuModel = {
 
 function AppAssistant(appController) {
 	//save global reference to App Assistant
-	//Mojo.Log.info("AppAssistant CONSTRUCTOR!");
+	Mojo.Log.info("AppAssistant CONSTRUCTOR!");
 	MyAPP.appAssistant = this;
 	this.appController = appController;
 }
 
 AppAssistant.prototype.setup = function () {
-	//Mojo.Log.info("AppAssistant setup()");
+	Mojo.Log.info("AppAssistant setup()");
 	
 	//this.initDBandCookies();
 };
@@ -178,7 +179,7 @@ AppAssistant.prototype.setup = function () {
 // -------------------------------------------------------------------
 
 AppAssistant.prototype.handleLaunch = function(launchParams){
-	//Mojo.Log.info(" ********** App handleLaunch ***********");
+	Mojo.Log.info(" ********** App handleLaunch ***********");
 	
 	this.launchParams = launchParams;
 	
@@ -198,11 +199,11 @@ AppAssistant.prototype.handleLaunchAfter = function() {
 		//FIRST LAUNCH or TAP on Icon when minimized
 		if (cardStageController) {
 			// Application already running
-			//Mojo.Log.info("Relaunch!");
+			Mojo.Log.info("Relaunch!");
 			cardStageController.activate();
 		}
 		else {
-			//Mojo.Log.info("Launch new intro stage!");
+			Mojo.Log.info("Launch new intro stage!");
 			//this.initDBandCookies();
 			pushMainScene = function (stageController) {
 				stageController.pushScene({
@@ -218,7 +219,7 @@ AppAssistant.prototype.handleLaunchAfter = function() {
 		}
 	}
 	else {
-		//Mojo.Log.info(" Launch Parameters: %j", launchParams);
+		Mojo.Log.info(" Launch Parameters: %j", launchParams);
 		switch (launchParams.action) {
 		case "sync":
 
@@ -231,12 +232,12 @@ AppAssistant.prototype.handleLaunchAfter = function() {
 			else {
 				var launchSync = this.launchDashSync.bind(this, launchParams);
 
-				//Mojo.Log.info("Calling Connection Service Request from AppAssistant");
+				Mojo.Log.info("Calling Connection Service Request from AppAssistant");
 				this.connectRequest = new Mojo.Service.Request('palm://com.palm.connectionmanager', {
 					method: 'getstatus',
 					parameters: {},
 					onSuccess: function(response){
-						//Mojo.Log.info("Response %j", response);
+						Mojo.Log.info("Connection Response %j", response);
 						if (response.isInternetConnectionAvailable) {
 							if (!MyAPP.prefs.syncWifiOnly ||
 							response.wifi.state === 'connected') {
@@ -245,7 +246,7 @@ AppAssistant.prototype.handleLaunchAfter = function() {
 						}
 					},
 					onFailure: function () {
-						//Mojo.Log.info("Connection Status Service Request FAILED!");
+						Mojo.Log.info("Connection Status Service Request FAILED!");
 					}
 				});
 			}
@@ -256,11 +257,11 @@ AppAssistant.prototype.handleLaunchAfter = function() {
 		case 'notify':
 			dashboardStage = this.controller.getStageProxy("dashnotify");
 			if (dashboardStage) {
-				//Mojo.Log.info("Notify Dashboard already running");
+				Mojo.Log.info("Notify Dashboard already running");
 				dashboardStage.delegateToSceneAssistant("addNotify");
 			}
 			else {
-				//Mojo.Log.info("No notify dashboardStage found.");
+				Mojo.Log.info("No notify dashboardStage found.");
 				//this.initDBandCookies();
 				pushDashboard = function(stageController){
 					stageController.pushScene('dashnotify');
@@ -276,7 +277,7 @@ AppAssistant.prototype.handleLaunchAfter = function() {
 			//Mojo.Log.info("app assitant openTask with value: ", launchParams.taskValue);
 			if (cardStageController) {
 				// Application already running
-				//Mojo.Log.info("Relaunch!");
+				Mojo.Log.info("Relaunch!");
 				if (cardStageController.activeScene().sceneName === 'intro') {
 					cardStageController.delegateToSceneAssistant("editTask", launchParams.taskValue);
 				}
@@ -286,7 +287,7 @@ AppAssistant.prototype.handleLaunchAfter = function() {
 
 			}
 			else {
-				//Mojo.Log.info("Launch new intro stage!");
+				Mojo.Log.info("Launch new intro stage!");
 				//this.initDBandCookies();
 				pushMainScene = function (stageController) {
 					stageController.pushScene({
@@ -312,14 +313,17 @@ AppAssistant.prototype.handleLaunchAfter = function() {
 };
 
 AppAssistant.prototype.initDBandCookies = function () {
+	Mojo.Log.info("Initializing Database");
 	// Initialize database
 	dao.init();
 	
 	// Initialize toodledo api
+	Mojo.Log.info("Initializing API");
 	api.init();
 	
 	this.getPrefs();
 	
+	Mojo.Log.info("Initializing Cookies");
 	// Initialize cookies
 	//this.getPrefsCookie();
 	//this.getAccountCookie();
@@ -327,11 +331,12 @@ AppAssistant.prototype.initDBandCookies = function () {
 	this.getSyncLogCookie();
 	//this.getFieldsCookie();
 	
-	//Mojo.Log.info("MyAPP.local %j", MyAPP.local);
+	Mojo.Log.info("MyAPP.local %j", MyAPP.local);
 	
 };
 
 AppAssistant.prototype.getPrefs = function () {
+	Mojo.Log.info("Getting Preferences");
 	var options = {
 		name: Mojo.appInfo.id + ".prefs",
 		version: 0.4,
@@ -342,16 +347,18 @@ AppAssistant.prototype.getPrefs = function () {
 };
 
 AppAssistant.prototype.gotPrefsDb = function (event) {
-	//Mojo.Log.info("DB Event: %j", event);
+	Mojo.Log.info("Prefs DB Retrieved");
 	MyAPP.prefsDb.get('prefs', this.gotPrefs.bind(this), this.dbFailure.bind(this));
 };
 
 AppAssistant.prototype.gotPrefs = function (args) {
 	if (args) {
+		Mojo.Log.info("Preferences retrieved from Depot");
+
 		//MyAPP.prefs = args;
 		for (value in args) {
 				MyAPP.prefs[value] = args[value];
-				//Mojo.Log.info("Pref: ", value, args[value], MyAPP.prefs[value]);
+				Mojo.Log.info("Pref: ", value, args[value], MyAPP.prefs[value]);
 		}
 	}
 	else {
@@ -370,6 +377,7 @@ AppAssistant.prototype.gotPrefs = function (args) {
 
 AppAssistant.prototype.gotAccount = function (args) {
 	if (args) {
+		Mojo.Log.info("Account retrieved from Depot");
 		//MyAPP.account = args;
 		for (value in args) {
 				MyAPP.account[value] = args[value];
@@ -392,6 +400,7 @@ AppAssistant.prototype.gotAccount = function (args) {
 
 AppAssistant.prototype.gotLocal = function (args) {
 	if (args) {
+		Mojo.Log.info("Local retrieved from Depot");
 		//MyAPP.local = args;
 		for (value in args) {
 				MyAPP.local[value] = args[value];
@@ -414,6 +423,7 @@ AppAssistant.prototype.gotLocal = function (args) {
 
 AppAssistant.prototype.gotFields = function (args) {
 	if (args) {
+		Mojo.Log.info("Fields retrieved from Depot");
 		//MyAPP.fields = args;
 		for (value in args) {
 				MyAPP.fields[value] = args[value];

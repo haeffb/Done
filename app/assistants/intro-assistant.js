@@ -37,7 +37,7 @@ IntroAssistant.prototype.setup = function() {
 			dividerFunction: this.taskDivider.bind(this),
 			dividerTemplate: 'intro/divider',
 			filterFunction: this.filterFunction.bind(this),
-			delay: 300,
+			delay: 200,
 			formatters: {
 				duedate: this.formatDueDate.bind(this),
 				duetime: this.formatDueTime.bind(this),
@@ -98,7 +98,7 @@ IntroAssistant.prototype.setup = function() {
 				value: 'folder'
 			}, 
 			{
-				secondaryIcon: 'done-icon-home',
+				secondaryIcon: 'done-icon-context',
 				label: $L('Contexts'),
 				value: 'context'
 			}, 
@@ -124,7 +124,7 @@ IntroAssistant.prototype.setup = function() {
 			}
 ,
 			{
-				secondaryIcon: 'done-icon-people',
+				secondaryIcon: 'done-icon-custom',
 				label: $L('Custom'),
 				value: 'custom'
 			}
@@ -142,7 +142,7 @@ IntroAssistant.prototype.setup = function() {
 			},
 			{
 				items: [
-					{icon: 'refresh',command: 'doSync'}
+					{icon: 'sync',command: 'doSync'}
 				]
 			}
 		]
@@ -285,9 +285,7 @@ IntroAssistant.prototype.getFilterChoices = function(list) {
 	switch (list) {
 		case 'folder':
 			for (i = 0; i < this.foldersArray.length; i++) {
-				thisChoice = this.foldersArray[i];
-				thisChoice.secondaryIcon = 'done-icon-folder';
-				choices.push(thisChoice);
+				choices.push(this.foldersArray[i]);
 			}
 			break;
 		case 'context':
@@ -296,16 +294,16 @@ IntroAssistant.prototype.getFilterChoices = function(list) {
 			}
 			break;
 		case 'all':
-			choices.push({value: 1, label: $L("Hotlist")});
-			choices.push({value: 2, label: $L("Starred")});
-			choices.push({value: 3, label: $L("Recent")});
+			choices.push({value: 1, label: $L("Hotlist"), secondaryIcon: "done-icon-hotfire"});
+			choices.push({value: 2, label: $L("Starred"), secondaryIcon: "done-icon-star-1"});
+			choices.push({value: 3, label: $L("Recent"), secondaryIcon: "done-icon-schedule"});
 			break;
 		case 'priority':
-			choices.push({value: 3, label: $L("3-Top")});
-			choices.push({value: 2, label: $L("2-High")});
-			choices.push({value: 1, label: $L("1-Medium")});
-			choices.push({value: 0, label: $L("0-Low")});
-			choices.push({value: -1, label: $L("Negative")});
+			choices.push({value: 3, label: $L("3-Top"), secondaryIcon: "priority3"});
+			choices.push({value: 2, label: $L("2-High"), secondaryIcon: "priority2"});
+			choices.push({value: 1, label: $L("1-Medium"), secondaryIcon: "priority1"});
+			choices.push({value: 0, label: $L("0-Low"), secondaryIcon: "priority0"});
+			choices.push({value: -1, label: $L("Negative"), secondaryIcon: "priority-1"});
 			break;
 		case 'duedate':
 			choices.push({value: 1, label: $L("Overdue")});
@@ -419,7 +417,7 @@ IntroAssistant.prototype.checkChange = function (event) {
 			event.model.completed = nowTime;
 			if (event.model.repeat && (event.model.duedate || event.model.startdate)) {
 				//diff = event.model.duedate *1 - event.model.startdate *1;
-				//Mojo.Log.info("Repeat Task!", event.model.repeat);
+				Mojo.Log.info("Repeat Task!", event.model.repeat);
 				repeatFromCompleted = false;
 				repeat = event.model.repeat;
 				if (repeat > 99) {
@@ -429,7 +427,7 @@ IntroAssistant.prototype.checkChange = function (event) {
 				if (repeat > 49) {
 					//Mojo.Log.info("Can't handle advanced repeats!!");
 				}
-				else {
+				else if (repeat) {
 					newDueDate = (repeatFromCompleted) ? 
 						new Date() : new Date(event.model.duedate);
 					newStartDate = (repeatFromCompleted) ?
@@ -473,8 +471,8 @@ IntroAssistant.prototype.checkChange = function (event) {
 					}
 					newDueDate.setHours(0, 0, 0, 0);
 					newStartDate.setHours(0, 0, 0, 0);
-					//Mojo.Log.info("New due date:", newDueDate);
-					//Mojo.Log.info("New start date:", newStartDate);
+					Mojo.Log.info("New due date:", newDueDate);
+					Mojo.Log.info("New start date:", newStartDate);
 					newTask = Object.clone(event.model);
 					
 					// Add new task with completed true
@@ -500,6 +498,7 @@ IntroAssistant.prototype.checkChange = function (event) {
 		}
 		else {
 			event.model.completed = '';
+			event.model.completedon = '';
 		}
 		MyAPP.local.lastaddedit = Math.floor(event.model.modified / 1000);
 		//MyAPP.localCookie.put(MyAPP.local);
@@ -599,13 +598,13 @@ IntroAssistant.prototype.startSync = function () {
 					sync.initSync(this.syncFinished.bind(this), syncOutput);
 				}	
 				else {
-				//Mojo.Log.info("Wifi connection not available!");			
-				Mojo.Controller.errorDialog($L("Wifi connection not available!"));						
+				Mojo.Log.info("Wifi connection not available!");			
+				//Mojo.Controller.errorDialog($L("Wifi connection not available!"));						
 				}		
 			}
 			else {
-				//Mojo.Log.info("Internet connection not available!");			
-				Mojo.Controller.errorDialog($L("Internet connection not available!"));	
+				Mojo.Log.info("Internet connection not available!");			
+				//Mojo.Controller.errorDialog($L("Internet connection not available!"));	
 			}
 		}.bind(this),
 		onFailure: function(response){
@@ -780,7 +779,7 @@ IntroAssistant.prototype.listDelete = function (event) {
 IntroAssistant.prototype.listAdd = function (title) {
 	// Add a new task, using default values
 	var nowTime = Math.floor(new Date().getTime() / 1000) * 1000,
-		folder, context;
+		folder, context, repeat;
 		
 	folder = MyAPP.prefs.defaultFolder;
 	context = MyAPP.prefs.defaultContext;
@@ -799,6 +798,10 @@ IntroAssistant.prototype.listAdd = function (title) {
 			}
 		}	
 	}
+	
+	repeat = MyAPP.prefs.defaultRepeat;
+	repeat = (MyAPP.prefs.repeatFromCompleted) ? repeat + 100 : repeat;
+	
 
 	var mytask = {
 		id: 0,
@@ -816,8 +819,9 @@ IntroAssistant.prototype.listAdd = function (title) {
 		duetime: "",
 		starttime: "",
 		reminder: 0,
-		repeat: MyAPP.prefs.defaultRepeat,
+		repeat: repeat,
 		completed: "",
+		completedon: "",
 		rep_advanced: "",
 		status: MyAPP.prefs.defaultStatus,
 		star: 0,
@@ -1063,6 +1067,7 @@ IntroAssistant.prototype.gotFoldersDb = function (response) {
 	for (i = 0; i < response.length; i++) {
 		//Mojo.Log.info("Response folder %j", response[i], i);
 		this.foldersModel.items[response[i].value] = response[i];
+		this.foldersArray[i].secondaryIcon = "done-icon-folder";
 	}
 	
 	// Retrieve contexts
@@ -1083,6 +1088,7 @@ IntroAssistant.prototype.gotContextsDb = function (response) {
 	for (i = 0; i < response.length; i++) {
 		//Mojo.Log.info("Response context %j", response[i], i);
 		this.contextsModel.items[response[i].value] = response[i];
+		this.contextsArray[i].secondaryIcon = "done-icon-context";
 	}
 	//this.contextsModel.items = response;
 	//Mojo.Log.info("Contexts model items %j", this.contextsModel.items);
@@ -1171,13 +1177,58 @@ IntroAssistant.prototype.gotTasksDb = function (response) {
 			}
 */			
 			
-			// Set boolean value for completed tasks
+			
+			var showTask = false;
+			// show completed tasks only if list is 'completed' or 
+			// a custom list with completed tasks selected
 			if (response[i].completed) {
+				// Set boolean value for completed tasks
 				response[i].done = true;
+				if (this.showListModel.value === 'completed') {
+					showTask = true;
+				}
+				if (this.showListModel.value === 'custom' && this.showFilterModel.value > 0) {
+					//Mojo.Log.info('Show Completed', this.customLists[this.showFilterModel.value].completed[0].selected);
+					if (this.customLists[this.showFilterModel.value].completed[0].selected) {
+						showTask = true;
+					}
+				}
 			}
-
+			else {
+				showTask = true;
+				// task is not completed, so show unless list is 'completed'
+				// or a custom list with "not completed" tasks not selected
+				if (this.showListModel.value === 'completed') {
+					showTask = false;
+				}
+				if (this.showListModel.value === 'custom' && this.showFilterModel.value > 0){ 
+					if (!this.customLists[this.showFilterModel.value].completed[1].selected) {
+						showTask = false;
+					}
+				}
+			}
+			
+			//Mojo.Log.info('completed', response[i].completed, showTask);
+			
+			if (showTask) {
+				response[i].wrap = myWrap;
+				
+				// check for parent/child tasks
+				if (!response[i].parent || !MyAPP.prefs.indentSubtasks) {
+					//Mojo.Log.info("regular task", response[i].title, response[i].id);
+					this.tasks.push(response[i]);
+				}
+				else {
+					//Mojo.Log.info("subtask", response[i].title, response[i].parent);
+					this.childTasks.push(response[i]);
+				}	
+			}
+	
+/*
 			// Check to see if list type is 'completed'			
-			if (this.showListModel.value === 'completed') {
+			if (this.showListModel.value === 'completed' ||
+				(this.showListModel.value === 'custom' && 
+				this.customLists[this.showFilterModel.value].completed[1].value) ) {
 				if (response[i].completed) {
 					//response[i].done = true;
 					response[i].wrap = myWrap;
@@ -1202,7 +1253,8 @@ IntroAssistant.prototype.gotTasksDb = function (response) {
 					}
 				}
 			}
-		}
+
+*/		}
 		
 		if (MyAPP.prefs.showList === 'all' || 
 			(MyAPP.prefs.showList === 'custom' && MyAPP.prefs.showFilter === 'all'))
@@ -1287,7 +1339,7 @@ IntroAssistant.prototype.calcImportance = function (task) {
 };
 
 IntroAssistant.prototype.getTasks = function (listType, filter) {
-	//Mojo.Log.info("List: %s, filter: %s, sort %s",listType, filter, this.sortSpec);
+	Mojo.Log.info("List: %s, filter: %s, sort %s",listType, filter, this.sortSpec);
 	var sqlString, date1, date2, val1, i;
 	//sqlString = "SELECT * FROM tasks WHERE (VALUE>0)";
 	sqlString = "SELECT t.id as id, t.parent, t.children, t.title, t.tag, " +
@@ -1305,7 +1357,7 @@ IntroAssistant.prototype.getTasks = function (listType, filter) {
 	sqlString += " LEFT OUTER JOIN folders f ON t.folder=f.value";
 	sqlString += " WHERE (t.value>0)";
 	
-	if (!MyAPP.prefs.showFutureTasks) {
+	if (!MyAPP.prefs.showFutureTasks && listType !== 'custom') {
 		date1 = new Date();
 		date2 = new Date();
 		date1.setHours(0,0,0,0);
@@ -1316,10 +1368,10 @@ IntroAssistant.prototype.getTasks = function (listType, filter) {
 			" OR t.startdate = '') AND (duedate<" + date2.getTime() + 
 			" OR duedate ='')";
 	}
-	if (!MyAPP.prefs.showNegPriority) {
+	if (!MyAPP.prefs.showNegPriority && listType !== 'custom') {
 		sqlString += " AND (t.priority>-1)";
 	}
-	if (!MyAPP.prefs.showDeferred) {
+	if (!MyAPP.prefs.showDeferred && listType !== 'custom') {
 		sqlString += " AND (t.status < 4)";
 	}
 	var sort1 = (listType == 'all') ? 'sortorder' : listType;
@@ -1462,10 +1514,22 @@ IntroAssistant.prototype.getTasks = function (listType, filter) {
 			});
 			this.customLists[filter].starred.each(function (starred) {
 				if (!starred.selected) {
-					sqlString += " AND t.star != " + starred.value;
+					sqlString += " AND t.star = " + starred.value;
 				}
 			});
-			
+
+/*
+			//NEED TO SHOW COMPLETED FOR CUSTOM LISTS!!!
+			var done = this.customLists[filter].completed[0].value;
+			var not = this.customLists[filter].completed[1].value;
+			if (done) {
+				sqlString += " AND t.completed = ''";
+			}
+			if (not) {
+				sqlString += " AND t.completed > 0";
+			}
+
+*/			
 			// Select by due date
 			date1 = new Date();
 			date1.setHours(0, 0, 0, 0);
@@ -1578,10 +1642,18 @@ IntroAssistant.prototype.cleanup = function(event) {
 	this.controller.stopListening('taskListing', Mojo.Event.listTap, this.listTapHandler);
 	this.controller.stopListening('taskListing', Mojo.Event.propertyChange, this.checkChangeHandler);
 	this.controller.stopListening('taskListing', Mojo.Event.listDelete, this.listDeleteHandler);
+	this.controller.stopListening('taskListing', Mojo.Event.filter, this.filterListHandler);
+		
+    Mojo.Event.stopListening(this.controller.document, "keydown", this.onKeyDownHandler, true);
+
 		
 	this.controller.stopListening('showFilter', Mojo.Event.propertyChange, this.showFilterHandler);
 	this.controller.stopListening('showList', Mojo.Event.propertyChange, this.showListHandler);
 	
+	this.controller.stopListening('syncTaskOutput', Mojo.Event.tap, this.toggleSyncOutputHandler);
+	this.controller.stopListening('syncOutput', Mojo.Event.tap, this.showSyncOutputHandler);	
+
+	// Delay "Sync on Quit" by 6 seconds so that app is closed before beginning sync
 	if (MyAPP.prefs.syncOnQuit && !MyAPP.prefs.syncOnInterval) {
 		// delay by 6 seconds to allow app to close...
 		this.setSyncTimer(0.1);

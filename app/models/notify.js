@@ -24,10 +24,16 @@ function Notify() {
 			return;
 		}
 		var sqlString, tomorrow = this.setTomorrow().getTime(), now = new Date().getTime();
+/*
 		sqlString = "SELECT * FROM tasks WHERE (duetime<" + tomorrow + ") " + 
 			"AND (duetime>" + now + ") " +
 			"OR (starttime< " + tomorrow + ") " + 
 			"AND (starttime>" + now + ") " +
+			"ORDER BY duetime DESC, duedate DESC, " +
+			"starttime DESC, startdate DESC, title ASC;GO;";
+
+*/		sqlString = "SELECT * FROM tasks WHERE (duetime >" + now + ") " +
+			"OR (starttime >" + now + ") " +
 			"ORDER BY duetime DESC, duedate DESC, " +
 			"starttime DESC, startdate DESC, title ASC;GO;";
 		//Mojo.Log.info("Now:", new Date().getTime(), sqlString);
@@ -35,9 +41,19 @@ function Notify() {
 	};
 	
 	this.gotTasksDB = function (response) {
-		var thisDate = this.setTomorrow(), i, due, start, temp, now;
+		var thisDate = null, i, due, start, temp, now;
 		//Mojo.Log.info("This Date: ", thisDate);
+		//Mojo.Log.info("Response in notify %j", response);
+		if (MyAPP.prefs.notifyDaily) {
+			thisDate = this.setTomorrow();		
+			//Mojo.Log.info("This Date: ", thisDate);
+		}
 		if (response.length) {
+			if (!thisDate) {
+				thisDate = new Date();
+				// HACK - set to notify in 10 years!
+				thisDate.setFullYear(thisDate.getFullYear() + 10);
+			}
 			now = new Date();
 			for (i = 0; i < response.length; i++) {
 				//Mojo.Log.info("Task:", response[i].title, response[i].duetime, response[i].starttime);
@@ -62,32 +78,34 @@ function Notify() {
 				}
 			}
 		}
+		Mojo.Log.info("setting alarm at", thisDate);
 		this.setAlarm(thisDate);
 	};
 	
 	this.setAlarm = function(myDate){
-		var myDateString;
-		myDateString = this.makeDateString(myDate);
-		new Mojo.Service.Request("palm://com.palm.power/timeout", {
-			method: 'set',
-			parameters: {
-				key: Mojo.appInfo.id + '.notify',
-				//'in': 	'00:05:00',
-				at: myDateString,
-				wakeup: true,
-				uri: 'palm://com.palm.applicationManager/launch',
-				params: {
-					'id': Mojo.appInfo.id,
-					'params': {
-						action: 'notify'
+		if (myDate) {
+			var myDateString;
+			myDateString = this.makeDateString(myDate);
+			new Mojo.Service.Request("palm://com.palm.power/timeout", {
+				method: 'set',
+				parameters: {
+					key: Mojo.appInfo.id + '.notify',
+					//'in': 	'00:05:00',
+					at: myDateString,
+					wakeup: true,
+					uri: 'palm://com.palm.applicationManager/launch',
+					params: {
+						'id': Mojo.appInfo.id,
+						'params': {
+							action: 'notify'
+						}
 					}
-				}
-			},
-			onSuccess: function(){
-				Mojo.Log.info("Success in Setting up Notification at", myDateString);
-			}.bind(this)
-		});
-		
+				},
+				onSuccess: function(){
+					Mojo.Log.info("Success in Setting up Notification at", myDateString);
+				}.bind(this)
+			});
+		}
 	};
 		
 	this.clearNotification = function (value) {
@@ -97,7 +115,7 @@ function Notify() {
 					"key": Mojo.appInfo.id + '.notify'
 				},
 				onSuccess: function(){
-					//Mojo.Log.info("Cleared Notification Timer!");
+					Mojo.Log.info("Cleared Notification Timer!");
 				}
 			});
 		

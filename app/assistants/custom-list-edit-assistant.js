@@ -20,6 +20,7 @@ CustomListEditAssistant.prototype.setup = function() {
 	this.controller.get('priorityListLabel').innerHTML = $L("Priority");
 	this.controller.get('starredListLabel').innerHTML = $L("Starred");
 	this.controller.get('statusListLabel').innerHTML = $L("Status");
+	this.controller.get('completedListLabel').innerHTML = $L("Completed");
 
 
 	this.controller.get('DatesTitle').innerHTML = $L("Dates");
@@ -149,6 +150,20 @@ CustomListEditAssistant.prototype.setup = function() {
 		}
 	);
 	this.controller.setupWidget('starredDrawer', {}, {open: false});
+
+	this.controller.setupWidget('completedList', {
+			itemTemplate: 'custom-list-edit/foldersRowTemplate',
+			listTemplate: 'custom-list-edit/foldersListTemplate',
+			swipeToDelete: false,
+			renderLimit: 20,
+			reorderable: false,
+			autoconfirmDelete: false
+		},
+		this.completedListModel = {
+			items: []	
+		}
+	);
+	this.controller.setupWidget('completedDrawer', {}, {open: false});
 	
 	this.controller.setupWidget('statusList', 
 		{
@@ -237,6 +252,7 @@ CustomListEditAssistant.prototype.setup = function() {
 	//this.controller.listen('tagsListLabel', Mojo.Event.tap, this.drawerTapHandler);
 	this.controller.listen('priorityListLabel', Mojo.Event.tap, this.drawerTapHandler);
 	this.controller.listen('starredListLabel', Mojo.Event.tap, this.drawerTapHandler);
+	this.controller.listen('completedListLabel', Mojo.Event.tap, this.drawerTapHandler);
 	this.controller.listen('statusListLabel', Mojo.Event.tap, this.drawerTapHandler);
 	this.controller.listen('dueDateListLabel', Mojo.Event.tap, this.drawerTapHandler);
 	this.controller.listen('startDateListLabel', Mojo.Event.tap, this.drawerTapHandler);
@@ -252,6 +268,7 @@ CustomListEditAssistant.prototype.setup = function() {
 	this.controller.listen('goalsList', Mojo.Event.propertyChange, this.listsTapHandler);
 	this.controller.listen('statusList', Mojo.Event.propertyChange, this.listsTapHandler);
 	this.controller.listen('starredList', Mojo.Event.propertyChange, this.listsTapHandler);
+	this.controller.listen('completedList', Mojo.Event.propertyChange, this.listsTapHandler);
 	this.controller.listen('priorityList', Mojo.Event.propertyChange, this.listsTapHandler);
 	//this.controller.listen('tagsList', Mojo.Event.propertyChange, this.listsTapHandler);
 
@@ -321,6 +338,9 @@ CustomListEditAssistant.prototype.drawerTap = function (event) {
 		case 'starredListLabel':
 			this.controller.get('starredDrawer').mojo.toggleState();
 			break;
+		case 'completedListLabel':
+			this.controller.get('completedDrawer').mojo.toggleState();
+			break;
 		case 'statusListLabel':
 			this.controller.get('statusDrawer').mojo.toggleState();
 			break;
@@ -362,6 +382,9 @@ CustomListEditAssistant.prototype.gotCustomList = function (response) {
 	
 	this.starredListModel.items = this.customList.starred;
 	this.controller.modelChanged(this.starredListModel);
+	
+	this.completedListModel.items = this.customList.completed;
+	this.controller.modelChanged(this.completedListModel);
 	
 	this.dueDateSelectorModel.value = this.customList.duedate;
 	this.controller.modelChanged(this.dueDateSelectorModel);
@@ -515,6 +538,23 @@ CustomListEditAssistant.prototype.updateCounts = function ( ) {
 	}
 	this.controller.get('starredListCount').innerHTML = startext;
 	
+	var completed = this.completedListModel.items[0].selected;
+	var notcompleted = this.completedListModel.items[1].selected;
+	var completetext = $L("Neither");
+	if (completed) {
+		if (notcompleted) {
+			completetext = $L("Both");
+		}
+		else {
+			completetext = $L("Completed");
+		}
+	}
+	else {
+		if (notcompleted) {
+			completetext = $L("Not Completed");
+		}
+	}
+	this.controller.get('completedListCount').innerHTML = completetext;
 };
  
 CustomListEditAssistant.prototype.countSelected = function (listModel) {
@@ -556,6 +596,7 @@ CustomListEditAssistant.prototype.saveCustomList = function () {
 	}); 
 	customList.status = this.statusListModel.items;
 	customList.starred = this.starredListModel.items;
+	customList.completed = this.completedListModel.items;
 	customList.priority = this.priorityListModel.items;
 	customList.duedate = this.dueDateSelectorModel.value;
 	customList.duedatebefore = this.dueDateOlderToggleModel.value;
@@ -591,6 +632,7 @@ CustomListEditAssistant.prototype.cleanup = function(event) {
 	//this.controller.stopListening('tagsListLabel', Mojo.Event.tap, this.drawerTapHandler);
 	this.controller.stopListening('priorityListLabel', Mojo.Event.tap, this.drawerTapHandler);
 	this.controller.stopListening('starredListLabel', Mojo.Event.tap, this.drawerTapHandler);
+	this.controller.stopListening('completedListLabel', Mojo.Event.tap, this.drawerTapHandler);
 	this.controller.stopListening('statusListLabel', Mojo.Event.tap, this.drawerTapHandler);
 	this.controller.stopListening('dueDateListLabel', Mojo.Event.tap, this.drawerTapHandler);
 	this.controller.stopListening('startDateListLabel', Mojo.Event.tap, this.drawerTapHandler);
@@ -603,6 +645,7 @@ CustomListEditAssistant.prototype.cleanup = function(event) {
 	this.controller.stopListening('goalsList', Mojo.Event.propertyChange, this.listsTapHandler);
 	this.controller.stopListening('statusList', Mojo.Event.propertyChange, this.listsTapHandler);
 	this.controller.stopListening('starredList', Mojo.Event.propertyChange, this.listsTapHandler);
+	this.controller.stopListening('completedList', Mojo.Event.propertyChange, this.listsTapHandler);
 	this.controller.stopListening('priorityList', Mojo.Event.propertyChange, this.listsTapHandler);
 	//this.controller.stopListening('tagsList', Mojo.Event.propertyChange, this.listsTapHandler);
 

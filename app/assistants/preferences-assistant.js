@@ -27,7 +27,7 @@ PreferencesAssistant.prototype.setup = function() {
 	this.controller.get('repeatFromLabel').innerHTML = $L("Repeat From");
 
 	this.controller.get('accountOptionsTitle').innerHTML = $L("Account Settings");
-	this.controller.get('folderOptionsTitle').innerHTML = $L("Folders Contexts & Goals");
+	this.controller.get('folderOptionsTitle').innerHTML = $L("Configuration Settings");
 
 	this.controller.setupWidget("EditAccountButtonId", 
 		this.accountButtonAttributes = {}, 
@@ -41,6 +41,14 @@ PreferencesAssistant.prototype.setup = function() {
 		this.folderButtonAttributes = {}, 
 		this.folderButtonModel = {
 			buttonLabel : $L('Edit Folders/Contexts/Goals'),        
+			buttonClass : '',        
+			disabled : false        
+		});
+		
+	this.controller.setupWidget("FieldConfigButtonId", 
+		this.folderButtonAttributes = {}, 
+		this.folderButtonModel = {
+			buttonLabel : $L('Field Configuration'),        
 			buttonClass : '',        
 			disabled : false        
 		});
@@ -397,12 +405,22 @@ PreferencesAssistant.prototype.setup = function() {
 		});
 	this.controller.get('notificationsLabel').innerHTML = $L("Enable Notifications");
 	
+	// Add Enable Daily Notifications toggle
+	this.controller.setupWidget('notifyDailyToggleId',
+		this.toggleAttributes,
+		this.notifyDailyModel = {
+			value: MyAPP.prefs.notifyDaily,
+			disabled: false
+		});
+	this.controller.get('notifyDailyLabel').innerHTML = $L("Daily Notifications");
+	
 	// Notification time picker
 	this.controller.setupWidget('notificationTime', 
 	{
 		label: " " //$L('Daily') + ":"
 	}, this.notificationTimePickerModel = {
-		time: new Date(MyAPP.prefs.notifyTime)
+		time: new Date(MyAPP.prefs.notifyTime),
+		disabled: false
 	});
 	
 	// Add Notifications Alarm toggle
@@ -410,9 +428,12 @@ PreferencesAssistant.prototype.setup = function() {
 		this.toggleAttributes,
 		this.notifyAlarmModel = {
 			value: MyAPP.prefs.notifyAlarm,
-			disabled: false			
+			disabled: false
 		});
 	this.controller.get('notifyAlarmLabel').innerHTML = $L("Alert Sound");
+	
+	// Display notify options (or not)
+	this.toggleNotifyDisplay(MyAPP.prefs.notifications);
 
 /*
 	// Add Show Due Date & Due Time toggle
@@ -455,20 +476,51 @@ PreferencesAssistant.prototype.setup = function() {
 	this.controller.listen('EditAccountButtonId', Mojo.Event.tap, this.editAccountHandler);
 	this.editFolderHandler = this.editFolder.bind(this);
 	this.controller.listen('EditFoldersButtonId', Mojo.Event.tap, this.editFolderHandler);
+	this.fieldConfigHandler = this.fieldConfig.bind(this);
+	this.controller.listen('FieldConfigButtonId', Mojo.Event.tap, this.fieldConfigHandler);
 	
 	this.notificationsChangeHandler = this.notificationsChange.bind(this);
 	this.controller.listen('notificationsToggleId', Mojo.Event.propertyChange, this.notificationsChangeHandler);
+	this.controller.listen('notifyDailyToggleId', Mojo.Event.propertyChange, this.notificationsChangeHandler);
 
 	this.controller.setInitialFocusedElement(null);
 
 };
 
 PreferencesAssistant.prototype.notificationsChange = function (event) {
-	if (!event.model.value) {
+	//debugObject(event.target, 'noFuncs');
+	// Enable notifications toggled
+	Mojo.Log.info("Notifications Change");
+	MyAPP.prefs.notifications = this.notificationsModel.value;
+	MyAPP.prefs.notifyDaily = this.notifyDailyModel.value;
+	if (event.target.id && event.target.id === 'notificationsToggleId') {
+		this.toggleNotifyDisplay(event.model.value);
+	}
+
+	if (!event.model.value && event.target.id && event.target.id === 'notificationsToggleId') {
 		notify.clearNotification();
 	}
 	else {
 		notify.getNextDate();
+	}
+};
+
+PreferencesAssistant.prototype.toggleNotifyDisplay = function (event) {
+	if (event) {
+		this.controller.get('notifyDailyRow').show();
+		this.controller.get('notifyTimePickerRow').show();
+		this.controller.get('notifyAlarmRow').show();
+		this.controller.get('notifyRow').removeClassName('single');
+		this.controller.get('notifyRow').addClassName('first');
+		
+	}
+	else {
+		this.controller.get('notifyDailyRow').hide();
+		this.controller.get('notifyTimePickerRow').hide();
+		this.controller.get('notifyAlarmRow').hide();
+		this.controller.get('notifyRow').removeClassName('first');
+		this.controller.get('notifyRow').addClassName('single');
+		
 	}
 };
 
@@ -479,6 +531,10 @@ PreferencesAssistant.prototype.editAccount = function (event) {
 PreferencesAssistant.prototype.editFolder = function (event) {
 	//Mojo.Log.info('Going to folders scene');
 	this.controller.stageController.pushScene('folders');
+};
+PreferencesAssistant.prototype.fieldConfig = function (event) {
+	//Mojo.Log.info('Going to fields scene');
+	this.controller.stageController.pushScene('field-config');
 };
 
 PreferencesAssistant.prototype.activate = function(event) {
@@ -561,6 +617,7 @@ PreferencesAssistant.prototype.deactivate = function(event) {
 	MyAPP.prefs.notifications = this.notificationsModel.value;
 	MyAPP.prefs.notifyTime = this.notificationTimePickerModel.time.getTime();
 	MyAPP.prefs.notifyAlarm = this.notifyAlarmModel.value;
+	MyAPP.prefs.notifyDaily = this.notifyDailyModel.value;
 	MyAPP.prefs.showNotes = this.showNotesModel.value;
 	MyAPP.prefs.showPriority = this.showPriorityModel.value;
 	MyAPP.prefs.indentSubtasks = this.indentSubtasksModel.value;
@@ -590,5 +647,8 @@ PreferencesAssistant.prototype.cleanup = function(event) {
 	/* this function should do any cleanup needed before the scene is destroyed as 
 	   a result of being popped off the scene stack */
 	this.controller.stopListening('EditAccountButtonId', Mojo.Event.tap, this.editAccountHandler);
+	this.controller.stopListening('EditFoldersButtonId', Mojo.Event.tap, this.editFolderHandler);
+	this.controller.stopListening('FieldConfigButtonId', Mojo.Event.tap, this.fieldConfigHandler);
 	this.controller.stopListening('notificationsToggleId', Mojo.Event.propertyChange, this.notificationsChangeHandler);
+	this.controller.stopListening('notifyDailyToggleId', Mojo.Event.propertyChange, this.notificationsChangeHandler);
 };
