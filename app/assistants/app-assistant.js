@@ -80,8 +80,10 @@ MyAPP.prefs = {
 	notifyTime: 0,
 	notifyAlarm: false,
 	notifyDaily: false,
+	showSnooze: false,
+	snoozeTime: 60, //minutes for snoozing due/start times
 	indentSubtasks: false,
-	color: 4 // khaki yellow
+	color: 1 // light yellow
 };
 
 MyAPP.fields = {
@@ -154,19 +156,20 @@ MyAPP.appMenuModel = {
 		{label: $L('Preferences & Accounts') + "...", command: 'doPrefs', disabled: false},
 		{label: $L('Folders Contexts & Goals') + "...", command: 'doFolders', disabled: false},
 		{label: $L('Custom Lists') + "...", command: 'doCustom', disabled: false},
+		{label: $L('Show Notifications'), command: 'doNotify', disabled: false},
 		Mojo.Menu.helpItem
 	]
 };
 
 function AppAssistant(appController) {
 	//save global reference to App Assistant
-	Mojo.Log.info("AppAssistant CONSTRUCTOR!");
+	//Mojo.Log.info("AppAssistant CONSTRUCTOR!");
 	MyAPP.appAssistant = this;
 	this.appController = appController;
 }
 
 AppAssistant.prototype.setup = function () {
-	Mojo.Log.info("AppAssistant setup()");
+	//Mojo.Log.info("AppAssistant setup()");
 	
 	//this.initDBandCookies();
 };
@@ -179,7 +182,7 @@ AppAssistant.prototype.setup = function () {
 // -------------------------------------------------------------------
 
 AppAssistant.prototype.handleLaunch = function(launchParams){
-	Mojo.Log.info(" ********** App handleLaunch ***********");
+	//Mojo.Log.info(" ********** App handleLaunch ***********");
 	
 	this.launchParams = launchParams;
 	
@@ -195,15 +198,155 @@ AppAssistant.prototype.handleLaunchAfter = function() {
 		dashboardStage, pushDashboard;
 	cardStageController = this.controller.getStageController('mainStage');
 	//Mojo.Log.info("controller is: " + cardStageController);
-	if (!launchParams) {
-		//FIRST LAUNCH or TAP on Icon when minimized
+	//Mojo.Log.info(" Launch Parameters: %j", launchParams);
+	if (launchParams.addtask) {
+		launchParams.action = "addtask";
+	}
+	switch (launchParams.action) {
+	case "sync":
+
+		if (cardStageController) {
+			if (cardStageController.activeScene().sceneName === 'intro') {
+				cardStageController.delegateToSceneAssistant("startSync");
+			}
+			//NOTE: Sync will not fire if other card is open (prefs, help, etc)
+		}
+		else {
+			var launchSync = this.launchDashSync.bind(this, launchParams);
+
+			//Mojo.Log.info("Calling Connection Service Request from AppAssistant");
+			this.connectRequest = new Mojo.Service.Request('palm://com.palm.connectionmanager', {
+				method: 'getstatus',
+				parameters: {},
+				onSuccess: function(response){
+					//Mojo.Log.info("Connection Response %j", response);
+					if (response.isInternetConnectionAvailable) {
+						if (!MyAPP.prefs.syncWifiOnly ||
+						response.wifi.state === 'connected') {
+							launchSync();
+						}
+						else {
+							//Mojo.Log.info("No wifi - sync failed");
+							this.controller.showBanner(Mojo.appInfo.title + " Unable to sync!", null, "sync_error");
+						}
+					}
+					else {
+						//Mojo.Log.info("No internet - sync failed");
+						this.controller.showBanner(Mojo.appInfo.title + " Unable to sync!", null, "sync_error");	
+					}
+				}.bind(this),
+				onFailure: function () {
+					//Mojo.Log.info("Connection Status Service Request FAILED!");
+				}
+			});
+		}
+		if (MyAPP.prefs.syncOnInterval) {
+			sync.setSyncTimer(MyAPP.prefs.syncInterval);
+		}
+		break;
+	case 'notify':
+		dashboardStage = this.controller.getStageProxy("dashnotify");
+		if (dashboardStage) {
+			//Mojo.Log.info("Notify Dashboard already running");
+			dashboardStage.delegateToSceneAssistant("addNotify", launchParams.taskValue);
+		}
+		else {
+			//Mojo.Log.info("No notify dashboardStage found.");
+			//this.initDBandCookies();
+			pushDashboard = function(stageController){
+				stageController.pushScene({
+					name: 'dashnotify'
+				}, launchParams.taskValue);
+			};
+			this.controller.createStageWithCallback({
+				name: "dashnotify",
+				lightweight: true
+			}, pushDashboard, 'dashboard');
+		}
+		notify.getNextDate();
+		break;
+	case 'openTask':
+		//Mojo.Log.info("app assistant openTask with value: ", launchParams.taskValue);
 		if (cardStageController) {
 			// Application already running
-			Mojo.Log.info("Relaunch!");
+			//Mojo.Log.info("Relaunch!");
+			if (cardStageController.activeScene().sceneName === 'intro') {
+				cardStageController.delegateToSceneAssistant("editTask", launchParams.taskValue);
+			}
+			else if (cardStageController.activeScene().sceneName === 'addtask') {
+				cardStageController.delegateToSceneAssistant("loadNewTask", launchParams.taskValue);					
+			}
+			else {
+				cardStageController.pushScene('addtask', launchParams.taskValue);
+			}
 			cardStageController.activate();
 		}
 		else {
-			Mojo.Log.info("Launch new intro stage!");
+			//Mojo.Log.info("Launch new intro stage!");
+			//this.initDBandCookies();
+			pushMainScene = function (stageController) {
+				stageController.pushScene({
+					name: 'intro',
+					disableSceneScroller: true
+				});
+			};
+			stageArgs = {
+				name: 'mainStage',
+				lightweight: true
+			};
+			this.controller.createStageWithCallback(stageArgs, pushMainScene.bind(this), 'card');
+			cardStageController = this.controller.getStageProxy('mainStage');
+			cardStageController.delegateToSceneAssistant("editTask", launchParams.taskValue);
+		}
+	
+		break;
+	case "addtask":
+		//Mojo.Log.info("app assistant addTask with value: ", launchParams.taskValue);
+		if (cardStageController) {
+			// Application already running
+			//Mojo.Log.info("Relaunch! to add task");
+			if (cardStageController.activeScene().sceneName === 'intro') {
+				cardStageController.delegateToSceneAssistant("listAdd", launchParams.addtask);
+			}
+			else if (cardStageController.activeScene().sceneName === 'addtask') {
+				cardStageController.delegateToSceneAssistant("addTask", launchParams.addtask);					
+			}
+			else {
+				var task = taskUtils.newTask(launchParams.addtask);
+				dao.updateTask(task, function () {});
+				cardStageController.pushScene('addtask', task.value);
+			}
+			cardStageController.activate();
+		}
+		else {
+			//Mojo.Log.info("Launch new intro stage!");
+			//this.initDBandCookies();
+			pushMainScene = function (stageController) {
+				stageController.pushScene({
+					name: 'intro',
+					disableSceneScroller: true
+				});
+			};
+			stageArgs = {
+				name: 'mainStage',
+				lightweight: true
+			};
+			this.controller.createStageWithCallback(stageArgs, pushMainScene.bind(this), 'card');
+			cardStageController = this.controller.getStageProxy('mainStage');
+			cardStageController.delegateToSceneAssistant("listAdd", launchParams.addtask);
+		}
+	
+		break;
+	
+	default:
+		//FIRST LAUNCH or TAP on Icon when minimized
+		if (cardStageController) {
+			// Application already running
+			//Mojo.Log.info("Relaunch!");
+			cardStageController.activate();
+		}
+		else {
+			//Mojo.Log.info("Launch new intro stage!");
 			//this.initDBandCookies();
 			pushMainScene = function (stageController) {
 				stageController.pushScene({
@@ -217,113 +360,23 @@ AppAssistant.prototype.handleLaunchAfter = function() {
 			};
 			this.controller.createStageWithCallback(stageArgs, pushMainScene.bind(this), 'card');
 		}
-	}
-	else {
-		Mojo.Log.info(" Launch Parameters: %j", launchParams);
-		switch (launchParams.action) {
-		case "sync":
-
-			if (cardStageController) {
-				if (cardStageController.activeScene().sceneName === 'intro') {
-					cardStageController.delegateToSceneAssistant("startSync");
-				}
-				//NOTE: Sync will not fire if other card is open (prefs, help, etc)
-			}
-			else {
-				var launchSync = this.launchDashSync.bind(this, launchParams);
-
-				Mojo.Log.info("Calling Connection Service Request from AppAssistant");
-				this.connectRequest = new Mojo.Service.Request('palm://com.palm.connectionmanager', {
-					method: 'getstatus',
-					parameters: {},
-					onSuccess: function(response){
-						Mojo.Log.info("Connection Response %j", response);
-						if (response.isInternetConnectionAvailable) {
-							if (!MyAPP.prefs.syncWifiOnly ||
-							response.wifi.state === 'connected') {
-								launchSync();
-							}
-						}
-					},
-					onFailure: function () {
-						Mojo.Log.info("Connection Status Service Request FAILED!");
-					}
-				});
-			}
-			if (MyAPP.prefs.syncOnInterval) {
-				sync.setSyncTimer(MyAPP.prefs.syncInterval);
-			}
-			break;
-		case 'notify':
-			dashboardStage = this.controller.getStageProxy("dashnotify");
-			if (dashboardStage) {
-				Mojo.Log.info("Notify Dashboard already running");
-				dashboardStage.delegateToSceneAssistant("addNotify");
-			}
-			else {
-				Mojo.Log.info("No notify dashboardStage found.");
-				//this.initDBandCookies();
-				pushDashboard = function(stageController){
-					stageController.pushScene('dashnotify');
-				};
-				this.controller.createStageWithCallback({
-					name: "dashnotify",
-					lightweight: true
-				}, pushDashboard, 'dashboard');
-			}
-			notify.getNextDate();
-			break;
-		case 'openTask':
-			//Mojo.Log.info("app assitant openTask with value: ", launchParams.taskValue);
-			if (cardStageController) {
-				// Application already running
-				Mojo.Log.info("Relaunch!");
-				if (cardStageController.activeScene().sceneName === 'intro') {
-					cardStageController.delegateToSceneAssistant("editTask", launchParams.taskValue);
-				}
-				else if (cardStageController.activeScene().sceneName === 'addtask') {
-					cardStageController.delegateToSceneAssistant("loadNewTask", launchParams.taskValue);					
-				}
-
-			}
-			else {
-				Mojo.Log.info("Launch new intro stage!");
-				//this.initDBandCookies();
-				pushMainScene = function (stageController) {
-					stageController.pushScene({
-						name: 'intro',
-						disableSceneScroller: true
-					});
-				};
-				stageArgs = {
-					name: 'mainStage',
-					lightweight: true
-				};
-				this.controller.createStageWithCallback(stageArgs, pushMainScene.bind(this), 'card');
-				cardStageController = this.controller.getStageProxy('mainStage');
-				cardStageController.delegateToSceneAssistant("editTask", launchParams.taskValue);
-			}
-		
-			break;
-		default:
-			break;
-		}
+		break;
 	}
 	
 };
 
 AppAssistant.prototype.initDBandCookies = function () {
-	Mojo.Log.info("Initializing Database");
+	//Mojo.Log.info("Initializing Database");
 	// Initialize database
 	dao.init();
 	
 	// Initialize toodledo api
-	Mojo.Log.info("Initializing API");
+	//Mojo.Log.info("Initializing API");
 	api.init();
 	
 	this.getPrefs();
 	
-	Mojo.Log.info("Initializing Cookies");
+	//Mojo.Log.info("Initializing Cookies");
 	// Initialize cookies
 	//this.getPrefsCookie();
 	//this.getAccountCookie();
@@ -331,12 +384,12 @@ AppAssistant.prototype.initDBandCookies = function () {
 	this.getSyncLogCookie();
 	//this.getFieldsCookie();
 	
-	Mojo.Log.info("MyAPP.local %j", MyAPP.local);
+	//Mojo.Log.info("MyAPP.local %j", MyAPP.local);
 	
 };
 
 AppAssistant.prototype.getPrefs = function () {
-	Mojo.Log.info("Getting Preferences");
+	//Mojo.Log.info("Getting Preferences");
 	var options = {
 		name: Mojo.appInfo.id + ".prefs",
 		version: 0.4,
@@ -347,28 +400,28 @@ AppAssistant.prototype.getPrefs = function () {
 };
 
 AppAssistant.prototype.gotPrefsDb = function (event) {
-	Mojo.Log.info("Prefs DB Retrieved");
+	//Mojo.Log.info("Prefs DB Retrieved");
 	MyAPP.prefsDb.get('prefs', this.gotPrefs.bind(this), this.dbFailure.bind(this));
 };
 
 AppAssistant.prototype.gotPrefs = function (args) {
 	if (args) {
-		Mojo.Log.info("Preferences retrieved from Depot");
+		//Mojo.Log.info("Preferences retrieved from Depot");
 
 		//MyAPP.prefs = args;
 		for (value in args) {
 				MyAPP.prefs[value] = args[value];
-				Mojo.Log.info("Pref: ", value, args[value], MyAPP.prefs[value]);
+				//Mojo.Log.info("Pref: ", value, args[value], MyAPP.prefs[value]);
 		}
 	}
 	else {
-		Mojo.Log.info("PREFS LOAD FAILURE!!!");
+		//Mojo.Log.info("PREFS LOAD FAILURE!!!");
 		this.getPrefsCookie();
 		MyAPP.prefsCookie.remove();
 		MyAPP.prefsDb.add('prefs', MyAPP.prefs, 
 			function () {},
 			function (event) {
-				Mojo.Log.info("Prefs DB failure %j", event);
+				//Mojo.Log.info("Prefs DB failure %j", event);
 		});
 	}
 	//Mojo.Log.info("Prefs: %j", MyAPP.prefs);
@@ -377,7 +430,7 @@ AppAssistant.prototype.gotPrefs = function (args) {
 
 AppAssistant.prototype.gotAccount = function (args) {
 	if (args) {
-		Mojo.Log.info("Account retrieved from Depot");
+		//Mojo.Log.info("Account retrieved from Depot");
 		//MyAPP.account = args;
 		for (value in args) {
 				MyAPP.account[value] = args[value];
@@ -385,13 +438,13 @@ AppAssistant.prototype.gotAccount = function (args) {
 		}
 	}
 	else {
-		Mojo.Log.info("ACCOUNT LOAD FAILURE!!!");
+		//Mojo.Log.info("ACCOUNT LOAD FAILURE!!!");
 		this.getAccountCookie();
 		MyAPP.accountCookie.remove();
 		MyAPP.prefsDb.add('account', MyAPP.account, 
 			function () {},
 			function (event) {
-				Mojo.Log.info("Prefs DB failure %j", event);
+				//Mojo.Log.info("Prefs DB failure %j", event);
 		});
 	}
 	//Mojo.Log.info("Account: %j", MyAPP.account);
@@ -400,7 +453,7 @@ AppAssistant.prototype.gotAccount = function (args) {
 
 AppAssistant.prototype.gotLocal = function (args) {
 	if (args) {
-		Mojo.Log.info("Local retrieved from Depot");
+		//Mojo.Log.info("Local retrieved from Depot");
 		//MyAPP.local = args;
 		for (value in args) {
 				MyAPP.local[value] = args[value];
@@ -408,13 +461,13 @@ AppAssistant.prototype.gotLocal = function (args) {
 		}
 	}
 	else {
-		Mojo.Log.info("LOCAL LOAD FAILURE!!!");
+		//Mojo.Log.info("LOCAL LOAD FAILURE!!!");
 		this.getLocalCookie();
 		MyAPP.localCookie.remove();
 		MyAPP.prefsDb.add('local', MyAPP.local, 
 			function () {},
 			function (event) {
-				Mojo.Log.info("Prefs DB failure %j", event);
+				//Mojo.Log.info("Prefs DB failure %j", event);
 		});
 	}
 	//Mojo.Log.info("Local: %j", MyAPP.local);
@@ -423,7 +476,7 @@ AppAssistant.prototype.gotLocal = function (args) {
 
 AppAssistant.prototype.gotFields = function (args) {
 	if (args) {
-		Mojo.Log.info("Fields retrieved from Depot");
+		//Mojo.Log.info("Fields retrieved from Depot");
 		//MyAPP.fields = args;
 		for (value in args) {
 				MyAPP.fields[value] = args[value];
@@ -431,13 +484,13 @@ AppAssistant.prototype.gotFields = function (args) {
 		}
 	}
 	else {
-		Mojo.Log.info("FIELDS LOAD FAILURE!!!");
+		//Mojo.Log.info("FIELDS LOAD FAILURE!!!");
 		this.getFieldsCookie();
 		MyAPP.fieldsCookie.remove();
 		MyAPP.prefsDb.add('fields', MyAPP.fields, 
 			function () {},
 			function (event) {
-				Mojo.Log.info("Prefs DB failure %j", event);
+				//Mojo.Log.info("Prefs DB failure %j", event);
 		});
 	}
 	//Mojo.Log.info("Fields: %j", MyAPP.fields);
@@ -445,10 +498,11 @@ AppAssistant.prototype.gotFields = function (args) {
 };
 
 AppAssistant.prototype.dbFailure = function (event) {
-	Mojo.Log.info("Prefs DB failure %j", event);
+	//Mojo.Log.info("Prefs DB failure %j", event);
 };
 
 AppAssistant.prototype.launchDashSync = function (launchParams) {
+/*
 		dashboardStage = this.controller.getStageController("dashsync");
 		if (dashboardStage) {
 			//Mojo.Log.info("Sync Dashboard already running");
@@ -465,6 +519,13 @@ AppAssistant.prototype.launchDashSync = function (launchParams) {
 				lightweight: true
 			}, pushDashboard, 'dashboard');
 		}
+
+*/		
+	sync.initSync(this.finishedSync.bind(this));
+};
+
+AppAssistant.prototype.finishedSync = function (response) {
+	//Mojo.Log.info("Sync Finished! %j", response);
 };
 
 AppAssistant.prototype.handleCommand = function (event) {
@@ -485,7 +546,12 @@ AppAssistant.prototype.handleCommand = function (event) {
 */		case Mojo.Menu.helpCmd:
 			this.controller.getActiveStageController().pushScene('support');
 			break;
-					}
+		case 'doNotify':
+			// update or show Notifications
+			notify.updateNotifications(true);
+			break;
+		}
+				
 	}
 };
 

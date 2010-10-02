@@ -330,34 +330,78 @@ AddtaskAssistant.prototype.setup = function(){
         spinning: false
     });
     this.controller.get('Scrim').hide();
+	
+	// Setup subtask list
+	this.controller.setupWidget('subtaskListing', 
+		{
+			itemTemplate: 'addtask/taskRowTemplate',
+			listTemplate: 'addtask/taskListTemplate',
+			swipeToDelete: true,
+			autoconfirmDelete: false,
+			renderLimit: 30,  // had to increase to get drawers in list to work correctly
+			//dividerFunction: this.taskDivider.bind(this),
+			dividerTemplate: 'intro/divider',
+			//filterFunction: this.filterFunction.bind(this),
+			delay: 200,
+			addItemLabel: $L("Add subtask"),
+			formatters: {
+				duedate: taskUtils.formatDueDate.bind(this),
+				duetime: taskUtils.formatDueTime.bind(this),
+				//folder: taskUtils.formatFolder.bind(this),
+				//context: taskUtils.formatContext.bind(this),
+				star: taskUtils.formatStar.bind(this),
+				note: taskUtils.formatNote.bind(this),
+				hasnote: taskUtils.formatHasNote.bind(this),
+				priority: taskUtils.formatPriority.bind(this)
+				//parent: taskUtils.formatParent.bind(this)
+				},
+
+		reorderable: false
+		},
+		//this.taskListModel = {items: []}
+		//this.taskListModel = {items: [], disabled: false}
+		this.subtaskListModel = {disabled: false,
+			items: [
+				{title: "Task 1", parent: "111"},
+				{title: "Task 2", parent: "111"}
+			]
+		}
+	);
+	this.controller.get('subtaskListLabel').innerHTML = $L("Subtasks");
+	this.controller.get('subtaskListCount').innerHTML = $L("None");
+	this.controller.setupWidget('subtaskDrawer', {}, {open: false});
+	this.drawerTapHandler = this.drawerTap.bindAsEventListener(this);
+	this.controller.listen('subtaskListCount', Mojo.Event.tap, this.drawerTapHandler);
+	this.parentRowTapHandler = this.parentRowTap.bindAsEventListener(this);
+	this.controller.listen('ParentRow', Mojo.Event.tap, this.parentRowTapHandler);
+	this.subtaskListTapHandler = this.subtaskListTap.bindAsEventListener(this);
+	this.controller.listen('subtaskListing', Mojo.Event.listTap, this.subtaskListTapHandler);
+	this.subtaskListAddHandler = this.subtaskListAdd.bindAsEventListener(this);
+	this.controller.listen('subtaskListing', Mojo.Event.listAdd, this.subtaskListAddHandler);
+	this.controller.setupWidget('taskCheck', {
+		modelProperty: "done"
+	});
+	
     
     // Setup command menu
     
     this.controller.setupWidget(Mojo.Menu.commandMenu, {}, {
         items: [
-
 			{
 			icon: 'new',
 			command: 'add-task'
 			},
-
-	
-		{
-            //label: $L("Duplicate Task"),
-			icon: "copytask",
+			{
+ 			icon: "copytask",
             command: "copy-task"
-        }
-/*		,{
-			icon: "savetask",
-			command: "save-task"
-		}
-
-		, {
-            label: $L("Config"),
-            command: "field-config"
-        }
-
-*/		]
+        	}
+/*			,
+			{
+				icon: 'sub-task',
+				command: 'make-subtask'
+			}
+*/
+		]
     });
     
     /* add event handlers to listen to events from widgets */
@@ -392,7 +436,69 @@ AddtaskAssistant.prototype.setup = function(){
     
     this.checkChangeHandler = this.checkChange.bindAsEventListener(this);
     this.controller.listen('addTaskCheck', Mojo.Event.propertyChanged, this.checkChangeHandler);
+
+	this.checkChangeHandlerSub = this.checkChangeSub.bindAsEventListener(this);
+	this.controller.listen('subtaskListing', Mojo.Event.propertyChange, this.checkChangeHandlerSub);
     
+};
+
+AddtaskAssistant.prototype.subtaskListTap = function (event) {
+	//Mojo.Log.info("Subtask List Tap");
+	//debugObject(event.originalEvent.target, 'noFuncs');
+	//Mojo.Log.info("Event target", event.originalEvent.target.className);
+	//Mojo.Log.info("Event item %j", event.item);
+	
+	var className = event.originalEvent.target.className;
+	switch (className) {
+		case 'subtaskIcon':
+			event.item.parent = '';
+			taskUtils.saveToDB(event.item, taskUtils.returnFromDb.bind(this));
+			this.subtaskListModel.items.splice(event.index, 1);
+			this.controller.modelChanged(this.subtaskListModel);
+			this.controller.get('subtaskListCount').innerHTML = 
+				this.subtaskListModel.items.length + " " +$L("Subtasks");
+			break;
+		default:
+			this.saveTask();
+			this.controller.stageController.pushScene('addtask', event.item.value);
+			break;
+	}
+};
+
+AddtaskAssistant.prototype.subtaskListAdd = function (title) {
+	var mytask = taskUtils.newTask();
+	mytask.parent = this.task.value;
+	mytask.folder = this.task.folder;
+	mytask.goal = this.task.goal;
+	mytask.context = this.task.context;
+	mytask.tag = this.task.tag;
+	mytask.status = this.task.status;
+	dao.updateTask(mytask, function () {});
+	this.controller.stageController.pushScene('addtask', 
+			mytask.value);	
+};
+
+AddtaskAssistant.prototype.parentRowTap = function (event) {
+	//Mojo.Log.info("Parent Row Tap");
+	this.saveTask();
+	this.controller.stageController.pushScene('addtask', 
+			this.task.parent);	
+	
+};
+
+AddtaskAssistant.prototype.subtaskListChoose = function (event) {
+	//Mojo.Log.info("Subtaks Choose event %j", event);
+};
+
+AddtaskAssistant.prototype.drawerTap = function (event) {
+	//Mojo.Log.info("Drawer Tap");
+	//debugObject(event.target, 'noFuncs');
+	switch (event.target.id){ 
+		case 'subtaskListCount':
+			this.controller.get('subtaskDrawer').mojo.toggleState();
+			break;		
+	}
+	//this.updateCounts();
 };
 
 AddtaskAssistant.prototype.handleCommand = function(event){
@@ -409,10 +515,13 @@ AddtaskAssistant.prototype.handleCommand = function(event){
 		case "save-task":
 			this.controller.stageController.popScene();
 			break;
+		case "make-subtask":
+			this.subTask();
+			break;
     }
 };
 
-AddtaskAssistant.prototype.addTask = function () {
+AddtaskAssistant.prototype.addTask = function (title) {
 /* THIS FUNCTION IS NOT WORKING PROPERLY!!!!! */
 	var nowTime = Math.floor(new Date().getTime() / 1000) * 1000,
 		folder, context, repeat;
@@ -445,7 +554,7 @@ AddtaskAssistant.prototype.addTask = function () {
 		id: 0,
 		parent: "",
 		children: "",
-		title: "", // uses FilterList to add a new task...
+		title: title || "", // uses FilterList to add a new task...
 		tag: "",
 		folder: folder,
 		context: context,
@@ -484,7 +593,25 @@ AddtaskAssistant.prototype.addTask = function () {
 	
 };
 
+AddtaskAssistant.prototype.subTask = function(){
+	var dashboardStage = Mojo.Controller.getAppController().getStageProxy("dashnotify");
+	if (true) { //(dashboardStage) {
+		//Mojo.Log.info("Updating Notifications", Mojo.appInfo.id);
+		new Mojo.Service.Request('palm://com.palm.applicationManager', {
+			method: "launch",
+			parameters: {
+				'id': Mojo.appInfo.id,
+				'params': {
+					action: 'notify'
+				}
+			}
+		});
+		//Mojo.Log.info("Called relaunch with Notify");
+	}
+};
+
 AddtaskAssistant.prototype.copyTask = function(){
+
     var nowTime = Math.floor(new Date().getTime() / 1000) * 1000;
     
     // save original task
@@ -505,14 +632,20 @@ AddtaskAssistant.prototype.copyTask = function(){
 		{messageText: MyAPP.appName + " " + $L("task duplicated")},
 		{}
 	);
-	
     
 };
 
+AddtaskAssistant.prototype.checkChangeSub = function (event) {
+	//Mojo.Log.info("Sub Check Changed!");
+	//Mojo.Log.info("Event model %j", event.model.done);
+	
+	//taskUtils.checkChange(event.model);
+
+};
 
 AddtaskAssistant.prototype.checkChange = function(event){
     var repeatFromCompleted, newDueDate, newStartDate, repeat, newTask, diff;
-    //Mojo.Log.info("Event id:", event.target.id);
+    Mojo.Log.info("Event id:", event.target.id);
     // Changed the "Completed" checkbox
     var nowTime = Math.floor(new Date().getTime() / 1000) * 1000;
     this.task.modified = nowTime;
@@ -600,6 +733,8 @@ AddtaskAssistant.prototype.checkChange = function(event){
                 this.task = newTask;
             }
         }
+		notify.updateNotifications(false, this.task.value+'');
+		
     }
     else {
         this.task.completed = '';
@@ -607,6 +742,8 @@ AddtaskAssistant.prototype.checkChange = function(event){
     }
     
     this.saveTask();
+	// update notifications if the notification stage is open
+	
 };
 
 
@@ -827,13 +964,14 @@ AddtaskAssistant.prototype.gotStartDate = function(date){
 };
 
 AddtaskAssistant.prototype.aboutToActivate = function (callback) {
-	callback.defer();
+	this.activateCallback = callback;
+	this.loadData();
 };
 
 AddtaskAssistant.prototype.activate = function(event){
     /* put in event handlers here that should only be in effect when this scene is active. For
      example, key handlers that are observing the document */
-    this.loadData();
+    //this.loadData();
 };
 
 AddtaskAssistant.prototype.loadData = function(){
@@ -920,6 +1058,20 @@ AddtaskAssistant.prototype.loadData = function(){
     MyAPP.saveCookie.remove();
 };
 
+AddtaskAssistant.prototype.showDates = function () {
+		var a = new Date(this.task.added);
+		//a = a.setMinutes(a.getMinutes() - a.getTimezoneOffset());
+		//Mojo.Log.info(a);
+		var m = new Date(this.task.modified);
+		//m = m.setMinutes(m.getMinutes() - m.getTimezoneOffset());
+		
+		this.controller.get('taskdetails').innerHTML =  $L("Added") + ": " +
+			Mojo.Format.formatDate(new Date(a), 'medium') +
+			"<br />" + $L("Modified") + ": " + 
+			Mojo.Format.formatDate(new Date(m), 'medium');
+};
+
+
 AddtaskAssistant.prototype.gotFoldersDb = function(response){
     //Mojo.Log.info("Folders response is %j", response, response.length);
     this.folders = [{
@@ -966,8 +1118,10 @@ AddtaskAssistant.prototype.gotGoalsDb = function(response){
     dao.retrieveTasksByString(sqlString, this.gotTasks.bind(this));
 };
 
+
+
 AddtaskAssistant.prototype.gotTasks = function(responseText){
-    Mojo.Log.info("Task: %j", responseText);
+    //Mojo.Log.info("Task: %j", responseText);
     this.task = responseText[0];
     
     var startTimeString = $L("No Start Time");
@@ -1167,14 +1321,54 @@ AddtaskAssistant.prototype.gotTasks = function(responseText){
     
     this.addTaskCheckModel.value = (this.task.completed > 0) ? true : false;
     this.controller.modelChanged(this.addTaskCheckModel);
-    
+	
+	
+	if (MyAPP.account.pro === 1) {
+		if (this.task.parent) {
+			this.controller.get("SubtaskRow").hide();
+			sqlString = "SELECT title FROM tasks WHERE value=" + this.task.parent + ";GO;";
+			dao.retrieveTasksByString(sqlString, this.gotParent.bind(this));
+			
+		}
+		else {
+			sqlString = "SELECT * FROM tasks WHERE parent=" + this.taskValue + ";GO;";
+			dao.retrieveTasksByString(sqlString, this.gotSubtasks.bind(this));			
+		}
+	}
+	else {
+		this.controller.get("SubtaskRow").hide();
+		this.controller.get("ParentRow").hide();	
+		this.activateCallback();	
+	}
+	this.showDates();
+};
+
+AddtaskAssistant.prototype.gotSubtasks = function (response) {
+	//Mojo.Log.info("Subtasks: %j", response);
+	this.controller.get('subtaskListCount').innerHTML = response.length + " " +$L("Subtasks");
+	var i;
+	for (i = 0; i < response.length; i++){
+		response[i].done = response[i].completed ? true : false;
+	}
+	this.subtaskListModel.items = response;
+	this.controller.modelChanged(this.subtaskListModel);
+	this.activateCallback();
+};
+
+AddtaskAssistant.prototype.gotParent = function (response) {
+	//Mojo.Log.info("Parent %j", response);
+	this.controller.get("parentTitle").innerHTML = response[0].title;
+	this.controller.get("ParentRow").show();
+	this.activateCallback();
 };
 
 AddtaskAssistant.prototype.loadNewTask = function(taskValue){
     //Mojo.Log.info("Load New Task:", taskValue);
     this.saveTask();
-    sqlString = "SELECT * FROM tasks WHERE value=" + taskValue + ";GO;";
+    var sqlString = "SELECT * FROM tasks WHERE value=" + taskValue + ";GO;";
     dao.retrieveTasksByString(sqlString, this.gotTasks.bind(this));
+	sqlString = "SELECT * FROM tasks WHERE parent=" + taskValue + ";GO;";
+	dao.retrieveTasksByString(sqlString, this.gotSubtasks.bind(this));
 };
 
 
@@ -1225,29 +1419,31 @@ AddtaskAssistant.prototype.saveTask = function(){
     this.task.note = this.noteModel.value;
 	this.task.length = this.lengthModel.value * 1;
     //Mojo.Log.info("Duedate:", this.task.duedate, new Date(this.task.duedate));
+
+	taskUtils.saveToDB(this.task, taskUtils.returnFromDb);    
+	this.showDates();
+};
+
+AddtaskAssistant.prototype.saveToDB = function (task) {
     var nowTime = Math.floor(new Date().getTime() / 1000) * 1000;
-    this.task.modified = nowTime;
+    task.modified = nowTime;
     MyAPP.local.lastaddedit = nowTime / 1000;
-    //Mojo.Log.info("Now", nowTime);
-   // MyAPP.localCookie = new Mojo.Model.Cookie(MyAPP.appName + "local");
-   // MyAPP.localCookie.put(MyAPP.local);
 	MyAPP.prefsDb.add('local', MyAPP.local, 
 		function () {},
 		function (event) {
-			Mojo.Log.info("Prefs DB failure %j", event);
+			//Mojo.Log.info("Prefs DB failure %j", event);
 		});
     
     // Save data to a cookie in the event the user closes app before DB commit
     // Will check for this cookie on app load and resave to DB if needed.
     MyAPP.saveCookie = new Mojo.Model.Cookie(MyAPP.appName + ".save");
-    MyAPP.saveCookie.put(this.task);
+    MyAPP.saveCookie.put(task);
     
     // Save info to database
     // update existing entry in database
     
     //Mojo.Log.info("Updating Task: %j", this.task);
-    dao.updateTask(this.task, this.returnFromDb.bind(this));
-    
+    dao.updateTask(task, this.returnFromDb.bind(this));
 };
 
 AddtaskAssistant.prototype.returnFromDb = function(){
@@ -1282,5 +1478,11 @@ AddtaskAssistant.prototype.cleanup = function(event){
     this.controller.stopListening('NoteId', Mojo.Event.propertyChanged, this.dirtyHandler);
     this.controller.stopListening('LengthId', Mojo.Event.propertyChanged, this.dirtyHandler);
     this.controller.stopListening('TagsId', Mojo.Event.propertyChanged, this.dirtyHandler);
-    
+
+	this.controller.stopListening('subtaskListCount', Mojo.Event.tap, this.drawerTapHandler);
+	this.controller.stopListening('subtaskListing', Mojo.Event.listTap, this.subtaskListTapHandler);
+ 	this.controller.stopListening('subtaskListing', Mojo.Event.listAdd, this.subtaskListAddHandler);
+	this.controller.stopListening('ParentRow', Mojo.Event.tap, this.parentRowTapHandler);
+   
 };
+

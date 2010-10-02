@@ -16,7 +16,7 @@ CustomListEditAssistant.prototype.setup = function() {
 	this.controller.get('foldersListLabel').innerHTML = $L("Folders");
 	this.controller.get('contextsListLabel').innerHTML = $L("Contexts");
 	this.controller.get('goalsListLabel').innerHTML = $L("Goals");
-	//this.controller.get('tagsListLabel').innerHTML = $L("Tags");
+	this.controller.get('tagsListLabel').innerHTML = $L("Tags");
 	this.controller.get('priorityListLabel').innerHTML = $L("Priority");
 	this.controller.get('starredListLabel').innerHTML = $L("Starred");
 	this.controller.get('statusListLabel').innerHTML = $L("Status");
@@ -26,8 +26,10 @@ CustomListEditAssistant.prototype.setup = function() {
 	this.controller.get('DatesTitle').innerHTML = $L("Dates");
 	this.controller.get('dueDateListLabel').innerHTML = $L("Due Dates");
 	this.controller.get('DueDateToggleLabel').innerHTML = $L("Include Older");
+	this.controller.get('NoDueDateToggleLabel').innerHTML = $L("No Due Date");
 	this.controller.get('startDateListLabel').innerHTML = $L("Start Dates");
 	this.controller.get('StartDateToggleLabel').innerHTML = $L("Include Older");
+	this.controller.get('NoStartDateToggleLabel').innerHTML = $L("No Start Date");
 	
 	this.controller.get('SortTitle').innerHTML = $L('Sort') + " - " +$L("(drag to sort)");
 
@@ -116,8 +118,8 @@ CustomListEditAssistant.prototype.setup = function() {
 	}, 
 		this.tagsListModel = {
 			items: [
-				{label: 'Tag A', selected: true},
-				{label: 'Tag B', selected: true}
+				//{label: 'Tag A', selected: true},
+				//{label: 'Tag B', selected: true}
 			]
 		}
 	);
@@ -202,6 +204,11 @@ CustomListEditAssistant.prototype.setup = function() {
 			value: false
 		}
 	);
+	this.controller.setupWidget('NoDueDateToggle', {	},
+		this.noDueDateToggleModel ={
+			value: false
+		}
+	);
 	this.controller.setupWidget('dueDateDrawer', {}, {open: false});
 
 
@@ -223,6 +230,11 @@ CustomListEditAssistant.prototype.setup = function() {
 	);
 	this.controller.setupWidget('StartDateOlderToggle', {	},
 		this.startDateOlderToggleModel = {
+			value: false
+		}
+	);
+	this.controller.setupWidget('NoStartDateToggle', {	},
+		this.noStartDateToggleModel = {
 			value: false
 		}
 	);
@@ -249,7 +261,7 @@ CustomListEditAssistant.prototype.setup = function() {
 	this.controller.listen('foldersListLabel', Mojo.Event.tap, this.drawerTapHandler);
 	this.controller.listen('contextsListLabel', Mojo.Event.tap, this.drawerTapHandler);
 	this.controller.listen('goalsListLabel', Mojo.Event.tap, this.drawerTapHandler);
-	//this.controller.listen('tagsListLabel', Mojo.Event.tap, this.drawerTapHandler);
+	this.controller.listen('tagsListLabel', Mojo.Event.tap, this.drawerTapHandler);
 	this.controller.listen('priorityListLabel', Mojo.Event.tap, this.drawerTapHandler);
 	this.controller.listen('starredListLabel', Mojo.Event.tap, this.drawerTapHandler);
 	this.controller.listen('completedListLabel', Mojo.Event.tap, this.drawerTapHandler);
@@ -279,13 +291,37 @@ CustomListEditAssistant.prototype.setup = function() {
 	this.controller.setInitialFocusedElement(null); 
 };
 
-CustomListEditAssistant.prototype.dueDateChange = function (event) {
+CustomListEditAssistant.prototype.dueDateChange = function(event){
 	//Mojo.Log.info("Date Changed");
 	this.controller.get('dueDateListCount').innerHTML = "(" +
-		this.dueDateSelectorModel.choices[this.dueDateSelectorModel.value].label + ")";
+		this.dueDateSelectorModel.choices[this.dueDateSelectorModel.value].label +
+		")";
 	this.controller.get('startDateListCount').innerHTML = "(" +
-		this.startDateSelectorModel.choices[this.startDateSelectorModel.value].label + ")";
+		this.startDateSelectorModel.choices[this.startDateSelectorModel.value].label +
+		")";
 	
+	this.showDateOptions();
+};
+
+CustomListEditAssistant.prototype.showDateOptions = function () {
+	if (this.dueDateSelectorModel.value * 1 === 5 || this.dueDateSelectorModel.value * 1 === 6) {
+		this.controller.get("DueDateOlderRow").hide();
+		this.controller.get("NoDueDateRow").hide();
+	}
+	else {
+		this.controller.get("DueDateOlderRow").show();
+		this.controller.get("NoDueDateRow").show();
+		
+	}
+	if (this.startDateSelectorModel.value * 1 === 5 || this.startDateSelectorModel.value * 1 === 6) {
+		this.controller.get("StartDateOlderRow").hide();
+		this.controller.get("NoStartDateRow").hide();
+	}
+	else {
+		this.controller.get("StartDateOlderRow").show();
+		this.controller.get("NoStartDateRow").show();
+		
+	}
 };
 
 CustomListEditAssistant.prototype.listsTap = function (event) {
@@ -390,10 +426,17 @@ CustomListEditAssistant.prototype.gotCustomList = function (response) {
 	this.controller.modelChanged(this.dueDateSelectorModel);
 	this.dueDateOlderToggleModel.value = this.customList.duedatebefore;
 	this.controller.modelChanged(this.dueDateOlderToggleModel);
+	this.noDueDateToggleModel.value = this.customList.noduedates;
+	this.controller.modelChanged(this.noDueDateToggleModel);
+	
 	this.startDateSelectorModel.value = this.customList.startdate;
 	this.controller.modelChanged(this.startDateSelectorModel);
 	this.startDateOlderToggleModel.value = this.customList.startdatebefore;
 	this.controller.modelChanged(this.startDateOlderToggleModel);
+	this.noStartDateToggleModel.value = this.customList.nostartdates;
+	this.controller.modelChanged(this.noStartDateToggleModel);
+
+	this.showDateOptions();
 	
 	this.sortListModel.items = this.customList.sort;
 	this.controller.modelChanged(this.sortListModel);
@@ -478,27 +521,62 @@ CustomListEditAssistant.prototype.gotContextsDb = function(response){
 };
 
 CustomListEditAssistant.prototype.gotGoalsDb = function(response){
-    //Mojo.Log.info("Goals response is %j", response);
-    var i;
+	//Mojo.Log.info("Goals response is %j", response);
+	var i;
 	response.sort(this.sortByLabel.bind(this));
-   this.goalListModel.items = [{
-        id: 0,
-        label: $L("No Goal"),
-        value: 0
-    }];
-    this.goalListModel.items = this.goalListModel.items.concat(response);
+	this.goalListModel.items = [{
+		id: 0,
+		label: $L("No Goal"),
+		value: 0
+	}];
+	this.goalListModel.items = this.goalListModel.items.concat(response);
 	
-  	for (i=0; i < this.goalListModel.items.length; i++) {
+	for (i = 0; i < this.goalListModel.items.length; i++) {
 		if (this.customList.goals.indexOf(this.goalListModel.items[i].id) === -1) {
 			this.goalListModel.items[i].selected = true;
 		}
 		else {
 			this.goalListModel.items[i].selected = false;
 		}
-	}	
+	}
 	this.controller.modelChanged(this.goalListModel);
-  
-  	this.updateCounts();  
+	
+	var sqlString = "SELECT DISTINCT tag FROM tasks;GO;";
+	dao.retrieveTasksByString(sqlString, this.gotTagsDb.bind(this));
+};
+
+
+CustomListEditAssistant.prototype.gotTagsDb = function (response) {
+	//Mojo.Log.info("Tags are %j", response);
+	var tag, tagArray, i;
+	this.tagsListModel.items = [
+		{label: "No tags"}
+	];
+	response.each(function (tag, index){
+		//Mojo.Log.info("Tag %s %j", index, tag);
+		tagArray = tag.tag.split(",");
+		for (i = 0; i < tagArray.length; i++) {
+			tag = {};
+			tag.label = (tagArray[i].replace(/^\s+/,""));
+			tag.selected = true;
+			if (tag.label) {
+				this.tagsListModel.items.push(tag);
+			}
+		}	
+	}.bind(this));
+ 	for (i=0; i < this.tagsListModel.items.length; i++) {
+		if (!this.customList.tags || this.customList.tags.indexOf(this.tagsListModel.items[i].label) === -1) {
+			this.tagsListModel.items[i].selected = true;
+		}
+		else {
+			this.tagsListModel.items[i].selected = false;
+		}
+	}
+
+	//Mojo.Log.info("Tags array %j", this.tagsListModel.items);
+	this.controller.modelChanged(this.tagsListModel);
+	
+ 	this.updateCounts();  
 	this.dueDateChange();
 };
 
@@ -513,6 +591,9 @@ CustomListEditAssistant.prototype.updateCounts = function ( ) {
 	this.controller.get('goalsListCount').innerHTML = "(" + 
 		this.countSelected(this.goalListModel) + " " + $L("of") + " " +
 		this.goalListModel.items.length + ")";
+	this.controller.get('tagsListCount').innerHTML = "(" + 
+		this.countSelected(this.tagsListModel) + " " + $L("of") + " " +
+		this.tagsListModel.items.length + ")";
 	this.controller.get('statusListCount').innerHTML = "(" + 
 		this.countSelected(this.statusListModel) + " " + $L("of") + " " +
 		this.statusListModel.items.length + ")";
@@ -594,14 +675,23 @@ CustomListEditAssistant.prototype.saveCustomList = function () {
 			customList.goals.push(goal.id);
 		}
 	}); 
+	customList.tags = [];
+	this.tagsListModel.items.each(function (tag, index) {
+		if (!tag.selected) {
+			//Mojo.Log.info("Tag", tag.label, index);
+			customList.tags.push(tag.label);
+		}
+	}); 
 	customList.status = this.statusListModel.items;
 	customList.starred = this.starredListModel.items;
 	customList.completed = this.completedListModel.items;
 	customList.priority = this.priorityListModel.items;
 	customList.duedate = this.dueDateSelectorModel.value;
 	customList.duedatebefore = this.dueDateOlderToggleModel.value;
+	customList.noduedates = this.noDueDateToggleModel.value;
 	customList.startdate = this.startDateSelectorModel.value;
 	customList.startdatebefore = this.startDateOlderToggleModel.value;
+	customList.nostartdates = this.noStartDateToggleModel.value;
 	
 	customList.sort = this.sortListModel.items;
 	

@@ -537,6 +537,13 @@ PreferencesAssistant.prototype.fieldConfig = function (event) {
 	this.controller.stageController.pushScene('field-config');
 };
 
+PreferencesAssistant.prototype.aboutToActivate = function(callback) {
+	this.activateCallback = callback;
+	// get folders & contexts & goals for defaults
+	dao.retrieveFolders(this.gotFoldersDb.bind(this));
+	
+};
+
 PreferencesAssistant.prototype.activate = function(event) {
 	/* put in event handlers here that should only be in effect when this scene is active. For
 	   example, key handlers that are observing the document */
@@ -549,8 +556,6 @@ PreferencesAssistant.prototype.activate = function(event) {
 		this.controller.get('indentSubtasksRow').hide();
 	}
 	
-	// get folders & contexts & goals for defaults
-	dao.retrieveFolders(this.gotFoldersDb.bind(this));
 };
 
 PreferencesAssistant.prototype.gotFoldersDb = function (response) {
@@ -582,7 +587,7 @@ PreferencesAssistant.prototype.gotGoalsDb = function(response){
 	this.goalModel.value = MyAPP.prefs.defaultGoal;
 	this.controller.modelChanged(this.goalModel);
 	
-	// Update widget models
+	this.activateCallback();
 };
 
 PreferencesAssistant.prototype.deactivate = function(event) {

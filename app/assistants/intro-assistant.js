@@ -27,6 +27,7 @@ IntroAssistant.prototype.setup = function() {
 	/* use Mojo.View.render to render view templates and add them to the scene, if needed. */
 	
 	/* setup widgets here */
+	//var pro = (MyAPP.account.pro === 1) ? true : false;
 	this.controller.setupWidget('taskListing', 
 		{
 			itemTemplate: 'intro/taskRowTemplate',
@@ -39,17 +40,20 @@ IntroAssistant.prototype.setup = function() {
 			filterFunction: this.filterFunction.bind(this),
 			delay: 200,
 			formatters: {
-				duedate: this.formatDueDate.bind(this),
-				duetime: this.formatDueTime.bind(this),
-				folder: this.formatFolder.bind(this),
-				context: this.formatContext.bind(this),
-				star: this.formatStar.bind(this),
-				note: this.formatNote.bind(this),
-				hasnote: this.formatHasNote.bind(this),
-				priority: this.formatPriority.bind(this),
-				parent: this.formatParent.bind(this)
+				duedate: taskUtils.formatDueDate.bind(this),
+				duetime: taskUtils.formatDueTime.bind(this),
+				due: taskUtils.formatDue.bind(this),
+				folder: taskUtils.formatFolder.bind(this),
+				context: taskUtils.formatContext.bind(this),
+				star: taskUtils.formatStar.bind(this),
+				note: taskUtils.formatNote.bind(this),
+				hasnote: taskUtils.formatHasNote.bind(this),
+				priority: taskUtils.formatPriority.bind(this),
+				//parent: taskUtils.formatParent.bind(this),
+				indent: taskUtils.formatIndent.bind(this),
+				repeat: taskUtils.formatRepeat.bind(this)
 				},
-			reorderable: false
+			reorderable: true //pro
 		},
 		//this.taskListModel = {items: []}
 		//this.taskListModel = {items: [], disabled: false}
@@ -160,6 +164,8 @@ IntroAssistant.prototype.setup = function() {
 	
 	this.listDeleteHandler = this.listDelete.bindAsEventListener(this);
 	this.controller.listen('taskListing', Mojo.Event.listDelete, this.listDeleteHandler);
+	this.listReorderHandler = this.listReorder.bindAsEventListener(this);
+	this.controller.listen('taskListing', Mojo.Event.listReorder, this.listReorderHandler);
 
 	this.filterListHandler = this.filterList.bindAsEventListener(this);
 	this.controller.listen('taskListing', Mojo.Event.filter, this.filterListHandler);
@@ -241,11 +247,15 @@ IntroAssistant.prototype.filterFunction = function (filterString, listWidget, of
 				this.someTasks.push(s);
 			}
 			else if (this.foldersModel.items[s.folder].label.toUpperCase().indexOf(filterString.toUpperCase())>=0){
-				//Mojo.Log.info("Found string in location", i);
+				//Mojo.Log.info("Found string in folder", i);
 				this.someTasks.push(s);
 			}
 			else if (this.contextsModel.items[s.context].label.toUpperCase().indexOf(filterString.toUpperCase())>=0){
-				//Mojo.Log.info("Found string in location", i);
+				//Mojo.Log.info("Found string in context", i);
+				this.someTasks.push(s);
+			}
+			else if (s.tag.toUpperCase().indexOf(filterString.toUpperCase())>=0){
+				//Mojo.Log.info("Found string in tag", i);
 				this.someTasks.push(s);
 			}
 		}
@@ -344,7 +354,7 @@ IntroAssistant.prototype.doFilter = function (event) {
 	MyAPP.prefsDb.add('prefs', MyAPP.prefs, 
 		function () {},
 		function (event) {
-			Mojo.Log.info("Prefs DB failure %j", event);
+			//Mojo.Log.info("Prefs DB failure %j", event);
 		});
 	this.goTop = true;
 };
@@ -417,7 +427,7 @@ IntroAssistant.prototype.checkChange = function (event) {
 			event.model.completed = nowTime;
 			if (event.model.repeat && (event.model.duedate || event.model.startdate)) {
 				//diff = event.model.duedate *1 - event.model.startdate *1;
-				Mojo.Log.info("Repeat Task!", event.model.repeat);
+				//Mojo.Log.info("Repeat Task!", event.model.repeat);
 				repeatFromCompleted = false;
 				repeat = event.model.repeat;
 				if (repeat > 99) {
@@ -471,8 +481,8 @@ IntroAssistant.prototype.checkChange = function (event) {
 					}
 					newDueDate.setHours(0, 0, 0, 0);
 					newStartDate.setHours(0, 0, 0, 0);
-					Mojo.Log.info("New due date:", newDueDate);
-					Mojo.Log.info("New start date:", newStartDate);
+					//Mojo.Log.info("New due date:", newDueDate);
+					//Mojo.Log.info("New start date:", newStartDate);
 					newTask = Object.clone(event.model);
 					
 					// Add new task with completed true
@@ -495,6 +505,7 @@ IntroAssistant.prototype.checkChange = function (event) {
 					}
 				}
 			}
+		notify.updateNotifications(false, event.model.value+'');
 		}
 		else {
 			event.model.completed = '';
@@ -598,12 +609,14 @@ IntroAssistant.prototype.startSync = function () {
 					sync.initSync(this.syncFinished.bind(this), syncOutput);
 				}	
 				else {
-				Mojo.Log.info("Wifi connection not available!");			
-				//Mojo.Controller.errorDialog($L("Wifi connection not available!"));						
+					//Mojo.Log.info("Wifi connection not available!");			
+					Mojo.Controller.getAppController().showBanner("No wifi - Unable to sync!", null, "sync_error");
+					//Mojo.Controller.errorDialog($L("Wifi connection not available!"));						
 				}		
 			}
 			else {
-				Mojo.Log.info("Internet connection not available!");			
+				//Mojo.Log.info("Internet connection not available!");			
+				Mojo.Controller.getAppController().showBanner("No data connection - Unable to sync!", null, "sync_error");
 				//Mojo.Controller.errorDialog($L("Internet connection not available!"));	
 			}
 		}.bind(this),
@@ -628,7 +641,7 @@ IntroAssistant.prototype.setSyncTimer = function (delayInMinutes) {
 	};
 	
 	d = new Date();
-	d.setTime(d.getTime() + 0.5 * 60 * 1000);
+	d.setTime(d.getTime() + delayInMinutes * 60 * 1000);
 	mo = d.getUTCMonth() + 1;
 	if (mo < 10) {
 		mo = '0' + mo;
@@ -661,13 +674,13 @@ IntroAssistant.prototype.setSyncTimer = function (delayInMinutes) {
 	MyAPP.SyncTimerId = new Mojo.Service.Request("palm://com.palm.power/timeout", {
 		method: 'set',
 		parameters: {
-			key: MyAPP.appId + '.sync',
+			key: Mojo.appInfo.id + '.sync',
 			//'in': 	'00:05:00',
 			at: myDateString,
 			wakeup: true,
 			uri: 'palm://com.palm.applicationManager/launch',
 			params: {
-				'id': MyAPP.appId,
+				'id': Mojo.appInfo.id,
 				'params': {
 					action: 'sync',
 					dashInfo: dashInfo
@@ -695,7 +708,7 @@ IntroAssistant.prototype.editTask = function (taskValue) {
 
 IntroAssistant.prototype.listTap = function (event) {
 	//Mojo.Log.logProperties(event, 'event');
-	//Mojo.Log.info("Event: %j", Object.toJSON(event.item));
+	//Mojo.Log.info("List tap on: %j", Object.toJSON(event.item));
 	//debugObject(event.originalEvent.target, 'noFuncs');
 	var id = event.originalEvent.target.id,
 		className = event.originalEvent.target.className,
@@ -751,8 +764,8 @@ IntroAssistant.prototype.listTap = function (event) {
 		return;
 	}
 	this.controller.stageController.pushScene('addtask', 
-			//this.taskListModel.items[event.index],
-			this.someTasks[event.index].value);
+			event.item.value);
+			//this.someTasks[event.index].value);
 };
 
 IntroAssistant.prototype.listDelete = function (event) {
@@ -774,63 +787,62 @@ IntroAssistant.prototype.listDelete = function (event) {
 		});
 
 	}
+	
+	//Mojo.Log.info('List item %j', this.taskListModel.items[event.index]);
+	//Mojo.Log.info('List length %j', this.taskListModel.items.length);
+	
+	// clear parent property and redraw the list
+	var i, count = 0;
+	for (i = 0; i < this.taskListModel.items.length; i++) {
+		//Mojo.Log.info("Index", i);
+		//Mojo.Log.info("Item %j", this.taskListModel.items[i]);
+		if (this.taskListModel.items[i].value === event.item.value) {
+			//Mojo.Log.info("Fuch!");
+		}
+		if (this.taskListModel.items[i].parent === event.item.value) {
+			count++;
+			//Mojo.Log.info("Child Task", this.taskListModel.items[i].title);
+			this.taskListModel.items[i].parent = '';
+			this.taskListModel.items[i].indent = null;
+			//redraw any child tasks to remove indent.
+			this.controller.get('taskListing').mojo.getList().mojo.invalidateItems(event.index + count, 1);
+		}
+	}
+	//Mojo.Log.info("count", count);
+	//this.controller.get('taskListing').mojo.getList().mojo.invalidateItems(event.index, count);
+	this.taskListModel.items.splice(event.index, 1);
+	//this.someTasks.splice(event.index, 1);
+	//Mojo.Log.info('List length %j', this.taskListModel.items.length);
+};
+
+IntroAssistant.prototype.listReorder = function (event) {
+	var parent;
+	//Mojo.Log.info("List Reorder");
+	//Mojo.Log.info("Event indexes", event.fromIndex, event.toIndex);
+	//Mojo.Log.info("From item %j", this.taskListModel.items[event.fromIndex].title);
+	//Mojo.Log.info("To item %j", this.taskListModel.items[event.toIndex].title);
+	if (MyAPP.account.pro === 1) {
+		this.taskListModel.items[event.fromIndex].indent = true;
+		if (event.toIndex < event.fromIndex) {
+			parent = (this.taskListModel.items[event.toIndex-1].parent) ?
+				this.taskListModel.items[event.toIndex-1].parent :
+				this.taskListModel.items[event.toIndex - 1].value;
+		}
+		else {
+			parent = (this.taskListModel.items[event.toIndex].parent) ?
+				this.taskListModel.items[event.toIndex].parent :
+				this.taskListModel.items[event.toIndex].value;
+		}
+		this.taskListModel.items[event.fromIndex].parent = parent;
+		taskUtils.saveToDB(this.taskListModel.items[event.fromIndex], taskUtils.returnFromDb.bind(this));
+		this.taskListModel.items.splice(event.fromIndex, 1);
+		this.taskListModel.items.splice(event.toIndex, 0, event.item);
+		this.controller.get('taskListing').mojo.noticeUpdatedItems(event.fromIndex, event.toIndex);
+	}
 };
 
 IntroAssistant.prototype.listAdd = function (title) {
-	// Add a new task, using default values
-	var nowTime = Math.floor(new Date().getTime() / 1000) * 1000,
-		folder, context, repeat;
-		
-	folder = MyAPP.prefs.defaultFolder;
-	context = MyAPP.prefs.defaultContext;
-	
-	if (MyAPP.prefs.useCurrent) {
-		//Mojo.Log.info("List & Filter", MyAPP.prefs.showList, MyAPP.prefs.showFilter);
-		if (MyAPP.prefs.showList === 'folder') {
-			if (MyAPP.prefs.showFilter !== 'all') {
-				folder = MyAPP.prefs.showFilter;
-				//Mojo.Log.info("Folder:", folder);
-			}
-		}	
-		if (MyAPP.prefs.showList === 'context') {
-			if (MyAPP.prefs.showFilter !== 'all') {
-				context = MyAPP.prefs.showFilter;
-			}
-		}	
-	}
-	
-	repeat = MyAPP.prefs.defaultRepeat;
-	repeat = (MyAPP.prefs.repeatFromCompleted) ? repeat + 100 : repeat;
-	
-
-	var mytask = {
-		id: 0,
-		parent: "",
-		children: "",
-		title: title, // uses FilterList to add a new task...
-		tag: "",
-		folder: folder,
-		context: context,
-		goal: MyAPP.prefs.defaultGoal,
-		added: nowTime,
-		modified:nowTime,
-		duedate: utils.makeDueDate(MyAPP.prefs.defaultDueDate, ""),
-		startdate: utils.makeDueDate(MyAPP.prefs.defaultStartDate, ""),
-		duetime: "",
-		starttime: "",
-		reminder: 0,
-		repeat: repeat,
-		completed: "",
-		completedon: "",
-		rep_advanced: "",
-		status: MyAPP.prefs.defaultStatus,
-		star: 0,
-		priority: MyAPP.prefs.defaultPriority,
-		length: 0,
-		timer: 0,
-		note: "",
-		value: nowTime
-	};
+	var mytask = taskUtils.newTask(title);
 	dao.updateTask(mytask, function () {});
 	this.controller.stageController.pushScene('addtask', 
 			mytask.value);	
@@ -852,6 +864,9 @@ IntroAssistant.prototype.syncFinished = function (response) {
 	this.hideScrim.delay(10);
 	this.spinnerModel.spinning = false;
 	this.controller.modelChanged(this.spinnerModel);
+	
+	// update notifications if the dashboard is displayed
+	notify.updateNotifications(false);
 /*
 	this.controller.get("syncOutput").innerHTML = $L("Last Sync:") + " " +
 		(MyAPP.prefs.lastSync > 0) ? Mojo.Format.formatDate(new Date(MyAPP.prefs.lastSync), "medium") : "Not Synced!";
@@ -884,6 +899,9 @@ IntroAssistant.prototype.taskDivider = function(itemModel) {
 		case 'context':
 			return (this.contextsModel.items[itemModel.context]) ? 
 				this.contextsModel.items[itemModel.context].label : $L("No Context");
+		case 'goal':
+			return (this.goalsModel.items[itemModel.goal]) ? 
+				this.goalsModel.items[itemModel.goal].label : $L("No Goal");
 		case 'duedate':
 			today = new Date();
 			today.setHours(0, 0, 0, 0);
@@ -1054,6 +1072,7 @@ IntroAssistant.prototype.loadData = function () {
 	dao.retrieveFolders(this.gotFoldersDb.bind(this));
 	MyAPP.saveCookie.remove();
 	notify.getNextDate();
+	this.getTags();
 };
 
 IntroAssistant.prototype.gotFoldersDb = function (response) {
@@ -1169,10 +1188,10 @@ IntroAssistant.prototype.gotTasksDb = function (response) {
 						tags.push(thisTags[j]);
 					}
 				}
-				Mojo.Log.info("thisTags %j", thisTags);
-				Mojo.Log.info("tags %j", tags);
+				//Mojo.Log.info("thisTags %j", thisTags);
+				//Mojo.Log.info("tags %j", tags);
 				tags.each(function (tag) {
-					Mojo.Log.info("tag", tag);
+					//Mojo.Log.info("tag", tag);
 				});
 			}
 */			
@@ -1283,9 +1302,11 @@ IntroAssistant.prototype.gotTasksDb = function (response) {
 		for (j=0; j< this.tasks.length; j++) {
 			if (this.tasks[j].value === this.childTasks[i].parent) {
 				index = j;
+				this.childTasks[i].indent = true;
 			}
 		}
 		//Mojo.Log.info("index: ", index);
+
 		this.tasks.splice(index, 0, this.childTasks[i]);
 	}
 	//this.tasks.sort(this.specSort.bind(this));
@@ -1338,8 +1359,26 @@ IntroAssistant.prototype.calcImportance = function (task) {
 	return importance;	
 };
 
+IntroAssistant.prototype.getTags = function () {
+	var sqlString = "SELECT DISTINCT tag FROM tasks;GO;";
+	dao.retrieveTasksByString(sqlString, this.gotTagsDb.bind(this));
+};
+
+IntroAssistant.prototype.gotTagsDb = function (response) {
+	//Mojo.Log.info("Tags are %j", response);
+	var tags = [], tagArray, i;
+	response.each(function (tag, index){
+		//Mojo.Log.info("Tag %s %j", index, tag);
+		tagArray = tag.tag.split(",");
+		for (i = 0; i < tagArray.length; i++) {
+			tags.push(tagArray[i].replace(/^\s+/,""));
+		}	
+	});
+	//Mojo.Log.info("Tags array %j", tags);
+};
+
 IntroAssistant.prototype.getTasks = function (listType, filter) {
-	Mojo.Log.info("List: %s, filter: %s, sort %s",listType, filter, this.sortSpec);
+	//Mojo.Log.info("List: %s, filter: %s, sort %s",listType, filter, this.sortSpec);
 	var sqlString, date1, date2, val1, i;
 	//sqlString = "SELECT * FROM tasks WHERE (VALUE>0)";
 	sqlString = "SELECT t.id as id, t.parent, t.children, t.title, t.tag, " +
@@ -1352,9 +1391,12 @@ IntroAssistant.prototype.getTasks = function (listType, filter) {
 		"as folderValue, f.privy as folderPrivy, " +
 		"CASE WHEN t.folder=0 THEN '0' ELSE f.sortorder END as sortorder, " + 
 		"f.archived as folderArchived, f.modified " +
-		"as folderModified";
+		"as folderModified, c.value as contextValue, c.label as contextLabel, " +
+		"g.value as goalValue, g.label as goalLabel";
 	sqlString += " FROM tasks t";
 	sqlString += " LEFT OUTER JOIN folders f ON t.folder=f.value";
+	sqlString += " LEFT OUTER JOIN contexts c ON t.context=c.value";
+	sqlString += " LEFT OUTER JOIN goals g ON t.goal=g.value";
 	sqlString += " WHERE (t.value>0)";
 	
 	if (!MyAPP.prefs.showFutureTasks && listType !== 'custom') {
@@ -1502,6 +1544,14 @@ IntroAssistant.prototype.getTasks = function (listType, filter) {
 			this.customLists[filter].goals.each(function (goal) {
 				sqlString += " AND t.goal != " + goal;
 			});
+			this.customLists[filter].tags.each(function (tag) {
+				if (tag === "No tags") {
+					sqlString += " AND t.tag IS NOT ''";
+				}
+				else {
+					sqlString += " AND t.tag NOT LIKE '%" + tag + "%'";
+				}
+			});
 			this.customLists[filter].priority.each(function (priority) {
 				if (!priority.selected) {
 					sqlString += " AND t.priority != " + priority.value;
@@ -1560,10 +1610,15 @@ IntroAssistant.prototype.getTasks = function (listType, filter) {
 				sqlString += " AND (t.duedate = '')";
 			}
 			else if (this.customLists[filter].duedate < 5) {
-				sqlString += " AND (t.duedate < " + date1.getTime() + ")";
+				sqlString += " AND ((t.duedate < " + date1.getTime() + ")";
 				if (!this.customLists[filter].duedatebefore) {
 					sqlString += " AND (t.duedate >= " + date2.getTime() + ")";
 				}
+				if (this.customLists[filter].noduedates) {
+					// also get tasks without a duedate
+					sqlString += " OR (t.duedate = '')";					
+				}
+				sqlString += ")";
 			}
 			
 			// Select by start dates
@@ -1594,23 +1649,49 @@ IntroAssistant.prototype.getTasks = function (listType, filter) {
 				sqlString += " AND (t.startdate = '')";
 			}
 			else if (this.customLists[filter].startdate < 5) {
-				sqlString += " AND (t.startdate < " + date1.getTime() + ")";
+				sqlString += " AND ((t.startdate < " + date1.getTime() + ")";
 				if (!this.customLists[filter].startdatebefore) {
 					sqlString += " AND (t.startdate >= " + date2.getTime() + ")";
 				}
+				if (this.customLists[filter].nostartdates) {
+					// also get tasks without a startdate
+					sqlString += " OR (t.startdate = '')";					
+				}
+				sqlString += ")";
 			}
 			
 			break;
 	}
 	if (listType === 'custom' && filter > 0) {
 		sqlString += " ORDER BY ";
+/*
 		sqlString += (this.customLists[filter].sort[0].type === 'folder') ?
-			"sortorder" : "t." +this.customLists[filter].sort[0].type;
+			"sortorder" : (this.customLists[filter].sort[0].type === 'duedate') ?
+			"t.duedate " + this.customLists[filter].sort[0].oppdir + ", duetime"
+			: "t." + this.customLists[filter].sort[0].type;
 		sqlString += " " + this.customLists[filter].sort[0].oppdir;
-		for (i = 1; i < this.customLists[filter].sort.length; i ++) {
+
+*/		for (i = 0; i < this.customLists[filter].sort.length; i ++) {
+/*
 			sqlString += (this.customLists[filter].sort[i].type === 'folder') ?
 				", sortorder" : ", t." + this.customLists[filter].sort[i].type;
 			sqlString += " " + this.customLists[filter].sort[i].oppdir;
+
+*/			sqlString += (this.customLists[filter].sort[i].type === 'folder') ?
+				"sortorder" : 
+				(this.customLists[filter].sort[i].type === 'context') ?
+				"contextLabel" :
+				(this.customLists[filter].sort[i].type === 'goal') ?
+				"goalLabel" :
+				(this.customLists[filter].sort[i].type === 'duedate') ?
+				"t.duedate " + this.customLists[filter].sort[i].oppdir + ", t.duetime" :
+				(this.customLists[filter].sort[i].type === 'startdate') ?
+				"t.startdate " + this.customLists[filter].sort[i].oppdir + ", t.starttime" :
+				"t." + this.customLists[filter].sort[i].type;
+			sqlString += " " + this.customLists[filter].sort[i].oppdir;
+			if (i < this.customLists[filter].sort.length - 1) {
+				sqlString += ", ";
+			}
 		}
 	}
 	else {
@@ -1643,6 +1724,7 @@ IntroAssistant.prototype.cleanup = function(event) {
 	this.controller.stopListening('taskListing', Mojo.Event.propertyChange, this.checkChangeHandler);
 	this.controller.stopListening('taskListing', Mojo.Event.listDelete, this.listDeleteHandler);
 	this.controller.stopListening('taskListing', Mojo.Event.filter, this.filterListHandler);
+	this.controller.stopListening('taskListing', Mojo.Event.listReorder, this.listReorderHandler);
 		
     Mojo.Event.stopListening(this.controller.document, "keydown", this.onKeyDownHandler, true);
 
@@ -1656,6 +1738,7 @@ IntroAssistant.prototype.cleanup = function(event) {
 	// Delay "Sync on Quit" by 6 seconds so that app is closed before beginning sync
 	if (MyAPP.prefs.syncOnQuit && !MyAPP.prefs.syncOnInterval) {
 		// delay by 6 seconds to allow app to close...
+		//Mojo.Log.info("Setting sync at exit");
 		this.setSyncTimer(0.1);
 	}
 	  
@@ -1688,6 +1771,38 @@ IntroAssistant.prototype.sortImportance = function (a, b) {
 				}
 				else if (a.priority < b.priority) {
 					return -1;
+				}
+				else {
+					if (a.folderLabel > b.folderLabel) {
+						return -1;
+					}
+					else if (a.folderLabel < b.folderLabel) {
+						return 1;
+					}
+					else {
+						if (a.contextLabel > b.contextLabel) {
+							return -1;
+						}
+						else if (a.contextLabel < b.contextLabel) {
+							return 1;
+						}
+						else {
+							if (a.status > b.status) {
+								return 1;
+							}
+							else if (a.status < b.status) {
+								return -1;
+							}
+							else {
+								if (a.title > b.title) {
+									return -1;
+								}
+								else if (a.title < b.title) {
+									return 1;
+								}
+							}
+						}
+					}
 				}
 			}
 			
@@ -1779,107 +1894,4 @@ IntroAssistant.prototype.specSort = function (a, b) {
 		return 0;
 };
 
-
-// List formatters - provide "formatted" values for the list widget
-IntroAssistant.prototype.formatDueDate = function (value, model) {
-	//Mojo.Log.info("Model Duedate", value, model.duedate);
-	if (MyAPP.prefs.showDueDate) {
-		return (value) ? Mojo.Format.formatDate(new Date(value), {
-			date: 'medium'
-		}) : $L("no due date");
-	}
-	else {
-		return "";
-	}
-};
-
-IntroAssistant.prototype.formatDueTime = function (value, model) {
-	//Mojo.Log.info("Model Duedate", value, model.duedate);
-	if (MyAPP.prefs.showDueDate) {
-		return (value) ? Mojo.Format.formatDate(new Date(value), {
-			time: 'short'
-		}) : "";
-	}
-	else {
-		return "";
-	}
-};
-
-IntroAssistant.prototype.formatFolder = function (value, model) {
-	//Mojo.Log.info("Model Folder", value, model.folder);
-	if (MyAPP.prefs.showFolderAndContext) {
-		try {
-			return (value) ? this.foldersModel.items[value].label : $L("no folder");
-		} 
-		catch (e) {
-			//Mojo.Log.info("Oops folder error");
-			return $L("no folder");
-		}
-	}
-	else {
-		return "";
-	}
-};
-
-IntroAssistant.prototype.formatContext = function (value, model) {
-	//Mojo.Log.info("Model Context", value, model.context);
-	if (MyAPP.prefs.showFolderAndContext) {
-		try {
-			return (value) ? this.contextsModel.items[value].label : $L("no context");
-		} 
-		catch (e) {
-			Mojo.Log.info("Oops context error!");
-			return $L("no context");
-		}
-	}
-	else {
-		return "";
-	}
-};
-
-IntroAssistant.prototype.formatStar = function (value, model) {
-	//Mojo.Log.info("Model Duedate", value, model.duedate);
-	return (MyAPP.prefs.showStar) ? "0" : "";
-};
-
-IntroAssistant.prototype.formatHasNote = function (value, model) {
-	//Mojo.Log.info("Model Duedate", value, model.duedate);
-	if (MyAPP.prefs.showNotes && value) {
-		return "done-icon-note";
-	}
-	else {
-		return "";
-	}
-};
-
-IntroAssistant.prototype.formatNote = function (value, model) {
-	//Mojo.Log.info("Model Duedate", value, model.duedate);
-	if (value) {
-		return Mojo.Format.runTextIndexer(value.replace(/\n/g, "<br />"));
-	}
-	else {
-		return "";
-	}
-};
-
-IntroAssistant.prototype.formatPriority = function (value, model) {
-	//Mojo.Log.info("Model Duedate", value, model.duedate);
-	//return (value) ? "taskbox priority" + value : "";
-	if (MyAPP.prefs.showPriority) {
-		return "taskbox priority" + value;
-	}
-	else {
-		return "";
-	}
-};
-IntroAssistant.prototype.formatParent = function (value, model) {
-	//Mojo.Log.info("Model Duedate", value, model.duedate);
-	//return (value) ? "taskbox priority" + value : "";
-	if (value && MyAPP.prefs.indentSubtasks) {
-		return "subtask";
-	}
-	else {
-		return "";
-	}
-};
 

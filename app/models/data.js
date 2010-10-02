@@ -804,7 +804,7 @@ function DAO () {
 
 	// Update Task
 	this.updateTask = function (t, inCallback) {
-		//Mojo.Log.info("Entering DAO.updateTask() with %j", t);
+		Mojo.Log.info("Entering DAO.updateTask() with %j", t);
 
 		this.db.transaction((function (inTransaction) {
 			inTransaction.executeSql(sqlUpdateTask, 
@@ -906,10 +906,24 @@ function DAO () {
 				[inVal], 
 				function (inResultSet ) {
 					//Mojo.Log.info("Deleted task value:", inVal);
+					this.resetParent(inVal);
 					inCallback();
+				}.bind(this),
+				this.errorHandler);
+	    }).bind(this));
+	};
+	
+	this.resetParent = function (inVal) {
+		var sqlResetParent = "UPDATE 'tasks' SET parent='' where parent=?;GO;";
+		this.db.transaction((function (inTransaction, inResultSet) {
+			inTransaction.executeSql(sqlResetParent,
+				[inVal], 
+				function (inResultSet ) {
+					//Mojo.Log.info("Reset parents for children tasks of:", inVal);
 				},
 				this.errorHandler);
 	    }).bind(this));
+		
 	};
 	
 	// Delete ALL  tasks *** Danger Will Robinson! Danger! ***

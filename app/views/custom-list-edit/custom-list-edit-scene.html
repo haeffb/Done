@@ -39,7 +39,6 @@
 					<div id='goalsList' x-mojo-element='List'></div>
 				</div>
 			</div>
-<!--
 			<div class="palm-row">
 				<div class='label right' id='tagsListCount'>(2 of 2)</div>
 				<div class="title" id='tagsListLabel'>Tags</div>
@@ -47,7 +46,7 @@
 					<div id='tagsList' x-mojo-element='List'></div>
 				</div>
 			</div>
--->
+
 			<div class="palm-row">
 				<div class='label right' id='priorityListCount'>(2 of 2)</div>
 				<div class="title" id='priorityListLabel'>Priority</div>
@@ -89,7 +88,7 @@
 					<div class='palm-row first'>
 						<div id='DueDateSelector' x-mojo-element='ListSelector'></div>
 					</div
-					<div class='palm-row last'>
+					<div class='palm-row' id="DueDateOlderRow">
 						<div class="palm-row-wrapper">
 						<table class="palm-list-section-label">
 							<tr>
@@ -98,6 +97,21 @@
 								</td>
 								<td>
 									<div x-mojo-element="ToggleButton" id="DueDateOlderToggle" class="thirty"></div>
+									</div>
+								</td>	
+							</tr>
+						</table>
+						</div>
+					</div>
+					<div class='palm-row last' id='NoDueDateRow'>
+						<div class="palm-row-wrapper">
+						<table class="palm-list-section-label">
+							<tr>
+								<td>
+									<span x-mojo-loc="" class="repeatfromtitle" id="NoDueDateToggleLabel">No Due Date</span>		
+								</td>
+								<td>
+									<div x-mojo-element="ToggleButton" id="NoDueDateToggle" class="thirty"></div>
 									</div>
 								</td>	
 							</tr>
@@ -114,7 +128,7 @@
 					<div class='palm-row first'>
 						<div id='StartDateSelector' x-mojo-element='ListSelector'></div>
 					</div
-					<div class='palm-row last'>
+					<div class='palm-row' id='StartDateOlderRow'>
 						<div class="palm-row-wrapper">
 						<table class="palm-list-section-label">
 							<tr>
@@ -123,6 +137,21 @@
 								</td>
 								<td>
 									<div x-mojo-element="ToggleButton" id="StartDateOlderToggle" class="thirty"></div>
+									</div>
+								</td>	
+							</tr>
+						</table>
+						</div>
+					</div>
+					<div class='palm-row last' id='NoStartDateRow'>
+						<div class="palm-row-wrapper">
+						<table class="palm-list-section-label">
+							<tr>
+								<td>
+									<span x-mojo-loc="" class="repeatfromtitle" id="NoStartDateToggleLabel">No Start Date</span>		
+								</td>
+								<td>
+									<div x-mojo-element="ToggleButton" id="NoStartDateToggle" class="thirty"></div>
 									</div>
 								</td>	
 							</tr>

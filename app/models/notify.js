@@ -33,7 +33,7 @@ function Notify() {
 			"starttime DESC, startdate DESC, title ASC;GO;";
 
 */		sqlString = "SELECT * FROM tasks WHERE (duetime >" + now + ") " +
-			"OR (starttime >" + now + ") " +
+			"OR (starttime >" + now + ") AND (completed=0 OR completed='')" +
 			"ORDER BY duetime DESC, duedate DESC, " +
 			"starttime DESC, startdate DESC, title ASC;GO;";
 		//Mojo.Log.info("Now:", new Date().getTime(), sqlString);
@@ -78,7 +78,7 @@ function Notify() {
 				}
 			}
 		}
-		Mojo.Log.info("setting alarm at", thisDate);
+		//Mojo.Log.info("setting alarm at", thisDate);
 		this.setAlarm(thisDate);
 	};
 	
@@ -102,9 +102,26 @@ function Notify() {
 					}
 				},
 				onSuccess: function(){
-					Mojo.Log.info("Success in Setting up Notification at", myDateString);
+					//Mojo.Log.info("Success in Setting up Notification at", myDateString);
 				}.bind(this)
 			});
+		}
+	};
+	
+	this.updateNotifications = function (launch, taskValue) {
+		var dashboardStage = Mojo.Controller.getAppController().getStageProxy("dashnotify");
+		if (launch || dashboardStage) {
+			//Mojo.Log.info("Updating Notifications");
+			new Mojo.Service.Request("palm://com.palm.applicationManager/launch", {
+				parameters: {
+					'id': Mojo.appInfo.id,
+					'params': {
+						action: 'notify',
+						taskValue: taskValue || null
+					}
+				}
+			});
+			//Mojo.Log.info("Called relaunch with Notify");
 		}
 	};
 		
@@ -115,7 +132,7 @@ function Notify() {
 					"key": Mojo.appInfo.id + '.notify'
 				},
 				onSuccess: function(){
-					Mojo.Log.info("Cleared Notification Timer!");
+					//Mojo.Log.info("Cleared Notification Timer!");
 				}
 			});
 		

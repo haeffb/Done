@@ -57,7 +57,7 @@ CustomListsAssistant.prototype.deleteItem = function (event) {
 		MyAPP.prefsDb.add('prefs', MyAPP.prefs, 
 			function () {},
 			function (event) {
-				Mojo.Log.info("Prefs DB failure %j", event);
+				//Mojo.Log.info("Prefs DB failure %j", event);
 		});
 	}
 	
@@ -79,6 +79,7 @@ CustomListsAssistant.prototype.addItem = function (event) {
 		folders: [],
 		contexts: [],
 		goals: [],
+		tags: [],
 		priority: [
 			{label: $L("3-Top"), selected: true, value: 3},		
 			{label: $L("2-High"), selected: true, value: 2}, 
@@ -88,8 +89,10 @@ CustomListsAssistant.prototype.addItem = function (event) {
 		],
 		duedate: 6,
 		duedatebefore: true,
+		noduedates: true,
 		startdate: 6,
 		startdatebefore: true,
+		nostartdates: true,
 		starred: [
 			{label: $L("Starred"), selected: true, value: 0},
 			{label: $L("Not Starred"), selected: true, value: 1}

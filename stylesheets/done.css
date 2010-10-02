@@ -24,6 +24,15 @@
 	font-size: 16px;
 }
 
+.due {
+	font-weight: bolder;
+	color: #0a0 !important;
+}
+
+.overdue {
+	color: #f00 !important;
+}
+
 .textfield-group .add-task-title {
   color: #eee;
 }
@@ -133,8 +142,17 @@ body.palm-default {
 	margin:2px 8px;
 	float:left;
 }
+.palm-row .recur .checkbox {
+	background:url(../images/checkbox-black-recur.png) top left no-repeat !important;
+	width:40px;
+	height: 36px;
+	top: 15px;
+	margin:2px 8px;
+	float:left;	
+}
 
-.palm-row .left .checkbox.true {
+.palm-row .left .checkbox.true,
+.palm-row .recur .checkbox.true {
 	background-position:bottom left;
 }
 
@@ -357,18 +375,31 @@ body.palm-default {
  .done-icon-status 		{ background: url(../images/icon-status-32x32.png) center no-repeat; }
  .done-icon-people 		{ background: url(../images/icon-people-32x32.png) center no-repeat; }
  .done-icon-custom 		{ background: url(../images/icon-custom-32x32.png) center no-repeat; }
- .done-icon-hotfire 	{ background: url(../images/icon-hotfire-32x32.png) center no-repeat; }
- .done-icon-recur {
- 	position: relative;
-	left: 5px;
-	top: 5px;
-	z-index: 999999;
-  	background: url(../images/icon-recurr-25x25.png) center no-repeat;
- }
-.palm-menu-icon.copytask 	{ background-image: url(../images/icon-copytasks-32x32.png); }
-.palm-menu-icon.savetask 	{ background-image: url(../images/icon-savetask-32x32.png); }
-.palm-menu-icon.sync 		{ 	background: url(../images/menu-icon-sync.png) }
+ .done-icon-hotfire 	{ background: url(../images/icon-hotfire-32x32.png) center no-repeat; } 
  
+.palm-menu-icon.copytask 	{ background-image: url(../images/icon-copytasks-32x32.png); }
+.palm-menu-icon.sub-task 	{ background-image: url(../images/icon-subtask-32x32.png); }
+.palm-menu-icon.savetask 	{ background-image: url(../images/icon-savetask-32x32.png); }
+/* 
+ .palm-menu-icon.sync 		{ 	background: url(../images/menu-icon-sync.png) }
+ */
+ 
+.done-icon-recur {
+	position: absolute;
+	top: 5px;
+	left: 5px;
+ 	z-index: 999999;
+ 	background: url(../images/icon-recurr-25x25.png) center no-repeat;
+ }
+
+ .subtaskIcon {
+ 	margin-top: 15px;
+	margin-right: 5px;
+	height: 32px;
+	width: 32px;
+ 	float: right;
+	background: url(../images/menu-icon-back.png) top left no-repeat;
+ }
  .done-icon-note {
  	height: 32px;
 	width: 32px;

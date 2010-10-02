@@ -1,0 +1,33 @@
+
+<div class='palm-row' x-mojo-touch-feedback='momentary'>
+	<div class='palm-row-wrapper'>
+		<div name="subtask" class="#{parentFormatted}"></div>
+		<div id="taskCheck" name='taskCheck' class="left" x-mojo-element='CheckBox'>
+		</div>
+			<!--<div id='recur' class="taskbox2 done-icon-recur"></div> -->
+
+		<div name='priorityIcon' class='tasklist #{priorityFormatted}'></div>
+		<div name='noteIcon' class='#{hasnoteFormatted}'></div>
+		<div name='subtaskIcon' class='subtaskIcon'></div>
+		<div class='star-list-container-#{starFormatted} done-icon-star-#{star}-small'></div>
+
+		<div name='taskDue' class='tasklist taskdue dueformat-#{dueFormat}'>	
+			#{duedateFormatted} #{duetimeFormatted}
+		</div>
+		<div name='taskTitle' class='tasktitle #{wrap}'>
+			#{title}
+		</div>
+		
+		<div name='taskFolder' class='tasklist taskfolder truncating-text'>#{folderFormatted}</div>
+		<div name='taskContext' class='tasklist taskcontext'>#{contextFormatted}</div> 
+
+		<div name="notesDrawer" class="note-container" style="display: none;">
+			<div class="palm-drawer-container">
+				<div class="palm-drawer-contents">
+					<div class='mynote'>#{-noteFormatted}</div>
+				</div>
+			</div> 
+		</div>
+		
+	</div>
+</div>

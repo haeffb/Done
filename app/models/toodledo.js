@@ -18,7 +18,7 @@ function API () {
 	this.doAPI = function (apiString, inCallback) {
 		//Mojo.Log.info("---Entering doAPI in Toodledo---");
 		var error, fullApiString = apiString + ";key=" + this.key;
-		Mojo.Log.info("apiString is ", fullApiString);
+		//Mojo.Log.info("apiString is ", fullApiString);
 		new Ajax.Request(fullApiString, {
 	  		method: 'get',
 	  		onSuccess: function(response){
@@ -44,7 +44,7 @@ function API () {
 	this.doAPIJSON = function (apiString, inCallback) {
 		//Mojo.Log.info("---Entering doAPI JSON in Toodledo---");
 		var fullApiString = apiString + ";key=" + this.key;
-		Mojo.Log.info("apiString is ", fullApiString);
+		//Mojo.Log.info("apiString is ", fullApiString);
 		new Ajax.Request(fullApiString, {
 	  		method: 'get',
 	  		onSuccess: function(response){
@@ -100,7 +100,7 @@ function API () {
 			MyAPP.prefsDb.add('prefs', MyAPP.prefs, 
 				function () {},
 				function (event) {
-					Mojo.Log.info("Prefs DB failure %j", event);
+					//Mojo.Log.info("Prefs DB failure %j", event);
 			});
 
 			inCallback();
@@ -242,7 +242,7 @@ function API () {
 	
 	this.formatDate = function (unixtimestamp, getTime) {
 		if (!unixtimestamp) {
-			return "0";
+			return "0000-00-00";
 		}
 		var dateString = "", d = new Date(unixtimestamp), t;
 		dateString = d.getFullYear();
@@ -291,7 +291,7 @@ function API () {
 					apiString += ";" + prop + "=" + this.formatDate(task[prop], false);
 				}
 				else if (prop === 'completed') {
-					Mojo.Log.info("Completed:", task[prop]);
+					//Mojo.Log.info("Completed:", task[prop]);
 					if (task[prop]) {
 						apiString += ";completed=1;completedon=" + this.formatDate(task[prop], false);
 					}
@@ -445,7 +445,7 @@ function API () {
 	// **************************************************************
 
 	this.hadFailure = function (error) {
-		Mojo.Log.info("****** AJAX REQUEST FAILURE *******");
+		//Mojo.Log.info("****** AJAX REQUEST FAILURE *******");
 		Mojo.Controller.errorDialog("Unable to connect to Toodledo");
 	};
 	
@@ -460,6 +460,7 @@ function API () {
 		bString = bString.replace(/;/g, "%3B");
 		bString = bString.replace(/\n/g, "%0D%0A");
 		bString = bString.replace(/#/g,"%23");
+		bString = bString.replace(/\x2B/g,"%2B");
 		//Mojo.Log.info("New String: " + bString);
 		return bString;
 	};

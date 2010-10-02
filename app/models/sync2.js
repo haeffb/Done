@@ -132,7 +132,7 @@ function Sync(){
 			MyAPP.prefsDb.add('account', MyAPP.account, 
 				function () {},
 				function (event) {
-					Mojo.Log.info("Prefs DB failure %j", event);
+					//Mojo.Log.info("Prefs DB failure %j", event);
 				}
 			);
 			
@@ -199,7 +199,7 @@ function Sync(){
 		for (i = 0; i < tasks.length; i++) {
 			//Set sync to true - will change to false later if
 			//task was also edited on web
-			Mojo.Log.info("Local task:", i, tasks[i].title);
+			//Mojo.Log.info("Local task:", i, tasks[i].title);
 			tasks[i].sync = true;
 		}
 
@@ -208,7 +208,7 @@ function Sync(){
 		
 		//Check for new/edited tasks on web:
 		//Mojo.Log.info("MyAPP.local %j", MyAPP.local);
-		Mojo.Log.info("Last web add/edit:", MyAPP.account.lastaddedit, "prev sync:", MyAPP.local.lastservertaskmod);
+		//Mojo.Log.info("Last web add/edit:", MyAPP.account.lastaddedit, "prev sync:", MyAPP.local.lastservertaskmod);
 		if ((MyAPP.account.lastaddedit) > MyAPP.local.lastservertaskmod) { //this.lastSync * 1) {
 			// save last server tasks modification date for use in getting tasks
 			this.lastservertaskmod = MyAPP.local.lastservertaskmod;
@@ -386,7 +386,7 @@ function Sync(){
 				//Mojo.Log.info("J", j, this.webEditedTasks[j].value);
 				if (''+this.localEditedTasks[i].value === ''+this.webEditedTasks[j].value) {
 					// uh-oh!
-					Mojo.Log.info("UH OH! TASK EDITED IN BOTH PLACES!!!!", this.webEditedTasks[j].id, this.webEditedTasks[j].title);
+					//Mojo.Log.info("UH OH! TASK EDITED IN BOTH PLACES!!!!", this.webEditedTasks[j].id, this.webEditedTasks[j].title);
 					this.localEditedTasks[i].sync = false;
 					this.webEditedTasks[j].sync = false;
 				}
@@ -407,7 +407,7 @@ function Sync(){
 				//Mojo.Log.info("Sending local task edit to web", this.localEditedTasks[i].title);
 				if (this.localEditedTasks[i].id) {
 					api.editTask(this.localEditedTasks[i], function(){
-						Mojo.Log.info("Edited web task!", this.localEditedTasks[i].title);
+						//Mojo.Log.info("Edited web task!");
 					});
 				}
 				else {
@@ -489,8 +489,8 @@ function Sync(){
 	
 	this.taskAdded = function(task, response){
 		//Mojo.Log.info("Task Added!?!?!");
-		Mojo.Log.info("response: %j", response);
-		Mojo.Log.info("Task added: %j", task);
+		//Mojo.Log.info("response: %j", response);
+		//Mojo.Log.info("Task added: %j", task);
 		if (response.added) {
 			//delete original (local only) task
 			//Mojo.Log.info("Deleting task with value: ", task.value);
@@ -645,8 +645,8 @@ function Sync(){
 		}
 		//check for folder added/edited on device:
 		if (MyAPP.local.lastfolderedit > this.lastSync) {
-			Mojo.Log.info("last folder edit", MyAPP.local.lastfolderedit, this.lastSync);
-			Mojo.Log.info("Folder added/edited on device!");
+			//Mojo.Log.info("last folder edit", MyAPP.local.lastfolderedit, this.lastSync);
+			//Mojo.Log.info("Folder added/edited on device!");
 			dao.retrieveFolders(this.gotLocalFolders.bind(this));
 		}
 		else {
@@ -795,7 +795,7 @@ function Sync(){
 				MyAPP.prefsDb.add('prefs', MyAPP.prefs, 
 					function () {},
 					function (event) {
-						Mojo.Log.info("Prefs DB failure %j", event);
+						//Mojo.Log.info("Prefs DB failure %j", event);
 					}
 				);
 			}
@@ -832,7 +832,7 @@ function Sync(){
 				MyAPP.prefsDb.add('prefs', MyAPP.prefs, 
 					function () {},
 					function (event) {
-						Mojo.Log.info("Prefs DB failure %j", event);
+						//Mojo.Log.info("Prefs DB failure %j", event);
 					}
 				);
 			}
@@ -871,7 +871,7 @@ function Sync(){
 				MyAPP.prefsDb.add('prefs', MyAPP.prefs, 
 					function () {},
 					function (event) {
-						Mojo.Log.info("Prefs DB failure %j", event);
+						//Mojo.Log.info("Prefs DB failure %j", event);
 					}
 				);
 			}
@@ -1065,7 +1065,7 @@ function Sync(){
 			MyAPP.prefsDb.add('prefs', MyAPP.prefs, 
 				function () {},
 				function (event) {
-					Mojo.Log.info("Prefs DB failure %j", event);
+					//Mojo.Log.info("Prefs DB failure %j", event);
 				}
 			);
 			
@@ -1078,7 +1078,7 @@ function Sync(){
 			MyAPP.prefsDb.add('local', MyAPP.local, 
 				function () {},
 				function (event) {
-					Mojo.Log.info("Prefs DB failure %j", event);
+					//Mojo.Log.info("Prefs DB failure %j", event);
 				}
 			);
 		
