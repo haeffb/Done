@@ -151,7 +151,7 @@
 "DAO ERROR! - Could not Open Database!": "Datenbankfehler: Konnte Datenbank nicht öffnen",
 "DAO ERROR": "Datenbankfehler",
 "Enable Notifications" : "Benachrichtigungen",
-"Daily Reminder": "Tägliche Erinnerung",
+"Daily Notifications": "Tägliche Erinnerung",
 "Notification Settings": "Benachrichtigungseinstellungen",
 "Simple": "Einfach",
 "Nav Arrows": "Blättern",
@@ -207,6 +207,7 @@
 "Start Dates": "Startdatum",
 "Sort": "Sortieren",
 "Length": "Länge",
+"(min.)": "(min.)",
 "Modified": "Geändert",
 "Added": "Hinzugefügt",
 "ASC": "Aufsteigend",
@@ -229,6 +230,12 @@
 "Lavender": "Lavendel",
 "Light Gray": "Hellgrau",
 "Light Blue": "Hellblau",
-"Plum": "Pflaume"
+"Plum": "Pflaume",
+"Parent": "Hauptaufgabe",
+"Subtask": "Teilaufgabe",
+"Subtasks": "Teilaufgaben",
+"Add subtask": "Teilaufgabe hinzufügen",
+"Show Notifications": "Benachrichtigung anzeigen",
+"Show Tags": "Tags anzeigen"
 }
 

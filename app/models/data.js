@@ -760,18 +760,21 @@ function DAO () {
 		"duetime, starttime, reminder, repeat, completed, rep_advanced, status, " +
 		"star, priority, length, timer, note, value) VALUES " +
 		"(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); GO;";
-/*
-	var sqlUpdateTask = "UPDATE 'tasks' SET parent=?, children=?, title=?, tag=?, " +
-		"folder=?, context=?, goal=?, added=?, modified=?, duedate=?, started=?, " +
-		"duetime=?, starttime=?, reminder=?, repeat=?, completed=?, rep_advanced=?, status=?, " +
-		"star=?, priority=?, length=?, timer=?, note=?, id=? WHERE value=?; GO;";
 
-*/
+	var sqlUpdateTask = "UPDATE 'tasks' SET id=?, parent=?, children=?, title=?, tag=?, " +
+		"folder=?, context=?, goal=?, added=?, modified=?, duedate=?, startdate=?, " +
+		"duetime=?, starttime=?, reminder=?, repeat=?, completed=?, rep_advanced=?, status=?, " +
+		"star=?, priority=?, length=?, timer=?, note=? WHERE value=?; GO;";
+
+/*
+
 	var sqlUpdateTask = "REPLACE INTO 'tasks' (id, parent, children, title, tag, " +
 		"folder, context, goal, added, modified, duedate, startdate, " +
 		"duetime, starttime, reminder, repeat, completed, rep_advanced, status, " +
 		"star, priority, length, timer, note, value) VALUES " +
 		"(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?); GO;";
+
+*/
 	var sqlRetrieveAllTasks = "SELECT * FROM tasks; GO;";
 	var sqlRetrieveTasksFromDate = "SELECT * FROM tasks WHERE (modified > ? OR id = 0); GO;";
 	var sqlDeleteTaskId = "DELETE FROM tasks WHERE id=?; GO;";
@@ -813,9 +816,14 @@ function DAO () {
 					t.reminder, t.repeat, t.completed, t.rep_advanced, t.status,
 					t.star, t.priority, t.length, t.timer, t.note, t.value ], 
 				function(inTransaction, inResultSet){
+					//Mojo.Log.info("Results %j", inResultSet.rows.length);
+					//debugObject(inResultSet.rows, "noFuncs");
 					inCallback();
-				}, 
-				this.errorHandler);
+				},
+				function (error) {
+					Mojo.Log.info("Error %j", error);
+				});
+				//this.errorHandler);
 	    }).bind(this));
 		
 	}; // End updateTask().

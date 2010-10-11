@@ -45,6 +45,7 @@ IntroAssistant.prototype.setup = function() {
 				due: taskUtils.formatDue.bind(this),
 				folder: taskUtils.formatFolder.bind(this),
 				context: taskUtils.formatContext.bind(this),
+				tag: taskUtils.formatTags.bind(this),
 				star: taskUtils.formatStar.bind(this),
 				note: taskUtils.formatNote.bind(this),
 				hasnote: taskUtils.formatHasNote.bind(this),
@@ -489,7 +490,7 @@ IntroAssistant.prototype.checkChange = function (event) {
 					newTask.repeat = 0;
 					newTask.id = 0;
 					newTask.value = nowTime;
-					dao.updateTask(newTask, function(){
+					dao.createTask(newTask, function(){
 						//Mojo.Log.info("Created repeat task");
 					});
 					
@@ -843,7 +844,7 @@ IntroAssistant.prototype.listReorder = function (event) {
 
 IntroAssistant.prototype.listAdd = function (title) {
 	var mytask = taskUtils.newTask(title);
-	dao.updateTask(mytask, function () {});
+	dao.createTask(mytask, function () {});
 	this.controller.stageController.pushScene('addtask', 
 			mytask.value);	
 };
@@ -916,7 +917,7 @@ IntroAssistant.prototype.taskDivider = function(itemModel) {
 				return $L("No Due Date");
 			}
 			else if (itemModel.duedate < today.getTime()) {
-				return $L("Overdue!");
+				return $L("Overdue") +"!";
 			}
 			else if (itemModel.duedate >= today.getTime() &&
 					itemModel.duedate < tomorrow.getTime()) {
@@ -1203,7 +1204,10 @@ IntroAssistant.prototype.gotTasksDb = function (response) {
 			if (response[i].completed) {
 				// Set boolean value for completed tasks
 				response[i].done = true;
-				if (this.showListModel.value === 'completed') {
+				if (this.showListModel.value === 'completed' || 
+						(response[i].completed > doneTime.getTime() && 
+						// showCompleted is backwards!!!
+						!MyAPP.prefs.showCompleted)) {
 					showTask = true;
 				}
 				if (this.showListModel.value === 'custom' && this.showFilterModel.value > 0) {

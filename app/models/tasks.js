@@ -51,8 +51,8 @@ var taskUtils = {
 			status: MyAPP.prefs.defaultStatus,
 			star: 0,
 			priority: MyAPP.prefs.defaultPriority,
-			length: 0,
-			timer: 0,
+			length: "",
+			timer: "",
 			note: "",
 			value: nowTime
 		};
@@ -178,10 +178,10 @@ var taskUtils = {
 			tomorrow.setDate(tomorrow.getDate() + 1);
 			
 			if (value >= today && value < tomorrow) {
-				return "Today";
+				return $L("Today");
 			}
 			else if (value >= tomorrow && value < tomorrow.setHours(tomorrow.getHours() + 24)) {
-				return "Tomorrow";
+				return $L("Tomorrow");
 			}
 			return (value) ? Mojo.Format.formatDate(new Date(value), {
 				date: 'medium'
@@ -193,6 +193,7 @@ var taskUtils = {
 	},
 	
 	formatDue: function (value, model) {
+		//apply CSS class for overdue and due today
 		if (model.duedate && model.duedate < new Date().getTime() ) {
 			if (model.duedate && model.duedate < (new Date().getTime() - 86400000)) {
 				return "due overdue";
@@ -200,6 +201,9 @@ var taskUtils = {
 			else {
 				return "due";
 			}
+		}
+		else {
+			return "";
 		}
 	},
 
@@ -241,6 +245,16 @@ var taskUtils = {
 				//Mojo.Log.info("Oops context error!");
 				return $L("no context");
 			}
+		}
+		else {
+			return "";
+		}
+	},
+
+	formatTags: function (value, model) {
+		//Mojo.Log.info("Model Tags", value, model.tag);
+		if (MyAPP.prefs.showTags) {
+			return (value) ? value : ""; //$L("no tags");
 		}
 		else {
 			return "";

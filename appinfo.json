@@ -1,22 +1,15 @@
 {
-	"id": "com.tigers.app.done",
-	"version": "0.5.0",
-	"ToodledoId": "DoneApp",
+	"id": "com.tigers.beta.done",
+	"version": "0.5.3",
+	"ToodledoId": "DoneBeta",
 	"copy": "&copy; Copyright 2010 Brian A. Haeffner.",
 	"vendor": "Tiger Country Software",
 	"type": "web",
 	"main": "index.html",
 	"title": "Done!",
-	"icon": "done64.png",
+	"icon": "done64b.png",
 	"smallicon": "done32.png",
 	"miniicon": "done32.png",
 	"keywords": ["done", "task", "todo"],
-	"noWindow": "true",
- 	"universalSearch" : {
-		"action" :  { 
-			"displayName" : "New task in Done!",
-			"url"         : "com.tigers.app.done",
-			"launchParam" : "addtask"
-		}                                                                
-	}
+	"noWindow": "true"
 }

@@ -452,6 +452,23 @@ function Sync(){
 		
 	};
 	
+	
+	this.checkExisting = function (task, response) {
+		Mojo.Log.info("response %j", response);
+		Mojo.Log.info("task %j", task);
+		if (response.length) {
+			//existing task
+			Mojo.Log.info("Updating existing task from web");
+			dao.updateTask(task, this.finishTransactions.bind(this, "tasks"));
+		}
+		else {
+			//new task
+			Mojo.Log.info("Creating new task from web");
+			dao.createTask(task, this.finishTransactions.bind(this, "tasks"));
+		}
+		
+	};
+	
 	this.syncWebToLocal = function () {
 		//Sync web updates to local
 		//Track number of database adds so we know when we've completed.
@@ -460,7 +477,9 @@ function Sync(){
 				//Mojo.Log.info("Adding web task:", j, this.webEditedTasks[j].title);
 				this.count.tasks += 1;
 				if (this.webEditedTasks[j].sync || !this.localWins) {
-					dao.updateTask(this.webEditedTasks[j], this.finishTransactions.bind(this, 'tasks'));
+					//dao.updateTask(this.webEditedTasks[j], this.finishTransactions.bind(this, 'tasks'));
+					sqlString = "SELECT * FROM tasks WHERE value =" + this.webEditedTasks[j].value;
+					dao.retrieveTasksByString(sqlString, this.checkExisting.bind(this, this.webEditedTasks[j]));
 				}
 				else {
 					this.finishTransactions('tasks');

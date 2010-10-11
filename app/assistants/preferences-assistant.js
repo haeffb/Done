@@ -278,6 +278,15 @@ PreferencesAssistant.prototype.setup = function() {
 		});
 	this.controller.get('showFolderLabel').innerHTML = $L("Show Folder/Context");
 	
+	// Add Show Tags toggle
+	this.controller.setupWidget('showTagsToggleId',
+		this.toggleAttributes,
+		this.showTagsModel = {
+			value: MyAPP.prefs.showTags,
+			disabled: false			
+		});
+	this.controller.get('showTagsLabel').innerHTML = $L("Show Tags");
+	
 	// Add Indent Subtasks toggle
 	this.controller.setupWidget('indentSubtasksToggleId',
 		this.toggleAttributes,
@@ -609,6 +618,7 @@ PreferencesAssistant.prototype.deactivate = function(event) {
 	//MyAPP.prefs.allowRotate = this.allowRotateModel.value;
 	MyAPP.prefs.showStar = this.showStarModel.value;
 	MyAPP.prefs.showFolderAndContext = this.showFolderModel.value;
+	MyAPP.prefs.showTags = this.showTagsModel.value;
 	//MyAPP.prefs.showDueDate = this.showDueDateModel.value;
 	MyAPP.prefs.showDeferred = this.showDeferredModel.value;
 	MyAPP.prefs.showFutureTasks = this.showFutureTasksModel.value;

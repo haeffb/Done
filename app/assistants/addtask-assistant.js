@@ -15,6 +15,10 @@ AddtaskAssistant.prototype.setup = function(){
     this.controller.get('repeatFromLabel').innerHTML = $L("Repeat From");
     this.controller.get('notesLabel').innerHTML = $L("Note");
     this.controller.get('tagsLabel').innerHTML = $L("Tags");
+    this.controller.get('starLabel').innerHTML = $L("Starred");
+    this.controller.get('parentLabel').innerHTML = $L("Parent");
+    this.controller.get('subtaskListLabel').innerHTML = $L("Subtasks");
+	this.controller.get('lengthLabel').innerHTML = $L("Length");
     
     
 	this.controller.get("yellowpad").style.backgroundColor = MyAPP.colors[MyAPP.prefs.color].color; //"#D2F7D4";
@@ -299,7 +303,7 @@ AddtaskAssistant.prototype.setup = function(){
 	
     // Add Length text input field
     this.controller.setupWidget("LengthId", this.lengthAttributes = {
-        hintText: $L('Length (min)') + '...',
+        hintText: $L('Length') + " " + $L('(min.)') + '...',
         multiline: true,
         enterSubmits: false,
         autoFocus: false,
@@ -439,6 +443,11 @@ AddtaskAssistant.prototype.setup = function(){
 
 	this.checkChangeHandlerSub = this.checkChangeSub.bindAsEventListener(this);
 	this.controller.listen('subtaskListing', Mojo.Event.propertyChange, this.checkChangeHandlerSub);
+
+	//hide parent and subtask fields
+		this.controller.get("SubtaskRow").hide();
+		this.controller.get("ParentRow").hide();	
+
     
 };
 
@@ -473,7 +482,7 @@ AddtaskAssistant.prototype.subtaskListAdd = function (title) {
 	mytask.context = this.task.context;
 	mytask.tag = this.task.tag;
 	mytask.status = this.task.status;
-	dao.updateTask(mytask, function () {});
+	dao.createTask(mytask, function () {});
 	this.controller.stageController.pushScene('addtask', 
 			mytask.value);	
 };
@@ -580,7 +589,7 @@ AddtaskAssistant.prototype.addTask = function (title) {
 	};
     
     // need to do something about saveCookie, etc.
-    dao.updateTask(this.task, function(){
+    dao.createTask(this.task, function(){
     });
 	
 	this.taskValue = this.task.value;
@@ -625,7 +634,7 @@ AddtaskAssistant.prototype.copyTask = function(){
     this.task.children = "";
     
     // need to do something about saveCookie, etc.
-    dao.updateTask(this.task, function(){
+    dao.createTask(this.task, function(){
     });
 	
 	Mojo.Controller.getAppController().showBanner(
@@ -713,7 +722,7 @@ AddtaskAssistant.prototype.checkChange = function(event){
                 newTask.repeat = 0;
                 newTask.id = 0;
                 newTask.value = nowTime;
-                dao.updateTask(newTask, function(){
+                dao.createTask(newTask, function(){
                     //Mojo.Log.info("Created repeat task");
                 });
                 
@@ -1328,6 +1337,7 @@ AddtaskAssistant.prototype.gotTasks = function(responseText){
 			this.controller.get("SubtaskRow").hide();
 			sqlString = "SELECT title FROM tasks WHERE value=" + this.task.parent + ";GO;";
 			dao.retrieveTasksByString(sqlString, this.gotParent.bind(this));
+			this.controller.get("ParentRow").hide();	
 			
 		}
 		else {
@@ -1345,7 +1355,14 @@ AddtaskAssistant.prototype.gotTasks = function(responseText){
 
 AddtaskAssistant.prototype.gotSubtasks = function (response) {
 	//Mojo.Log.info("Subtasks: %j", response);
-	this.controller.get('subtaskListCount').innerHTML = response.length + " " +$L("Subtasks");
+	
+	var choiceString = "1#"+$L("Subtask")+ "|#"+ $L("Subtasks");
+	Mojo.Log.info("String", choiceString);
+	this.controller.get('subtaskListCount').innerHTML = response.length + " " +
+		Mojo.Format.formatChoice(response.length, choiceString);
+	if (response.length) {
+		this.controller.get("SubtaskRow").show();
+	}
 	var i;
 	for (i = 0; i < response.length; i++){
 		response[i].done = response[i].completed ? true : false;

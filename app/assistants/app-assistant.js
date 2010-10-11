@@ -57,6 +57,7 @@ MyAPP.prefs = {
 	useCurrent: false,
 	repeatFromCompleted: false,
 	showFolderAndContext: false,
+	showTags: false,
 	showDueDate: true,
 	showNote: false,
 	showPriority: false,

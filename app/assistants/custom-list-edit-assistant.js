@@ -391,21 +391,26 @@ CustomListEditAssistant.prototype.drawerTap = function (event) {
 	//this.updateCounts();
 };
 
+
+CustomListEditAssistant.prototype.aboutToActivate = function(callback) {
+	this.activateCallback = callback;
+    // Retrieve custom list;
+    dao.retrieveCustomList(this.customListId, this.gotCustomList.bind(this));	
+};
 CustomListEditAssistant.prototype.activate = function(event) {
 	/* put in event handlers here that should only be in effect when this scene is active. For
 	   example, key handlers that are observing the document */
 
-    // Retrieve custom list;
-    dao.retrieveCustomList(this.customListId, this.gotCustomList.bind(this));
 };
 
 CustomListEditAssistant.prototype.gotCustomList = function (response) {
 	
+	Mojo.Log.info("Response %j", response);
 	if (response && response[0]) {
-		//Mojo.Log.info (response[0].listobject);
+		Mojo.Log.info (response[0].listobject);
 		this.customList = response[0].listobject.evalJSON();
 	}
-	//Mojo.Log.info("Custom List is: %j", this.customList);
+	Mojo.Log.info("Custom List is: %j", this.customList);
 	
 	this.customListNameModel.value = this.customList.label;
 	this.controller.modelChanged(this.customListNameModel);
@@ -419,25 +424,48 @@ CustomListEditAssistant.prototype.gotCustomList = function (response) {
 	this.starredListModel.items = this.customList.starred;
 	this.controller.modelChanged(this.starredListModel);
 	
-	this.completedListModel.items = this.customList.completed;
+	this.completedListModel.items = this.customList.completed || 
+		[
+			{label: $L("Completed"), selected: false, value: 0},
+			{label: $L("Not Completed"), selected: true, value: 1}			
+		];
 	this.controller.modelChanged(this.completedListModel);
 	
 	this.dueDateSelectorModel.value = this.customList.duedate;
 	this.controller.modelChanged(this.dueDateSelectorModel);
-	this.dueDateOlderToggleModel.value = this.customList.duedatebefore;
+	this.dueDateOlderToggleModel.value = this.customList.duedatebefore || false;
 	this.controller.modelChanged(this.dueDateOlderToggleModel);
-	this.noDueDateToggleModel.value = this.customList.noduedates;
+	this.noDueDateToggleModel.value = this.customList.noduedates || false;
 	this.controller.modelChanged(this.noDueDateToggleModel);
 	
 	this.startDateSelectorModel.value = this.customList.startdate;
 	this.controller.modelChanged(this.startDateSelectorModel);
-	this.startDateOlderToggleModel.value = this.customList.startdatebefore;
+	this.startDateOlderToggleModel.value = this.customList.startdatebefore || false;
 	this.controller.modelChanged(this.startDateOlderToggleModel);
-	this.noStartDateToggleModel.value = this.customList.nostartdates;
+	this.noStartDateToggleModel.value = this.customList.nostartdates || false;
 	this.controller.modelChanged(this.noStartDateToggleModel);
 
 	this.showDateOptions();
 	
+	if (this.customList.sort.length === 0) {
+		this.customList.sort = [
+				{label: $L('Folder'), type: 'folder', dir: 'ASC', oppdir: 'DESC'},
+				{label: $L('Context'), type: 'context', dir: 'ASC', oppdir: 'DESC'},
+				{label: $L('Goal'), type: 'goal', dir: 'ASC', oppdir: 'DESC'},
+				{label: $L('Tag'), type: 'tag', dir: 'ASC', oppdir: 'DESC'},
+				{label: $L('Priority'), type: 'priority', dir: 'DESC', oppdir: 'ASC'},
+				{label: $L('Starred'), type: 'star', dir: 'DESC', oppdir: 'ASC'},
+				{label: $L('Status'), type: 'status', dir: 'ASC', oppdir: 'DESC'},
+				{label: $L('Title'), type: 'title', dir: 'ASC', oppdir: 'DESC'},
+				{label: $L('Due Date'), type: 'duedate', dir: 'ASC', oppdir: 'DESC'},
+				{label: $L('Start Date'), type: 'startdate', dir: 'ASC', oppdir: 'DESC'},
+				{label: $L('Length'), type: 'length', dir: 'ASC', oppdir: 'DESC'},
+				{label: $L('Modified'), type: 'modified', dir: 'ASC', oppdir: 'DESC'},
+				{label: $L('Added'), type: 'added', dir: 'ASC', oppdir: 'DESC'}
+				//{label: $L('Importance'), type: 'importance', dir: 'DESC', oppdir: 'ASC'}		
+		];
+
+	}
 	this.sortListModel.items = this.customList.sort;
 	this.controller.modelChanged(this.sortListModel);
 	
@@ -550,7 +578,7 @@ CustomListEditAssistant.prototype.gotTagsDb = function (response) {
 	//Mojo.Log.info("Tags are %j", response);
 	var tag, tagArray, i;
 	this.tagsListModel.items = [
-		{label: "No tags"}
+		{label: $L("No tags")}
 	];
 	response.each(function (tag, index){
 		//Mojo.Log.info("Tag %s %j", index, tag);
@@ -636,6 +664,9 @@ CustomListEditAssistant.prototype.updateCounts = function ( ) {
 		}
 	}
 	this.controller.get('completedListCount').innerHTML = completetext;
+	
+	// activate scene since we've got widgets filled with data
+	this.activateCallback();
 };
  
 CustomListEditAssistant.prototype.countSelected = function (listModel) {
